@@ -12,7 +12,7 @@ import java.util.Iterator;
 public class Insert<T> implements Operation<Void>{
 
 	
-	Setter[] setters = new Setter[0];
+	Setter<T,?>[] setters = new Setter[0];
 	Class<T> table;
 	
 	Insert() {
@@ -23,7 +23,7 @@ public class Insert<T> implements Operation<Void>{
 	}
 	public <U> Insert<T> set(Column<U> col, U value) {
 		setters = Arrays.copyOf(setters, setters.length+1);
-		setters[setters.length-1] = new Setter(table, col, value) ;
+		setters[setters.length-1] = new Setter<T,U>(table, col, value) ;
 		return this;
 	}
 
@@ -32,7 +32,7 @@ public class Insert<T> implements Operation<Void>{
 		database.run(this);
 		return null;
 	}
-	Setter[] getSetters() {
+	Setter<T,?>[] getSetters() {
 		return setters;
 	}
 	Class<T> getTable() {

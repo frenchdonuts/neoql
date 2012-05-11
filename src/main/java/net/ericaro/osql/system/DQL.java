@@ -5,6 +5,8 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.ListModel;
+
 public class DQL {
 
 	public static <T> Insert<T> insertInto(Class<T> table) {
@@ -19,12 +21,8 @@ public class DQL {
 		return new DeleteFrom(table);
 	}
 
-	public static Select select(Projector what, Class table, Predicate p) {
-		return new Select(what, table, p);
-	}
-
-	public static <T> SingleSelect<T> select(Class<T> table, Where<? super T> p) {
-		return new SingleSelect<T>(table, p);
+	public static <T> Select<T> select(Class<T> table, Where<? super T> p) {
+		return new Select<T>(table, p);
 	}
 
 	public static Column[] columnsOf(Class tableClass) {

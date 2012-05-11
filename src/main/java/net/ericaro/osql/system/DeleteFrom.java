@@ -1,17 +1,17 @@
 package net.ericaro.osql.system;
 
-public class DeleteFrom implements Operation<Void> {
+public class DeleteFrom<T> implements Operation<Void> {
 
-	Class table;
-	private Predicate where;
+	Class<T> table;
+	private Where<? super T> where;
 	
 	
-	public DeleteFrom(Class table) {
+	public DeleteFrom(Class<T> table) {
 		super();
 		this.table = table;
 	}
 
-	public DeleteFrom where(Predicate where) {
+	public DeleteFrom<T> where(Where<? super T> where) {
 		this.where = where;
 		return this;
 	}
@@ -22,11 +22,11 @@ public class DeleteFrom implements Operation<Void> {
 		return null;
 	}
 
-	Class getTable() {
+	Class<T> getTable() {
 		return table;
 	}
 
-	Predicate getWhere() {
+	Where<? super T> getWhere() {
 		return where;
 	}
 

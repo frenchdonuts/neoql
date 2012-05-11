@@ -12,7 +12,7 @@ import java.util.Iterator;
  */
 public class Update<T> implements Operation<Void> {
 
-	Setter[] setters = new Setter[0];
+	Setter<T,?>[] setters = new Setter[0];
 	Class<T> table;
 	private Where<? super T> where;
 
@@ -21,9 +21,9 @@ public class Update<T> implements Operation<Void> {
 		this.table = table;
 	}
 
-	public Update<T> set(Column col, Object value) {
+	public <U> Update<T> set(Column<U> col, U value) {
 		setters = Arrays.copyOf(setters, setters.length+1);
-		setters[setters.length-1] = new Setter(table, col, value) ;
+		setters[setters.length-1] = new Setter<T,U>(table, col, value) ;
 		return this;
 	}
 
@@ -38,11 +38,11 @@ public class Update<T> implements Operation<Void> {
 		return null;
 	}
 
-	Setter[] getSetters() {
+	Setter<T,?>[] getSetters() {
 		return setters;
 	}
 
-	Class getTable() {
+	Class<T> getTable() {
 		return table;
 	}
 

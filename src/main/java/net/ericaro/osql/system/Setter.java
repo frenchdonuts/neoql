@@ -1,24 +1,19 @@
 package net.ericaro.osql.system;
 
-import java.lang.reflect.Field;
 
-class Setter<T> {
+class Setter<T,V> {
 
-	Object  value ;
-	private Field f;
+	V value ;
+	private Column<V> f;
 	
-	Setter(Class<T> table, Column col, Object value) {
+	Setter(Class<T> table, Column<V> col, V value) {
 		this.value = value;
-		f = col.field;
+		f = col;
 	}
 	
 	
 	void set(T row) {
-		try {
 			f.set(row, value);
-		} catch (Exception e) {
-			throw new RuntimeException("wrong field",e);
-		}
 	}
 
 }

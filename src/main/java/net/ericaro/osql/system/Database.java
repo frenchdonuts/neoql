@@ -51,7 +51,7 @@ public class Database {
 		return schedule(DQL.update(table));
 	}
 
-	public DeleteFrom deleteFrom(Class table) {
+	public <T> DeleteFrom<T> deleteFrom(Class<T> table) {
 		return schedule(DQL.deleteFrom(table));
 	}
 

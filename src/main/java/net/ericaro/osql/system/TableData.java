@@ -12,7 +12,7 @@ import java.util.ListIterator;
  * @author eric
  * 
  */
-public class TableData<T> implements Iterable<T> {
+public class TableData<T> implements Table<T> {
 
 	Column[]			table;
 	List<T>				rows	= new ArrayList<T>();
@@ -24,9 +24,19 @@ public class TableData<T> implements Iterable<T> {
 		this.type = metadata;
 		this.table = DQL.columnsOf(metadata);
 	}
+		
+	
 
 	
 	
+	public void addDatabaseListener(DatabaseListener<T> listener) {
+		owner.addDatabaseListener(type, listener);
+	}
+
+	public void removeDatabaseListener(DatabaseListener<T> listener) {
+		owner.removeDatabaseListener(type, listener);
+	}
+
 	Database getOwner() {
 		return owner;
 	}

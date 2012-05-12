@@ -7,17 +7,20 @@ import java.util.List;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataListener;
 
+// TODO find a way to "free" this list from the database (kind of close)
+//TODO this should work for any "tableData" including join tables, and virtual ones, note that the assumption are mild on a tabledata
+
 public class SelectList<T> extends AbstractList<T> implements List<T>, ListModel {
 
 	List<T>						content	= new ArrayList<T>();
 
 	private Select<T>			select;
-	private TableData<T>		table;
+	private Table<T>			table;
 	private ListDataSupport		events	= new ListDataSupport(this);
 
 	private Where<? super T>	where;
 
-	public SelectList(Select<T> select, TableData<T> table) {
+	SelectList(Select<T> select, Table<T> table) {
 		super();
 		this.select = select;
 		this.table = table;
@@ -27,7 +30,7 @@ public class SelectList<T> extends AbstractList<T> implements List<T>, ListModel
 				addImpl(t);
 		// first fill the filtered table
 		// then add events to keep in touch with list content
-		table.getOwner().addDatabaseListener(select.table, new DatabaseListener<T>() {
+		table.addDatabaseListener(new DatabaseListener<T>() {
 
 			public void inserted(T row) {
 				if (where.isTrue(row))
@@ -41,8 +44,8 @@ public class SelectList<T> extends AbstractList<T> implements List<T>, ListModel
 			}
 
 			public void updated(T old, T row) {
-				System.out.println("updated"+ old+", "+row);
-				
+				System.out.println("updated" + old + ", " + row);
+
 				int i = content.indexOf(old); // always try to remove the old one
 				boolean willbe = where.isTrue(row);
 				if (i >= 0 && willbe) {

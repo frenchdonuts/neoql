@@ -12,7 +12,7 @@ import java.util.ListIterator;
  * @author eric
  * 
  */
-public class TableData<T> implements Iterable<T> {
+public class TableData<T> implements Table<T> {
 
 	Column<T,?>[]			table;
 	List<T>				rows	= new ArrayList<T>();
@@ -34,12 +34,9 @@ public class TableData<T> implements Iterable<T> {
 	
 	class ForeignKeyColumnListener<V> implements DatabaseListener<V>{
 	
-		private Column<T,V> col;
-		
-		public ForeignKeyColumnListener(Column<T, V> col) {
-			super();
-			this.col = col;
-		}
+	public void addDatabaseListener(DatabaseListener<T> listener) {
+		owner.addDatabaseListener(type, listener);
+	}
 
 		
 		@Override
@@ -62,7 +59,7 @@ public class TableData<T> implements Iterable<T> {
 		
 	
 	}
-	
+
 	Database getOwner() {
 		return owner;
 	}

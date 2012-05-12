@@ -14,7 +14,7 @@ import java.util.ListIterator;
  */
 public class TableData<T> implements Iterable<T> {
 
-	Column[]			table;
+	Column<T,?>[]			table;
 	List<T>				rows	= new ArrayList<T>();
 	private Class<T>	type;
 	private Database	owner;
@@ -23,9 +23,45 @@ public class TableData<T> implements Iterable<T> {
 		this.owner = owner;
 		this.type = metadata;
 		this.table = DQL.columnsOf(metadata);
+		for(Column<T,?> col: table)
+			installColumn(col);
 	}
-
 	
+	private <V> void installColumn(Column<T,V> col){
+		if (col.hasForeignKey() )
+			owner.addDatabaseListener(col.getForeignTable(), new ForeignKeyColumnListener<V>(col) );
+	}
+	
+	class ForeignKeyColumnListener<V> implements DatabaseListener<V>{
+	
+		private Column<T,V> col;
+		
+		public ForeignKeyColumnListener(Column<T, V> col) {
+			super();
+			this.col = col;
+		}
+
+		
+		@Override
+		public void updated(V oldValue, V newValue) {
+			TableData.this.owner.update(type).set(col, newValue).where(DQL.columnIs(col, oldValue));
+		}
+
+
+		@Override
+		public void deleted(V oldValue) {
+			// fire an exception ( forbidding the deleting if the value is in use ?
+			Where<T> inUse = DQL.columnIs(col, oldValue);
+			for(T t: rows)
+				if (inUse.isTrue(t))
+					throw new DQLException("Foreign Key violation"+ col);
+		}
+		@Override
+		public void inserted(V newRow) {}
+		
+		
+	
+	}
 	
 	Database getOwner() {
 		return owner;
@@ -50,22 +86,11 @@ public class TableData<T> implements Iterable<T> {
 		rows.add(row);// todo do some check here
 		return row;
 	}
-
-	T newRow() {
-		try {
-			return append(type.newInstance());
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
+	
 	public T clone(T row) {
 		try {
 			T clone = type.newInstance();
-			for (Column<?> c : table)
+			for (Column<T,?> c : table)
 				c.copy(row, clone);
 			return clone;
 		} catch (Exception e) {

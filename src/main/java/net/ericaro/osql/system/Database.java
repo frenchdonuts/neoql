@@ -5,9 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-
-import javax.swing.ListModel;
-
+// TODO handle all the features of a sql database:
+// foreign key: meaning that updating a row require to change it also in all the foreign keys.
+// group by and order by in selects
+// joins -> Couple of values
+//
 public class Database {
 	Map<Class, TableData>	tables		= new HashMap<Class, TableData>();
 
@@ -23,8 +25,18 @@ public class Database {
 		callbacks.addDatabaseListener(table, listener);
 	}
 
-	public void removeDatabaseListener(Class table, DatabaseListener listener) {
+	public <T> void removeDatabaseListener(Class<T> table, DatabaseListener<T> listener) {
 		callbacks.removeDatabaseListener(table, listener);
+	}
+	
+	public <T,V> void addColumnListener(Column<T,V> column,
+			ColumnListener<V> listener) {
+		callbacks.addColumnListener(column, listener);
+	}
+
+	public <T,V> void removeColumnListener(Column<T,V> column,
+			ColumnListener<V> listener) {
+		callbacks.removeColumnListener(column, listener);
 	}
 
 	public void beginTransaction() {
@@ -33,13 +45,15 @@ public class Database {
 	}
 
 	public void commit() {
-		for (ListIterator<Operation<?>> i = operations.listIterator(); i.hasNext(); i.remove())
-			i.next().run(this);
+		while (operations.size()>0) {
+			Operation<?> next = operations.remove(0);
+			next.run(this);
+		}
 		callbacks.transactionCommitted();
 		assert operations.size() == 0 : "commit has not flushed all the operations";
 	}
 
-	public void createTable(Class c) {
+	public <T> void createTable(Class<T> c) {
 		schedule(new CreateTable(c));
 	}
 
@@ -51,7 +65,7 @@ public class Database {
 		return schedule(DQL.update(table));
 	}
 
-	public DeleteFrom deleteFrom(Class table) {
+	public <T> DeleteFrom<T> deleteFrom(Class<T> table) {
 		return schedule(DQL.deleteFrom(table));
 	}
 
@@ -71,8 +85,7 @@ public class Database {
 
 	public void add(Class... tables) {
 		for (Class table : tables) {
-
-			TableData data = new TableData(this, table);
+			TableData<?> data = new TableData(this, table);
 			this.tables.put(table, data);
 			callbacks.tableCreated(table);
 		}
@@ -81,9 +94,7 @@ public class Database {
 	public <T> void run(Insert<T> insert) {
 		Class<T> table = insert.getTable();
 		TableData<T> data = getDataFor(table);
-		T row = data.newRow();
-		for (Setter<T, ?> s : insert.getSetters())
-			s.set(row);
+		T row = data.append(insert.getRow() );
 		callbacks.rowInserted(table, row);
 	}
 
@@ -99,8 +110,10 @@ public class Database {
 		for (T row : data)
 			if (where.isTrue(row)) {
 				T clone = data.clone(row);
-				for (Setter<T,?> s : setters)
+				for (Setter<T,?> s : setters) {
 					s.set(clone);
+					callbacks.columnUpdated(s, row);
+				}
 				data.update(row, clone);
 				callbacks.rowUpdated(table, row, clone);
 			}

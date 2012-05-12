@@ -21,7 +21,7 @@ public class Update<T> implements Operation<Void> {
 		this.table = table;
 	}
 
-	public <U> Update<T> set(Column<U> col, U value) {
+	public <U> Update<T> set(Column<T,U> col, U value) {
 		setters = Arrays.copyOf(setters, setters.length+1);
 		setters[setters.length-1] = new Setter<T,U>(table, col, value) ;
 		return this;

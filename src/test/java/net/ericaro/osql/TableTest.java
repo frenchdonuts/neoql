@@ -5,7 +5,9 @@ import static org.junit.Assert.fail;
 import java.util.List;
 
 import net.ericaro.osql.Model.Student;
+import net.ericaro.osql.Model.Teacher;
 import net.ericaro.osql.predicates.True;
+import net.ericaro.osql.system.DQL;
 import net.ericaro.osql.system.Database;
 import net.ericaro.osql.system.SelectList;
 import net.ericaro.osql.system.Where;
@@ -23,39 +25,41 @@ public class TableTest {
 
 		Database database = new Database();
 		
-		database.add(Student.class);
+		database.add(Student.class, Teacher.class);
 		
 
 		database.beginTransaction();
-		
-		Where<Student> pair = new Where<Student>() {
-
-			@Override
-			public boolean isTrue(Student t) {
-				return t.getA()%2 == 0;
-			}};
-		
 			
-			
-		List<Student> res = database.select(Student.class, pair);
+		
+		List<Student> res = database.select(Student.class, Student.IS_RANK_PAIR );
 		
 		
-		database.insertInto(Student.class).set(Student.a, 1).set(Student.b, "one");
-		database.insertInto(Student.class).set(Student.a, 2).set(Student.b, "two");
-		database.insertInto(Student.class).set(Student.a, 3).set(Student.b, "three");
-		database.insertInto(Student.class).set(Student.a, 4).set(Student.b, "four");
+		database.insertInto(Student.class).set(Student.RANK, 1).set(Student.NAME, "one");
+		database.insertInto(Student.class).set(Student.RANK, 2).set(Student.NAME, "two");
+		database.insertInto(Student.class).set(Student.RANK, 3).set(Student.NAME, "three");
+		
+		Teacher prof = database.insertInto(Teacher.class).set(Teacher.NAME, "prof").build();
+		
+		database.insertInto(Student.class).set(Student.RANK, 4).set(Student.NAME, "four").set(Student.TEACHER, prof);
+		
 		
 		database.commit();
 		
 		for (Student t: res) System.out.println(t);
 		
-		database.update(Student.class).set(Student.a, 3).where(nameIs("two"));
-		database.update(Student.class).set(Student.a, 4).where(nameIs("one"));
+		database.update(Student.class).set(Student.RANK, 3).where(nameIs("two"));
+		database.update(Student.class).set(Student.RANK, 4).where(nameIs("one"));
 		database.commit();
 		
 		print(database, Student.class);
 		System.out.println("res is now");
 		for (Student t: res) System.out.println(t);
+		
+		database.update(Teacher.class).set(Teacher.NAME, "atchoum").where(DQL.columnIs(Teacher.NAME, "prof") );
+		database.commit();
+		
+		for (Student t: res) System.out.println(t);
+		
 
 		fail("Not yet implemented");
 	}
@@ -66,10 +70,6 @@ public class TableTest {
 	}
 	
 	public Where<Student> nameIs(final String name){
-		return new Where<Student>() {
-			@Override
-			public boolean isTrue(Student t) {
-				return name.equals( t.getB() );
-			}};
+		return DQL.columnIs(Student.NAME, name);
 	}
 }

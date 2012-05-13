@@ -2,7 +2,7 @@ package net.ericaro.osql.system;
 
 import java.util.EventListener;
 
-public interface DatabaseListener<T> extends EventListener{
+public interface TableListener<T> extends EventListener{
 
 	
 	public void updated(T oldRow, T newRow);

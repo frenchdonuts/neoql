@@ -7,8 +7,11 @@ import java.util.List;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataListener;
 
+import net.ericaro.osql.lang.Predicate;
+import net.ericaro.osql.lang.Select;
+
+
 // TODO find a way to "free" this list from the database (kind of close)
-//TODO this should work for any "tableData" including join tables, and virtual ones, note that the assumption are mild on a tabledata
 
 public class SelectList<T> extends AbstractList<T> implements List<T>, ListModel {
 
@@ -18,22 +21,22 @@ public class SelectList<T> extends AbstractList<T> implements List<T>, ListModel
 	private Table<T>			table;
 	private ListDataSupport		events	= new ListDataSupport(this);
 
-	private Where<? super T>	where;
+	private Predicate<? super T>	where;
 
 	SelectList(Select<T> select, Table<T> table) {
 		super();
 		this.select = select;
 		this.table = table;
-		where = select.where;
+		where = select.getWhere();
 		for (T t : table)
-			if (where.isTrue(t))
+			if (where.eval(t))
 				addImpl(t);
 		// first fill the filtered table
 		// then add events to keep in touch with list content
-		table.addDatabaseListener(new DatabaseListener<T>() {
+		table.addTableListener(new TableListener<T>() {
 
 			public void inserted(T row) {
-				if (where.isTrue(row))
+				if (where.eval(row))
 					addImpl(row);
 			}
 
@@ -47,7 +50,7 @@ public class SelectList<T> extends AbstractList<T> implements List<T>, ListModel
 				System.out.println("updated" + old + ", " + row);
 
 				int i = content.indexOf(old); // always try to remove the old one
-				boolean willbe = where.isTrue(row);
+				boolean willbe = where.eval(row);
 				if (i >= 0 && willbe) {
 					// it was before, it will be after too, I need to update the content
 					setImpl(i, row);

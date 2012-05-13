@@ -1,15 +1,14 @@
-package net.ericaro.osql.system;
+package net.ericaro.osql.lang;
 
 import java.lang.reflect.Field;
 
-public class Column<T,V> {
+public class Column<T, V> {
 
-	Field field;
 	Class<V> foreignTable;
+	
+	// that's part of the 
+	Field field;
 	String fname;
-	
-	
-	
 	
 	public Column(String fname) {
 		super();
@@ -21,18 +20,18 @@ public class Column<T,V> {
 		this.foreignTable = foreignTable;
 	}
 
-	void copy(Object src, Object target ) {
+	public void copy(T src, T target ) {
 		set(target, get(src) );
 	}
 	
-	protected void set(Object src, V value) {
+	void set(T src, V value) {
 		try {
 			field.set(src, value);
 		} catch (Exception e) {
 			throw new RuntimeException("wrong field",e);
 		}
 	}
-	protected V get(Object src) {
+	public V get(Object src) {
 		try {
 			return (V) field.get(src);
 		} catch (Exception e) {
@@ -46,6 +45,13 @@ public class Column<T,V> {
 
 	public boolean hasForeignKey() {
 		return foreignTable != null;
+	}
+	
+	public void init(Class<T> tableClass) throws NoSuchFieldException, SecurityException {
+		if (field == null) {// not init
+			field = tableClass.getDeclaredField(fname);
+			field.setAccessible(true);
+		}
 	}
 	
 	

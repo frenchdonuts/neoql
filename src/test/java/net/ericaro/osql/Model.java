@@ -1,7 +1,7 @@
 package net.ericaro.osql;
 
-import net.ericaro.osql.system.Column;
-import net.ericaro.osql.system.Where;
+import net.ericaro.osql.lang.Predicate; 
+import net.ericaro.osql.lang.Column;
 
 public class Model {
 
@@ -25,10 +25,9 @@ public class Model {
 		public static final Column<Student,String> NAME = new Column<Student,String>("name");
 		public static final Column<Student, Teacher> TEACHER = new Column<Student, Teacher>("teacher", Teacher.class );
 		
-		public static final Where<? super Student> IS_RANK_PAIR = new Where<Student>() {
-
+		public static final Predicate<? super Student> IS_RANK_PAIR = new Predicate<Student>() {
 			@Override
-			public boolean isTrue(Student t) {
+			public boolean eval(Student t) {
 				return t.getRank()%2 == 0;
 			}
 			

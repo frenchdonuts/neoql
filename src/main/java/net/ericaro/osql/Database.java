@@ -1,15 +1,10 @@
-package net.ericaro.osql.system;
+package net.ericaro.osql;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-import net.ericaro.osql.lang.ColumnValuePair;
-import net.ericaro.osql.lang.CreateTable;
-import net.ericaro.osql.lang.DeleteFrom;
-import net.ericaro.osql.lang.InsertInto;
-import net.ericaro.osql.lang.Predicate;
-import net.ericaro.osql.lang.Select;
-import net.ericaro.osql.lang.Update;
+
 
 public class Database {
 	Map<Class, TableData> tables = new HashMap<Class, TableData>(); // real
@@ -20,6 +15,10 @@ public class Database {
 	protected <T> TableData<T> tableFor(Class<T> table) {
 		return tables.get(table);
 	}
+	protected <T> Table<T> tableFor(TableDef<T> table) {
+		return table.asTable(this);
+	}
+	
 
 	public <T> void addTableListener(Class<T> table, TableListener<T> listener) {
 		tableFor(table).addTableListener(listener);
@@ -48,10 +47,36 @@ public class Database {
 		
 	}
 
-	public <T> SelectList<T> select(Select<T> select) {
-		return new SelectList<T>(select, tableFor(select.getTable()));
+	public <T> Iterable<T> select(Class<T> table) {
+		return select(table, DQL.True);
+	}
+		
+	public <T> Iterable<T> select(Class<T> table, Predicate<? super T> where) {
+		return select(new Select<T>(table, where) );
+	}
+	
+	public <T> Iterable<T> select(final Select<T> select) {
+		return new Iterable<T>() {
+			@Override public Iterator<T> iterator() {
+				return new SelectIterator<T>(select, tableFor(select.getTable()));
+			}};
+	}
+	
+	public <T> Table<T> table(Select<T> select) {
+		return new SelectTable<T>(select, tableFor(select.getTable()));
+	}
+	public <T> Table<T> table(Class<T> table) {
+		return tableFor(table);
+	}
+	public <L,R> Table<Pair<L,R>> table(InnerJoin<L,R> innerjoin) {
+		Table<L> left = innerjoin.getLeftTable().asTable(this);
+		Table<R> right = innerjoin.getRightTable().asTable(this);
+		return new InnerJoinTable<L,R>(left,right, innerjoin.getOn());
 	}
 
+	
+	
+	
 	public <T> void execute(Update<T> update) {
 		Class<T> table = update.getType();
 		TableData<T> data = tableFor(table);

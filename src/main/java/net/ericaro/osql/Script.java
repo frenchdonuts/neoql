@@ -1,10 +1,8 @@
-package net.ericaro.osql.lang;
+package net.ericaro.osql;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import net.ericaro.osql.system.Database;
-import net.ericaro.osql.system.SelectList;
 
 /**
  * Script made of a bunch of statements
@@ -32,10 +30,21 @@ public class Script {
 		return schedule(DQL.deleteFrom(table));
 	}
 	
+	public <T> TableDef<T> table(Class<T> table){
+		return new ClassTableDef<T>(table);
+	}
+	
+	public <T> TableDef<T> select(TableDef<T> table, Predicate<? super T> where){
+		return new SelectTableDef<T>(new Select<T>(table, where));
+	}
+	
+	
 	private <T extends Statement> T schedule(T stm) {
 		statements.add(stm);
 		return stm;
 	}
+	
+	
 	
 	
 	public void executeOn(Database database) {

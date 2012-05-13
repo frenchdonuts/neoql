@@ -1,9 +1,4 @@
-package net.ericaro.osql.system;
-
-import net.ericaro.osql.lang.Column;
-import net.ericaro.osql.lang.DQL;
-import net.ericaro.osql.lang.Predicate;
-import net.ericaro.osql.lang.Script;
+package net.ericaro.osql;
 
 import org.junit.Test;
 

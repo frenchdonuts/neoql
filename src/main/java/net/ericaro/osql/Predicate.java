@@ -1,4 +1,4 @@
-package net.ericaro.osql.lang;
+package net.ericaro.osql;
 
 public interface Predicate<T> {
 

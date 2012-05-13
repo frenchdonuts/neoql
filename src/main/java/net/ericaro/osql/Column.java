@@ -1,4 +1,4 @@
-package net.ericaro.osql.lang;
+package net.ericaro.osql;
 
 import java.lang.reflect.Field;
 

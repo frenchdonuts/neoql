@@ -1,4 +1,4 @@
-package net.ericaro.osql.system;
+package net.ericaro.osql;
 
 import java.util.EventListener;
 

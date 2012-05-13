@@ -3,16 +3,10 @@ package net.ericaro.osql;
 import static org.junit.Assert.fail;
 import net.ericaro.osql.Model.Student;
 import net.ericaro.osql.Model.Teacher;
-import net.ericaro.osql.lang.DQL;
-import net.ericaro.osql.lang.Predicate;
-import net.ericaro.osql.lang.Script;
-import net.ericaro.osql.lang.Select;
-import net.ericaro.osql.system.Database;
-import net.ericaro.osql.system.SelectList;
 
 import org.junit.Test;
 
-public class TableTest {
+public class TableListTest {
 	
 	@Test
 	public void test() {
@@ -31,7 +25,7 @@ public class TableTest {
 		
 		
 		Select<Student> select = new Select<Student>(Student.class, Student.IS_RANK_PAIR );
-		SelectList<Student> res = database.select(select); 
+		TableList<Student> res = database.select(select); 
 		
 		
 		s = new Script();

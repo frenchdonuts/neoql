@@ -1,9 +1,7 @@
-package net.ericaro.osql.lang;
+package net.ericaro.osql;
 
 import java.util.Arrays;
 
-import net.ericaro.osql.DQLException;
-import net.ericaro.osql.system.Database;
 
 /**
  * INSERT INTO table set column = value, column= value

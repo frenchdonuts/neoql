@@ -1,6 +1,5 @@
-package net.ericaro.osql.lang;
+package net.ericaro.osql;
 
-import net.ericaro.osql.system.Database;
 
 /**
  * Delete From class statement

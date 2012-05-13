@@ -1,8 +1,7 @@
-package net.ericaro.osql.lang;
+package net.ericaro.osql;
 
 import java.util.Arrays;
 
-import net.ericaro.osql.system.Database;
 
 /** Update from 
  * *

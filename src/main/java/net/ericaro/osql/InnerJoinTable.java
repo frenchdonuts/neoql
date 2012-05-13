@@ -1,11 +1,10 @@
-package net.ericaro.osql.system;
+package net.ericaro.osql;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import net.ericaro.osql.lang.Predicate;
 
 public class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 

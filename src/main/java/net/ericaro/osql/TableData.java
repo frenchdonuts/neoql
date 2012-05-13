@@ -1,4 +1,4 @@
-package net.ericaro.osql.system;
+package net.ericaro.osql;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -9,13 +9,6 @@ import java.util.ListIterator;
 
 import javax.swing.event.EventListenerList;
 
-import net.ericaro.osql.DQLException;
-import net.ericaro.osql.lang.Column;
-import net.ericaro.osql.lang.ColumnValuePair;
-import net.ericaro.osql.lang.DQL;
-import net.ericaro.osql.lang.Predicate;
-import net.ericaro.osql.lang.Select;
-import net.ericaro.osql.lang.Update;
 
 /**
  * basic table, essentially a metadata and an iterable of Object[]

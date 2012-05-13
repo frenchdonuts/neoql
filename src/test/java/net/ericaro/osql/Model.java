@@ -1,7 +1,5 @@
 package net.ericaro.osql;
 
-import net.ericaro.osql.lang.Predicate; 
-import net.ericaro.osql.lang.Column;
 
 public class Model {
 

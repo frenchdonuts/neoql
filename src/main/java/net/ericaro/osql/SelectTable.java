@@ -1,4 +1,4 @@
-package net.ericaro.osql.system;
+package net.ericaro.osql;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -10,27 +10,25 @@ import javax.swing.event.ListDataListener;
 
 import org.junit.runner.Computer;
 
-import net.ericaro.osql.lang.Predicate;
-import net.ericaro.osql.lang.Select;
-
-
 // TODO find a way to "free" this list from the database (kind of close)
 
 public class SelectTable<T> implements Table<T> {
 
-	private Table<T>			table;
-	private TableListenerSupport<T>		events	= new TableListenerSupport<T>();
+	private Table<T> table;
+	private TableListenerSupport<T> events = new TableListenerSupport<T>();
 
-	private Predicate<? super T>	where;
+	private Predicate<? super T> where;
+	private Select<T> select;
 
 	SelectTable(Select<T> select, Table<T> table) {
 		super();
 		this.table = table;
+		this.select = select;
 		where = select.getWhere();
 		for (T t : table)
 			if (where.eval(t))
 				events.fireInserted(t); // cause events to be fire just like if the items where appended
-		
+
 		// first fill the filtered table
 		// then add events to keep in touch with list content
 		table.addTableListener(new TableListener<T>() {
@@ -63,48 +61,10 @@ public class SelectTable<T> implements Table<T> {
 		});
 	}
 
-	
-	
 	@Override
 	public Iterator<T> iterator() {
-		return new Iterator<T>() {
-			Iterator<T> sub = table.iterator() ;
-			T next = null;
-			{
-				computeNext();
-			}
-			@Override
-			public boolean hasNext() {
-				return next != null;
-			}
-
-			@Override
-			public T next() {
-				T current = next;
-				computeNext();
-				return current;
-			}
-
-			private void computeNext() {
-				while( sub.hasNext() ) {
-					next = sub.next();
-					if (where.eval(next))
-						return; // breaks
-				}
-				next = null;
-					
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-				
-			}
-			
-		};
+		return new SelectIterator<T>(select, table);
 	}
-
-
 
 	public void addTableListener(TableListener<T> l) {
 		events.addTableListener(l);
@@ -113,7 +73,5 @@ public class SelectTable<T> implements Table<T> {
 	public void removeTableListener(TableListener<T> l) {
 		events.removeTableListener(l);
 	}
-	
-	
-	
+
 }

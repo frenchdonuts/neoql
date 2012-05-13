@@ -1,4 +1,4 @@
-package net.ericaro.osql.system;
+package net.ericaro.osql;
 
 public interface Table<T> extends Iterable<T> {
 

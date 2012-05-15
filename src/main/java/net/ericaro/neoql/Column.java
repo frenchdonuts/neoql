@@ -2,6 +2,8 @@ package net.ericaro.neoql;
 
 import java.lang.reflect.Field;
 
+import net.ericaro.neoql.TableData.ForeignKeyColumnListener;
+
 public class Column<T, V> implements Mapper<T,V>{
 
 	Class<V> foreignTable;
@@ -9,6 +11,7 @@ public class Column<T, V> implements Mapper<T,V>{
 	// that's part of the 
 	Field field;
 	String fname;
+
 	
 	public Column(String fname) {
 		super();

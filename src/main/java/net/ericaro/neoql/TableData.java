@@ -21,10 +21,11 @@ import java.util.Map.Entry;
 	TableListenerSupport<T>	events	 = new TableListenerSupport<T>();
 	TableListenerSupport<T>	internals= new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
 
-	Column<T, ?>[]			table;
+	Column<T, ?>[]			columns;
 	List<T>					rows	= new ArrayList<T>();
 	private Class<T>		type;
 	private Database		owner;
+	private TableListener[] columnListeners;
 
 	private static <T> Column<T, ?>[] columnsOf(Class<T> tableClass) {
 		List<Column<T, ?>> cols = new ArrayList<Column<T, ?>>();
@@ -48,18 +49,36 @@ import java.util.Map.Entry;
 	 TableData(Database owner, Class<T> metadata) {
 		this.owner = owner;
 		this.type = metadata;
-		this.table = columnsOf(metadata);
+		this.columns = columnsOf(metadata);
+		this.columnListeners= new TableListener[this.columns.length];
+		
 
 	}
 
 	void install() {
-		for (Column<T, ?> col : table)
-			installColumn(col);
+		int i=0;
+		for (Column<T, ?> col : columns)
+			installColumn(i++, col);
+	}
+	void uninstall() {
+		int i=0;
+		for (Column<T, ?> col : columns)
+			unInstallColumn(i++,col);
+		if (internals.getListenerCount() >0 )
+			throw new NeoQLException("Cannot drop table "+type.getName()+". Constraint violation(s)"+ internals);
+		
 	}
 
-	private <V> void installColumn(Column<T, V> col) {
-		if (col.hasForeignKey())
-			owner.addInternalTableListener(col.getForeignTable(), new ForeignKeyColumnListener<V>(col));
+	private <V> void installColumn(int i, Column<T, V> col) {
+		if (col.hasForeignKey()) {
+			ForeignKeyColumnListener<V> listener = new ForeignKeyColumnListener<V>(col);
+			columnListeners[i] = listener;
+			owner.addInternalTableListener(col.getForeignTable(), listener );
+		}
+	}
+	private <V> void unInstallColumn(int i, Column<T, V> col) {
+		if (col.hasForeignKey()) 
+			owner.removeInternalTableListener(col.getForeignTable(), columnListeners[i]);
 	}
 
 	public void addTableListener(TableListener<T> listener) {
@@ -108,6 +127,10 @@ import java.util.Map.Entry;
 		@Override
 		public  void inserted(V newRow) {}
 
+		@Override
+		public String toString() {
+			return "Foreign Key:"+type.getName()+ "."+col.fname+" → " + col.foreignTable.getName() +".";
+		}
 	}
 
 	Database getOwner() {
@@ -127,7 +150,7 @@ import java.util.Map.Entry;
 	 T clone(T row) {
 		try {
 			T clone = type.newInstance();
-			for (Column<T, ?> c : table)
+			for (Column<T, ?> c : columns)
 				c.copy(row, clone);
 			return clone;
 		} catch (Exception e) {

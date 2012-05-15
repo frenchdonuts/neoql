@@ -130,10 +130,4 @@ public class NeoQL {
 	public static <L,R> TableDef<Pair<L,R>> innerJoin(TableDef<L> left,TableDef<R> right, Predicate<? super Pair<L,R>> on){
 		return new InnerJoin<L, R>(left, right, on);
 	}
-
-	public static <S,T> Mapper<S,T> valueOf(Column<S, T> col) {
-		return null;
-	}
-	
-
 }

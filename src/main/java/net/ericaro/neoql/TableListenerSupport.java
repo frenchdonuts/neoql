@@ -22,6 +22,10 @@ import javax.swing.event.EventListenerList;
 		return listeners.getListeners(TableListener.class);
 	}
 
+	public int getListenerCount() {
+		return listeners.getListenerCount(TableListener.class);
+	}
+
 	 void fireDeleted(T row) {
 		for (TableListener<T> l : listeners())
 			l.deleted(row);
@@ -36,4 +40,15 @@ import javax.swing.event.EventListenerList;
 		for (TableListener<T> l : listeners())
 			l.updated(oldRow, newRow);
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("\n");
+		for (TableListener<T> l : listeners())
+			sb.append(l.toString()).append("\n");
+			return sb.toString();
+	}
+	 
+	 
 }

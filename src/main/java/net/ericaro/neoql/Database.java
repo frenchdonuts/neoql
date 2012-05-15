@@ -76,7 +76,12 @@ public class Database {
 		this.tables.put(table, data);
 		data.install();
 	}
+	<T> void execute(DropTable<T> dropTable) {
 
+		Class<T> table = dropTable.getTable();
+		tableFor(table).uninstall();
+		this.tables.remove(table);
+	}
 	<T> void execute(DeleteFrom<T> deleteFrom) {
 		TableData<T> data = tableFor(deleteFrom.getTable());
 		data.delete(deleteFrom.getWhere());

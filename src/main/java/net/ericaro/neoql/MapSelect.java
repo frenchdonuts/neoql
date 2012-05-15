@@ -9,7 +9,7 @@ package net.ericaro.neoql;
  class MapSelect<S,T> extends Select<S>{
 
 	Mapper<S,T> mapper;
-	// TODO append sort, and group by
+	
 
 	 MapSelect(Mapper<S,T> mapper, Class<S> table, Predicate<? super S> where) {
 		this(mapper, new ClassTableDef<S>(table) , where);

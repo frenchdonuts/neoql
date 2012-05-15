@@ -241,7 +241,7 @@ import java.util.ListIterator;
 						if (where.eval(next)) // based on outer right , left
 												// inner join the behaviour here
 												// is different
-							// TODO implement every possible joins
+							
 							// , in the meantime we use inner join
 							return;
 					}

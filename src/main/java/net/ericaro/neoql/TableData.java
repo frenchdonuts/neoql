@@ -29,7 +29,7 @@ import java.util.Map.Entry;
 	private static <T> Column<T, ?>[] columnsOf(Class<T> tableClass) {
 		List<Column<T, ?>> cols = new ArrayList<Column<T, ?>>();
 		try {
-			//TODO rethink this all 'introspection' thing
+			
 			for (Field f : tableClass.getDeclaredFields()) {
 				int mod = f.getModifiers(); 
 				if ( Modifier.isStatic(mod) && Modifier.isPublic(mod) && f.get(null) instanceof Column) {

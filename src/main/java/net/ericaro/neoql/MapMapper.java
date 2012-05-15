@@ -26,8 +26,7 @@ public class MapMapper<S, T> extends HashMap<S, T> implements Mapping<S, T> {
 
 	@Override
 	public T peek(S s) {
-		// TODO Auto-generated method stub
-		return null;
+		return get(s);
 	}
 	
 	

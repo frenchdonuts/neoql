@@ -8,7 +8,10 @@ public class Database {
 	// real class -> table mapping
 	private Map<Class, TableData>	tables	= new HashMap<Class, TableData>();	
 
-	//TODO add queries/table for single column ( works better with 'group by ' though'
+	// TODO find a way to "free" this list from the database (kind of close)
+	// TODO append sort, and group by
+	// TODO implement every possible joins
+	// TODO rethink this all 'introspection' thing
 	
 	// ##########################################################################
 	// ACCESS TABLES OBJECT BEGIN

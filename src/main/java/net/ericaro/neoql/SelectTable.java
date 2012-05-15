@@ -2,7 +2,7 @@ package net.ericaro.neoql;
 
 import java.util.Iterator;
 
-// TODO find a way to "free" this list from the database (kind of close)
+
 
  class SelectTable<T> implements Table<T> {
 

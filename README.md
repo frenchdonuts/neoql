@@ -1,4 +1,6 @@
-neoql
+NeoQL
 =====
 
-Wokr in progress for Neoql
+NeoQL
+
+Work in Progress.

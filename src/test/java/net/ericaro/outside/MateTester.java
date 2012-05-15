@@ -4,14 +4,14 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
 
-import net.ericaro.osql.Column;
-import net.ericaro.osql.DQL;
-import net.ericaro.osql.Database;
-import net.ericaro.osql.Pair;
-import net.ericaro.osql.Predicate;
-import net.ericaro.osql.Script;
-import net.ericaro.osql.TableDef;
-import net.ericaro.osql.TableList;
+import net.ericaro.neoql.Column;
+import net.ericaro.neoql.NeoQL;
+import net.ericaro.neoql.Database;
+import net.ericaro.neoql.Pair;
+import net.ericaro.neoql.Predicate;
+import net.ericaro.neoql.Script;
+import net.ericaro.neoql.TableDef;
+import net.ericaro.neoql.TableList;
 
 public class MateTester {
 
@@ -29,19 +29,24 @@ public class MateTester {
 
 	}
 
+	
 	static class Model {
 
-		public static TableDef<Pair<Student, Student>>			MATES	= DQL.innerJoin(Student.class, Student.class, new Predicate<Pair<Student, Student>>() {
+		public static TableDef<Pair<Student, Student>>			MATES	= NeoQL.innerJoin(Student.class, Student.class, new Predicate<Pair<Student, Student>>() {
 
 														@Override
 														public boolean eval(Pair<Student, Student> t) {
 															return t.getLeft().mate == t.getRight();
 														}
 													});
+		public static TableDef<String>			NAMES = NeoQL.select(Student.NAME, Student.class);		
+		
 
 		Database							db;
 		TableList<Pair<Student, Student>>	mates;
 		TableList<Student>					allStudents;
+
+		TableList<String> allStudentNames;
 
 		Model() {
 			super();
@@ -61,6 +66,12 @@ public class MateTester {
 				allStudents = db.listFor(Student.class);	
 			return allStudents;
 		}
+		public TableList<String> getAllStudentNames() {
+			if (allStudentNames == null)
+				allStudentNames = db.listFor(NAMES);	
+			return allStudentNames;
+		}
+		
 		public TableList<Pair<Student,Student>> getMates() {
 			if (mates== null)
 				mates = db.listFor(MATES);	
@@ -71,7 +82,7 @@ public class MateTester {
 			System.out.println("pair student" + t + " with " + mate);
 			db.execute(new Script() {
 				{
-					update(Student.class).set(Student.MATE, mate).where(DQL.is(Student.NAME, t.name));
+					update(Student.class).set(Student.MATE, mate).where(NeoQL.is(Student.NAME, t.name));
 
 				}
 			});
@@ -101,7 +112,7 @@ public class MateTester {
 		// uses the observable queries selected, and unselected.
 		// uses a wrapper to listmodel to put it in a list model
 		left.setModel(m.getMates());
-		right.setModel(m.getAllStudents() );
+		right.setModel(m.getAllStudentNames() );
 
 		jf.getContentPane().add(new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, right));
 		// there are wrapper around the table observable to a listmodel

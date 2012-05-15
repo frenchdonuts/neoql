@@ -1,31 +1,31 @@
 package net.ericaro.osql;
 
 
-public class Model {
+ class Model {
 
-	public static class Teacher{
-		public static final Column<Teacher, String> NAME = new Column<Teacher,String>("name");
+	 static class Teacher{
+		 static final Column<Teacher, String> NAME = new Column<Teacher,String>("name");
 		private String name;
-		public String getName() {
+		 String getName() {
 			return name;
 		}
 		@Override
-		public String toString() {
+		public  String toString() {
 			return "Teacher [name=" + name + "]";
 		}
 		
 		
 	}
 	
-	public static class Student {
+	 static class Student {
 		
-		public static final Column<Student,Integer> RANK = new Column<Student,Integer>("rank");
-		public static final Column<Student,String> NAME = new Column<Student,String>("name");
-		public static final Column<Student, Teacher> TEACHER = new Column<Student, Teacher>("teacher", Teacher.class );
+		 static final Column<Student,Integer> RANK = new Column<Student,Integer>("rank");
+		 static final Column<Student,String> NAME = new Column<Student,String>("name");
+		 static final Column<Student, Teacher> TEACHER = new Column<Student, Teacher>("teacher", Teacher.class );
 		
-		public static final Predicate<? super Student> IS_RANK_PAIR = new Predicate<Student>() {
+		 static final Predicate<? super Student> IS_RANK_PAIR = new Predicate<Student>() {
 			@Override
-			public boolean eval(Student t) {
+			public  boolean eval(Student t) {
 				return t.getRank()%2 == 0;
 			}
 			
@@ -44,7 +44,7 @@ public class Model {
 		}
 
 		@Override
-		public String toString() {
+		public  String toString() {
 			return "Student [rank=" + rank + ", name=" + name +", teacher's name=" + (teacher==null?"''":teacher.name)+ "]";
 		}
 		

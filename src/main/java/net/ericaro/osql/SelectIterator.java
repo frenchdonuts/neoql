@@ -2,13 +2,13 @@ package net.ericaro.osql;
 
 import java.util.Iterator;
 
-public class SelectIterator<T> implements Iterator<T> {
+ class SelectIterator<T> implements Iterator<T> {
 
 	Iterator<T> sub;
 	T next = null;
 	private Predicate<? super T> where;
 
-	public SelectIterator(Select<T> select, Table<T> table) {
+	 SelectIterator(Select<T> select, Table<T> table) {
 		super();
 		sub = table.iterator();
 		this.where = select.getWhere() ;
@@ -16,12 +16,12 @@ public class SelectIterator<T> implements Iterator<T> {
 	}
 
 	@Override
-	public boolean hasNext() {
+	public  boolean hasNext() {
 		return next != null;
 	}
 
 	@Override
-	public T next() {
+	public  T next() {
 		T current = next;
 		computeNext();
 		return current;
@@ -38,7 +38,7 @@ public class SelectIterator<T> implements Iterator<T> {
 	}
 
 	@Override
-	public void remove() {
+	public  void remove() {
 		throw new UnsupportedOperationException();
 
 	}

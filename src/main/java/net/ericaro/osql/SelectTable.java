@@ -1,18 +1,10 @@
 package net.ericaro.osql;
 
-import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
-
-import javax.swing.ListModel;
-import javax.swing.event.ListDataListener;
-
-import org.junit.runner.Computer;
 
 // TODO find a way to "free" this list from the database (kind of close)
 
-public class SelectTable<T> implements Table<T> {
+ class SelectTable<T> implements Table<T> {
 
 	private Table<T> table;
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
@@ -33,17 +25,17 @@ public class SelectTable<T> implements Table<T> {
 		// then add events to keep in touch with list content
 		table.addTableListener(new TableListener<T>() {
 
-			public void inserted(T row) {
+			public  void inserted(T row) {
 				if (where.eval(row))
 					events.fireInserted(row);
 			}
 
-			public void deleted(T row) {
+			public  void deleted(T row) {
 				if (where.eval(row))
 					events.fireDeleted(row);
 			}
 
-			public void updated(T old, T row) {
+			public  void updated(T old, T row) {
 				boolean was = where.eval(old);
 				boolean willbe = where.eval(row);
 				if (was && willbe) {
@@ -62,15 +54,15 @@ public class SelectTable<T> implements Table<T> {
 	}
 
 	@Override
-	public Iterator<T> iterator() {
+	public  Iterator<T> iterator() {
 		return new SelectIterator<T>(select, table);
 	}
 
-	public void addTableListener(TableListener<T> l) {
+	public  void addTableListener(TableListener<T> l) {
 		events.addTableListener(l);
 	}
 
-	public void removeTableListener(TableListener<T> l) {
+	public  void removeTableListener(TableListener<T> l) {
 		events.removeTableListener(l);
 	}
 

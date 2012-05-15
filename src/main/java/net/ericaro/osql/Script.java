@@ -6,38 +6,50 @@ import java.util.List;
 
 /**
  * Script made of a bunch of statements
+ * 
+ * Use as an EDSL starter.
+ * <code>
+   db.execute(new Script() {{
+			createTable(Test.class);
+		}});
+ * </code>
+ * 
+ * Note that script instance are stateless, they can be reused any time on any database
+ * 
  * @author eric
  *
  */
 public class Script {
 
-	List<Statement> statements = new ArrayList<Statement>();
+	private List<Statement> statements = new ArrayList<Statement>();
 	
-	public <T> CreateTable<T> createTable(Class<T> c) {
-		return schedule(DQL.createTable(c));
+	protected <T> CreateTable<T> createTable(Class<T> c) {
+		return schedule(new CreateTable<T>(c));
+		
+		
+		
 	}
 
 
-	public <T> InsertInto<T> insertInto(Class<T> table) {
-		return schedule(DQL.insertInto(table));
+	protected <T> InsertInto<T> insertInto(Class<T> table) {
+		return schedule(new InsertInto<T>(table));
 	}
 
-	public <T> Update<T> update(Class<T> table) {
-		return schedule(DQL.update(table));
+	protected <T> Update<T> update(Class<T> table) {
+		return schedule(new Update<T>(table));
 	}
 
-	public <T> DeleteFrom<T> deleteFrom(Class<T> table) {
-		return schedule(DQL.deleteFrom(table));
+	protected <T> DeleteFrom<T> deleteFrom(Class<T> table) {
+		return schedule(new DeleteFrom<T>(table));
 	}
 	
-	public <T> TableDef<T> table(Class<T> table){
+	protected <T> TableDef<T> table(Class<T> table){
 		return new ClassTableDef<T>(table);
 	}
 	
-	public <T> TableDef<T> select(TableDef<T> table, Predicate<? super T> where){
+	protected <T> TableDef<T> select(TableDef<T> table, Predicate<? super T> where){
 		return new SelectTableDef<T>(new Select<T>(table, where));
 	}
-	
 	
 	private <T extends Statement> T schedule(T stm) {
 		statements.add(stm);
@@ -45,9 +57,11 @@ public class Script {
 	}
 	
 	
-	
-	
-	public void executeOn(Database database) {
+	/** part of the visitor pattern
+	 * 
+	 * @param database
+	 */
+	void executeOn(Database database) {
 		for(Statement  stm: statements)
 			stm.executeOn(database);
 	}

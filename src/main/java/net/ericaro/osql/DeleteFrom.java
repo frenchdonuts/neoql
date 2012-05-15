@@ -1,6 +1,5 @@
 package net.ericaro.osql;
 
-
 /**
  * Delete From class statement
  * 
@@ -10,39 +9,40 @@ package net.ericaro.osql;
  */
 public class DeleteFrom<T> implements Statement {
 
-	Class<T> table;
-	private Predicate<? super T> where;
+	Class<T>						table;
+	private Predicate<? super T>	where;
 
-	public DeleteFrom(Class<T> table) {
+	DeleteFrom(Class<T> table) {
 		super();
 		this.table = table;
 	}
 
-	public DeleteFrom(Class<T> table, Predicate<? super T> where) {
+	DeleteFrom(Class<T> table, Predicate<? super T> where) {
 		this(table);
 		this.where = where;
 	}
 
-	public DeleteFrom<T> where(Predicate<? super T> where) {
+	DeleteFrom<T> where(Predicate<? super T> where) {
 		this.where = where;
 		return this;
 	}
 
-	public Class<T> getTable() {
+	Class<T> getTable() {
 		return table;
 	}
 
-	public void setTable(Class<T> table) {
+	void setTable(Class<T> table) {
 		this.table = table;
 	}
 
-	public Predicate<? super T> getWhere() {
+	Predicate<? super T> getWhere() {
 		return where;
 	}
 
-	public void setWhere(Predicate<? super T> where) {
+	void setWhere(Predicate<? super T> where) {
 		this.where = where;
 	}
+
 	@Override
 	public void executeOn(Database database) {
 		database.execute(this);

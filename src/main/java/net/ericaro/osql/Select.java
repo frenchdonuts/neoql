@@ -6,32 +6,32 @@ package net.ericaro.osql;
  *
  * @param <T>
  */
-public class Select<T> {
+ class Select<T> {
 
 	TableDef<T> table;
 	Predicate<? super T> where;
 	// TODO append sort, and group by
 
-	public Select(Class<T> table, Predicate<? super T> where) {
+	 Select(Class<T> table, Predicate<? super T> where) {
 		this(new ClassTableDef<T>(table) , where);
 	}
 
-	public Select(TableDef<T> table, Predicate<? super T> where) {
+	 Select(TableDef<T> table, Predicate<? super T> where) {
 		super();
 		this.table = table;
 		this.where = where;
 	}
 
-	public TableDef<T> getTable() {
+	 TableDef<T> getTable() {
 		return table;
 	}
 
 
-	public Predicate<? super T> getWhere() {
+	 Predicate<? super T> getWhere() {
 		return where;
 	}
 
-	public void setWhere(Predicate<? super T> where) {
+	 void setWhere(Predicate<? super T> where) {
 		this.where = where;
 	}
 	

@@ -1,6 +1,7 @@
 package net.ericaro.osql;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.AbstractListModel;
@@ -15,7 +16,7 @@ import javax.swing.ListModel;
  * 
  * @param <T>
  */
-public class TableList<T> extends AbstractListModel<T> implements ListModel<T> {
+public class TableList<T> extends AbstractListModel implements ListModel, Iterable<T> {
 
 	List<T> content = new ArrayList<T>();
 	private Table<T> table;
@@ -79,4 +80,13 @@ public class TableList<T> extends AbstractListModel<T> implements ListModel<T> {
 		super.fireIntervalRemoved(this, index, index);
 		return old;
 	}
+
+	@Override
+	public Iterator<T> iterator() {
+		return content.iterator();
+	}
+	
+	
+	
+	
 }

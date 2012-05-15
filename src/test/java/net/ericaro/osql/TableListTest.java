@@ -6,12 +6,11 @@ import net.ericaro.osql.Model.Teacher;
 
 import org.junit.Test;
 
-public class TableListTest {
+ class TableListTest {
 	
 	@Test
-	public void test() {
+	 void test() {
 
-		// TODO a smarter predicate system
 
 		Database database = new Database();
 		
@@ -25,7 +24,7 @@ public class TableListTest {
 		
 		
 		Select<Student> select = new Select<Student>(Student.class, Student.IS_RANK_PAIR );
-		TableList<Student> res = database.select(select); 
+		TableList<Student> res = new TableList<Student>(database.table(select)); 
 		
 		
 		s = new Script();
@@ -75,7 +74,7 @@ public class TableListTest {
 		s = new Script();
 		s.update(Teacher.class)
 		.set(Teacher.NAME, "atchoum")
-		.where(DQL.columnIs(Teacher.NAME, "prof") )
+		.where(DQL.is(Teacher.NAME, "prof") )
 		;
 		
 		s.executeOn(database);
@@ -88,13 +87,12 @@ public class TableListTest {
 
 	
 	
-	public static <T> void print(Database db, Class<T> table) {
-		Select<T> select = new Select<T>(table, DQL.True);
-		for (Object row : db.select(select) )
+	 static <T> void print(Database db, Class<T> table) {
+		for (Object row : db.select(table) )
 			System.out.println(row);
 	}
 	
-	public Predicate<Student> nameIs(final String name){
-		return DQL.columnIs(Student.NAME, name);
+	 Predicate<Student> nameIs(final String name){
+		return DQL.is(Student.NAME, name);
 	}
 }

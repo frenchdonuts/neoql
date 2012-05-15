@@ -1,7 +1,7 @@
 package net.ericaro.osql;
 
 
-public interface Statement {
+ interface Statement {
 
 	void executeOn(Database database);
 

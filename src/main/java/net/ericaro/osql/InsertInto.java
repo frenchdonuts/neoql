@@ -9,30 +9,30 @@ import java.util.Arrays;
  * @author eric
  * 
  */
-public class InsertInto<T> implements Statement {
+ public class InsertInto<T> implements Statement {
 
 	private Class<T> table;
 	private ColumnValuePair<T, ?>[] columnValuePairs = new ColumnValuePair[0];
 	T row;
 
-	public InsertInto(Class<T> type) {
+	 InsertInto(Class<T> type) {
 		super();
 		this.table = type;
 		build();
 	}
 
-	public <V> InsertInto<T> set(Column<T, V> col, V value) {
+	 public <V> InsertInto<T> set(Column<T, V> col, V value) {
 		int l = columnValuePairs.length;
 		columnValuePairs = Arrays.copyOf(columnValuePairs, l + 1);
 		columnValuePairs[l] = new ColumnValuePair<T, V>(col, value);
 		return this;
 	}
 
-	public Class<T> getTable() {
+	 Class<T> getTable() {
 		return table;
 	}
 
-	public ColumnValuePair<T, ?>[] getColumnValuePairs() {
+	 ColumnValuePair<T, ?>[] getColumnValuePairs() {
 		return columnValuePairs;
 	}
 
@@ -51,14 +51,14 @@ public class InsertInto<T> implements Statement {
 	 * 
 	 * @return
 	 */
-	public T getRow() {
-		for (ColumnValuePair<T, ?> s : columnValuePairs)
-			s.set(row);
+	 T getRow() {
+		for (ColumnValuePair s : columnValuePairs)
+			s.getColumn().set(row, s.getValue());
 		return row;
 	}
 	
 	@Override
-	public void executeOn(Database database) {
+	public  void executeOn(Database database) {
 		database.execute(this);
 	}
 }

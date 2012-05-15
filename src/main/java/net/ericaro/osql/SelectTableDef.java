@@ -1,20 +1,20 @@
 package net.ericaro.osql;
 
-public class SelectTableDef<T> implements TableDef<T> {
+ class SelectTableDef<T> implements TableDef<T> {
 
 	Select<T> select;
 
-	public SelectTableDef(Select<T> select) {
+	 SelectTableDef(Select<T> select) {
 		super();
 		this.select = select;
 	}
 
-	public Select<T> getSelect() {
+	 Select<T> getSelect() {
 		return select;
 	}
 
 	@Override
-	public Table<T> asTable(Database database) {
+	public  Table<T> asTable(Database database) {
 		return database.table(select);
 	}
 

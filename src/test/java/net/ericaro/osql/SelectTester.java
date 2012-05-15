@@ -1,39 +1,34 @@
 package net.ericaro.osql;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
-import javax.swing.Timer;
 
-import net.ericaro.osql.SystemTester.Student;
+ class SelectTester {
 
-public class SystemTester {
-
-	public static class Student {
-		public static Column<Student, String> NAME = new Column<Student, String>(
+	 static class Student {
+		 static Column<Student, String> NAME = new Column<Student, String>(
 				"name");
-		public static Column<Student, Boolean> SELECTED = new Column<Student, Boolean>(
+		 static Column<Student, Boolean> SELECTED = new Column<Student, Boolean>(
 				"selected");
+		
 		private String name;
 		private boolean selected;
 
 		@Override
-		public String toString() {
+		public  String toString() {
 			return "Student [name=" + name + ", selected=" + selected + "]";
 		}
 
 	}
 
-	public static class Model {
+	 static class Model {
 
 		Database db;
 		private Table<Student> selected;
 		private Table<Student> unselected;
 
-		public Model() {
+		 Model() {
 			super();
 			db = new Database();
 			new Script() {
@@ -46,27 +41,27 @@ public class SystemTester {
 
 			// create accessible queries
 			selected = db.tableFor(DQL.select(Student.class,
-					DQL.columnIs(Student.SELECTED, true)));
+					DQL.is(Student.SELECTED, true)));
 			unselected = db.tableFor(DQL.select(Student.class,
-					DQL.columnIs(Student.SELECTED, false)));
+					DQL.is(Student.SELECTED, false)));
 
 		}
 
-		public Iterable<Student> students() {
+		 Iterable<Student> students() {
 			return db.select(Student.class);
 		}
 
-		public void selectStudent(final Student t, final boolean selected) {
+		 void selectStudent(final Student t, final boolean selected) {
 			new Script() {
 				{
 					update(Student.class).set(Student.SELECTED, selected)
-							.where(DQL.columnIs(Student.NAME, t.name));
+							.where(DQL.is(Student.NAME, t.name));
 					executeOn(db);
 				}
 			};
 		}
 
-		public void addStudent(final String name, final boolean selected) {
+		 void addStudent(final String name, final boolean selected) {
 			new Script() {
 				{
 					insertInto(Student.class).set(Student.NAME, name).set(
@@ -77,12 +72,12 @@ public class SystemTester {
 		}
 	}
 
-	public static void main(String[] args) {
+	 static void main(String[] args) {
 		final Model m = new Model();
 
 		JFrame jf = new JFrame("tester");
-		JList<Student> left = new JList<Student>();
-		JList<Student> right = new JList<Student>();
+		JList left = new JList();
+		JList right = new JList();
 
 		// uses the observable queries selected, and unselected.
 		// uses a wrapper to listmodel to put it in a list model
@@ -98,7 +93,7 @@ public class SystemTester {
 		new Thread() {
 
 			@Override
-			public void run() {
+			public  void run() {
 
 				try {
 					sleep(5000);

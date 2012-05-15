@@ -6,19 +6,19 @@ import java.util.Map;
 
 public class Database {
 	// real class -> table mapping
-	private Map<Class, TableData>	tables	= new HashMap<Class, TableData>();	
+	private Map<Class, TableData> tables = new HashMap<Class, TableData>();
 
 	// TODO find a way to "free" this list from the database (kind of close)
 	// TODO append sort, and group by
 	// TODO implement every possible joins
 	// TODO rethink this all 'introspection' thing
-	
+
 	// ##########################################################################
 	// ACCESS TABLES OBJECT BEGIN
 	// ##########################################################################
-		
+
 	// tables are like select except that they keep in sync with the database content (observable) 
-	
+
 	public <T> TableData<T> tableFor(Class<T> table) {
 		return tables.get(table);
 	}
@@ -26,30 +26,40 @@ public class Database {
 	public <T> Table<T> tableFor(TableDef<T> table) {
 		return table.asTable(this);
 	}
+
 	
+	public <T> void drop(Class<T> table) {
+		tableFor(table).uninstall();
+		this.tables.remove(table);
+	}
+	
+	public <T> void drop(Table<T> table) {
+		table.drop(this);
+	}
+	
+
 	public <T> TableList<T> listFor(Class<T> table) {
 		return new TableList<T>(tableFor(table));
 	}
 
 	public <T> TableList<T> listFor(TableDef<T> table) {
 		return new TableList<T>(tableFor(table));
-	}	
-	
+	}
+
 	// ##########################################################################
 	// ACCESS TABLES OBJECT END
 	// ##########################################################################
 
-
-
 	// ##########################################################################
 	// EVENTS BEGIN
 	// ##########################################################################
-	
+
 	public <T> void addTableListener(Class<T> table, TableListener<T> listener) {
 		tableFor(table).addTableListener(listener);
 	}
 
-	public <T> void removeTableListener(Class<T> table, TableListener<T> listener) {
+	public <T> void removeTableListener(Class<T> table,
+			TableListener<T> listener) {
 		tableFor(table).removeTableListener(listener);
 	}
 
@@ -57,18 +67,19 @@ public class Database {
 		tableFor(table).addInternalTableListener(listener);
 	}
 
-	<T> void removeInternalTableListener(Class<T> table, TableListener<T> listener) {
+	<T> void removeInternalTableListener(Class<T> table,
+			TableListener<T> listener) {
 		tableFor(table).removeInternalTableListener(listener);
 	}
+
 	// ##########################################################################
 	// EVENTS END
 	// ##########################################################################
 
-
 	// ##########################################################################
 	// EXECUTE SCRIPT VISITOR PATTERN BEGIN
 	// ##########################################################################
-	
+
 	<T> void execute(CreateTable<T> createTable) {
 
 		Class<T> table = createTable.getTable();
@@ -76,12 +87,13 @@ public class Database {
 		this.tables.put(table, data);
 		data.install();
 	}
+
 	<T> void execute(DropTable<T> dropTable) {
 
 		Class<T> table = dropTable.getTable();
-		tableFor(table).uninstall();
-		this.tables.remove(table);
+		drop(tableFor(table));
 	}
+
 	<T> void execute(DeleteFrom<T> deleteFrom) {
 		TableData<T> data = tableFor(deleteFrom.getTable());
 		data.delete(deleteFrom.getWhere());
@@ -104,17 +116,17 @@ public class Database {
 				data.update(row, setters);
 			}
 	}
+
 	// ##########################################################################
 	// EXECUTE SCRIPT VISITOR PATTERN END
 	// ##########################################################################
 
-
 	// select do not get stick to the database, once the iterator is executed everything is over
-	
+
 	// ##########################################################################
 	// SELECTS BEGIN
 	// ##########################################################################
-		
+
 	public <T> Iterable<T> select(Class<T> table) {
 		return select(table, NeoQL.True);
 	}
@@ -124,31 +136,33 @@ public class Database {
 		return new Iterable<T>() {
 			@Override
 			public Iterator<T> iterator() {
-				return new SelectIterator<T>(select, tableFor(select.getTable()));
+				return new SelectIterator<T>(select,
+						tableFor(select.getTable()));
 			}
 		};
 	}
+
 	// ##########################################################################
 	// SELECTS END
 	// ##########################################################################
 
-
-	
-
 	// ##########################################################################
 	// VISITOR CALL BACK FOR TABLE CREATION BEGIN
 	// ##########################################################################
-		
 
 	<T> Table<T> table(Select<T> select) {
 		return new SelectTable<T>(select, tableFor(select.getTable()));
 	}
+
 	
-	<S,T> Table<T> table(MapSelect<S,T> select) {
-		SelectTable<S> table = new SelectTable<S>(select, tableFor(select.getTable()) );
-		return new MappedTable<S,T>(select.getMapper(), table );
+	
+
+	<S, T> Table<T> table(MapSelect<S, T> select) {
+		SelectTable<S> table = new SelectTable<S>(select,
+				tableFor(select.getTable()));
+		return new MappedTable<S, T>(select.getMapper(), table);
 	}
-	
+
 	<T> Table<T> table(Class<T> table) {
 		return tableFor(table);
 	}
@@ -158,16 +172,13 @@ public class Database {
 		Table<R> right = innerjoin.getRightTable().asTable(this);
 		return new InnerJoinTable<L, R>(left, right, innerjoin.getOn());
 	}
-	
-	
-		
+
 	// ##########################################################################
 	// VISITOR CALL BACK FOR TABLE CREATION END
 	// ##########################################################################
 
-
 	// execute a script
-	
+
 	public void execute(Script script) {
 		script.executeOn(this);
 	}

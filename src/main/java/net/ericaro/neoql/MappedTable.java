@@ -12,6 +12,7 @@ class MappedTable<S, T> implements Table<T> {
 	private Table<S> table;
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
 	private Mapping<S, T> mapping;
+	private TableListener<S> listener;
 
 	MappedTable(Mapper<S,T> mapper, Table<S> table) {
 		super();
@@ -22,7 +23,7 @@ class MappedTable<S, T> implements Table<T> {
 
 		// first fill the filtered table
 		// then add events to keep in touch with list content
-		table.addTableListener(new TableListener<S>() {
+		listener = new TableListener<S>() {
 
 			public void inserted(S row) {
 				events.fireInserted(mapping.push(row));
@@ -35,8 +36,18 @@ class MappedTable<S, T> implements Table<T> {
 			public void updated(S old, S row) {
 				events.fireUpdated(mapping.pop(old), mapping.push(row));
 			}
-		});
+		};
+		table.addTableListener(listener);
 	}
+
+	
+	
+	@Override
+	public void drop(Database from) {
+		table.removeTableListener(listener);
+	}
+
+
 
 	@Override
 	public Iterator<T> iterator() {

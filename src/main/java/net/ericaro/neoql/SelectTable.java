@@ -11,6 +11,7 @@ import java.util.Iterator;
 
 	private Predicate<? super T> where;
 	private Select<T> select;
+	private TableListener<T> listener;
 
 	SelectTable(Select<T> select, Table<T> table) {
 		super();
@@ -23,7 +24,7 @@ import java.util.Iterator;
 
 		// first fill the filtered table
 		// then add events to keep in touch with list content
-		table.addTableListener(new TableListener<T>() {
+		listener = new TableListener<T>() {
 
 			public  void inserted(T row) {
 				if (where.eval(row))
@@ -50,8 +51,18 @@ import java.util.Iterator;
 				// if we add a "sort" algorithm, I would need to "workout" this a little bit
 			}
 
-		});
+		};
+		table.addTableListener(listener);
 	}
+	
+	
+
+	@Override
+	public void drop(Database from) {
+		table.removeTableListener(listener);
+	}
+
+
 
 	@Override
 	public  Iterator<T> iterator() {

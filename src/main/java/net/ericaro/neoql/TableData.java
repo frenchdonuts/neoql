@@ -16,24 +16,25 @@ import java.util.Map.Entry;
  * @author eric
  * 
  */
- class TableData<T> implements Table<T> {
+class TableData<T> implements Table<T> {
 
-	TableListenerSupport<T>	events	 = new TableListenerSupport<T>();
-	TableListenerSupport<T>	internals= new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
+	TableListenerSupport<T> events = new TableListenerSupport<T>();
+	TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
 
-	Column<T, ?>[]			columns;
-	List<T>					rows	= new ArrayList<T>();
-	private Class<T>		type;
-	private Database		owner;
+	Column<T, ?>[] columns;
+	List<T> rows = new ArrayList<T>();
+	private Class<T> type;
+	private Database owner;
 	private TableListener[] columnListeners;
 
 	private static <T> Column<T, ?>[] columnsOf(Class<T> tableClass) {
 		List<Column<T, ?>> cols = new ArrayList<Column<T, ?>>();
 		try {
-			
+
 			for (Field f : tableClass.getDeclaredFields()) {
-				int mod = f.getModifiers(); 
-				if ( Modifier.isStatic(mod) && Modifier.isPublic(mod) && f.get(null) instanceof Column) {
+				int mod = f.getModifiers();
+				if (Modifier.isStatic(mod) && Modifier.isPublic(mod)
+						&& f.get(null) instanceof Column) {
 					// I should write stuff in the col object, it will be reused
 					Column<T, ?> col = (Column<T, ?>) f.get(null);
 					col.init(tableClass);
@@ -46,39 +47,51 @@ import java.util.Map.Entry;
 		return cols.toArray(new Column[cols.size()]);
 	}
 
-	 TableData(Database owner, Class<T> metadata) {
+	TableData(Database owner, Class<T> metadata) {
 		this.owner = owner;
 		this.type = metadata;
 		this.columns = columnsOf(metadata);
-		this.columnListeners= new TableListener[this.columns.length];
-		
+		this.columnListeners = new TableListener[this.columns.length];
 
 	}
 
+	
+	
+	@Override
+	public void drop(Database from) {
+		from.drop(type);
+	}
+
+
 	void install() {
-		int i=0;
+		int i = 0;
 		for (Column<T, ?> col : columns)
 			installColumn(i++, col);
 	}
+
 	void uninstall() {
-		int i=0;
+		int i = 0;
 		for (Column<T, ?> col : columns)
-			unInstallColumn(i++,col);
-		if (internals.getListenerCount() >0 )
-			throw new NeoQLException("Cannot drop table "+type.getName()+". Constraint violation(s)"+ internals);
-		
+			unInstallColumn(i++, col);
+		if (internals.getListenerCount() > 0)
+			throw new NeoQLException("Cannot drop table " + type.getName()
+					+ ". Constraint violation(s)" + internals);
+
 	}
 
 	private <V> void installColumn(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			ForeignKeyColumnListener<V> listener = new ForeignKeyColumnListener<V>(col);
+			ForeignKeyColumnListener<V> listener = new ForeignKeyColumnListener<V>(
+					col);
 			columnListeners[i] = listener;
-			owner.addInternalTableListener(col.getForeignTable(), listener );
+			owner.addInternalTableListener(col.getForeignTable(), listener);
 		}
 	}
+
 	private <V> void unInstallColumn(int i, Column<T, V> col) {
-		if (col.hasForeignKey()) 
-			owner.removeInternalTableListener(col.getForeignTable(), columnListeners[i]);
+		if (col.hasForeignKey())
+			owner.removeInternalTableListener(col.getForeignTable(),
+					columnListeners[i]);
 	}
 
 	public void addTableListener(TableListener<T> listener) {
@@ -86,37 +99,38 @@ import java.util.Map.Entry;
 	}
 
 	@Override
-	public  void removeTableListener(TableListener<T> listener) {
+	public void removeTableListener(TableListener<T> listener) {
 		events.removeTableListener(listener);
 	}
-	
-	 void addInternalTableListener(TableListener<T> listener) {
+
+	void addInternalTableListener(TableListener<T> listener) {
 		internals.addTableListener(listener);
 	}
-	
-	 void removeInternalTableListener(TableListener<T> listener) {
+
+	void removeInternalTableListener(TableListener<T> listener) {
 		internals.removeTableListener(listener);
 	}
 
 	class ForeignKeyColumnListener<V> implements TableListener<V> {
 
-		private Column<T, V>	col;
+		private Column<T, V> col;
 
-		 ForeignKeyColumnListener(Column<T, V> col) {
+		ForeignKeyColumnListener(Column<T, V> col) {
 			super();
 			this.col = col;
 		}
 
 		@Override
-		public  void updated(V oldValue, V newValue) {
+		public void updated(V oldValue, V newValue) {
 			if (oldValue == newValue)
 				return;
-			Update<T> update = new Update<T>(type, NeoQL.is(col, oldValue), new ColumnValuePair<T, V>(col, newValue));
+			Update<T> update = new Update<T>(type, NeoQL.is(col, oldValue),
+					new ColumnValuePair<T, V>(col, newValue));
 			owner.execute(update);
 		}
 
 		@Override
-		public  void deleted(V oldValue) {
+		public void deleted(V oldValue) {
 			// fire an exception ( forbidding the deleting if the value is in
 			// use ?
 			Predicate<T> inUse = NeoQL.is(col, oldValue);
@@ -125,11 +139,12 @@ import java.util.Map.Entry;
 		}
 
 		@Override
-		public  void inserted(V newRow) {}
+		public void inserted(V newRow) {}
 
 		@Override
 		public String toString() {
-			return "Foreign Key:"+type.getName()+ "."+col.fname+" → " + col.foreignTable.getName() +".";
+			return "Foreign Key:" + type.getName() + "." + col.fname + " → "
+					+ col.foreignTable.getName() + ".";
 		}
 	}
 
@@ -138,7 +153,7 @@ import java.util.Map.Entry;
 	}
 
 	@Override
-	public  Iterator<T> iterator() {
+	public Iterator<T> iterator() {
 		return rows.iterator();
 	}
 
@@ -147,7 +162,7 @@ import java.util.Map.Entry;
 		return row;
 	}
 
-	 T clone(T row) {
+	T clone(T row) {
 		try {
 			T clone = type.newInstance();
 			for (Column<T, ?> c : columns)
@@ -159,10 +174,10 @@ import java.util.Map.Entry;
 
 	}
 
-	Map<T, T>	updatedRows	= new HashMap<T, T>();
-	int			reintrant	= -1;
+	Map<T, T> updatedRows = new HashMap<T, T>();
+	int reintrant = -1;
 
-	 void update(T row, ColumnValuePair<T, ?>[] setters) {
+	void update(T row, ColumnValuePair<T, ?>[] setters) {
 		reintrant++;
 		try {
 			T clone;
@@ -180,16 +195,16 @@ import java.util.Map.Entry;
 			int i = rows.indexOf(row);
 			rows.set(i, clone);
 			internals.fireUpdated(row, clone); // fire updates only once per session
-			
-			
+
 		} finally {
 			reintrant--;
 			if (reintrant < 0) {
-				for (Entry<T,T> e : updatedRows.entrySet())
+				for (Entry<T, T> e : updatedRows.entrySet())
 					events.fireUpdated(e.getValue(), e.getKey());
 				updatedRows.clear();
 			} else
-				System.out.println("reintrant update: do not clean the updated set");
+				System.out
+						.println("reintrant update: do not clean the updated set");
 
 		}
 
@@ -199,7 +214,7 @@ import java.util.Map.Entry;
 		return rows.contains(value);
 	}
 
-	 void delete(Predicate<? super T> where) {
+	void delete(Predicate<? super T> where) {
 		for (ListIterator<T> i = rows.listIterator(); i.hasNext();) {
 			T row = i.next();
 			if (where.eval(row)) {
@@ -210,7 +225,7 @@ import java.util.Map.Entry;
 		}
 	}
 
-	 T insert(T row) {
+	T insert(T row) {
 		rows.add(row);
 		internals.fireInserted(row);
 		events.fireInserted(row);

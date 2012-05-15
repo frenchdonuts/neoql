@@ -5,57 +5,74 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
- class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
+class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 
-	Table<L>							left;
-	Table<R>							right;
-	Predicate<? super Pair<L, R>>		where;
-	List<Pair<L, R>>					data	= new ArrayList<Pair<L, R>>();
+	Table<L> left;
+	Table<R> right;
+	Predicate<? super Pair<L, R>> where;
+	List<Pair<L, R>> data = new ArrayList<Pair<L, R>>();
 
-	TableListenerSupport<Pair<L, R>>	events	= new TableListenerSupport<Pair<L, R>>();
+	TableListenerSupport<Pair<L, R>> events = new TableListenerSupport<Pair<L, R>>();
+	private TableListener<R> rightListener;
+	private TableListener<L> leftListener;
 
-	 InnerJoinTable(Table<L> left, Table<R> right, Predicate<? super Pair<L, R>> on) {
+	InnerJoinTable(Table<L> left, Table<R> right,
+			Predicate<? super Pair<L, R>> on) {
 		super();
 		this.left = left;
 		this.right = right;
 		this.where = on;
-		left.addTableListener(new TableListener<L>() {
+		leftListener = new TableListener<L>() {
 			@Override
 			public void updated(L oldRow, L newRow) {
 				leftUpdated(oldRow, newRow);
 			}
 
 			@Override
-			public  void deleted(L oldRow) {
+			public void deleted(L oldRow) {
 				leftDeleted(oldRow);
 			}
 
 			@Override
-			public  void inserted(L newRow) {
+			public void inserted(L newRow) {
 				leftInserted(newRow);
 			}
-		});
-		if (left != right) // auto join does not need right listener
-			right.addTableListener(new TableListener<R>() {
+		};
+		left.addTableListener(leftListener);
+		if (left != right) {
+			rightListener = new TableListener<R>() {
 				@Override
-				public  void updated(R oldRow, R newRow) {
+				public void updated(R oldRow, R newRow) {
 					rightUpdated(oldRow, newRow);
 				}
-	
+
 				@Override
-				public  void deleted(R oldRow) {
+				public void deleted(R oldRow) {
 					rightDeleted(oldRow);
 				}
-	
+
 				@Override
-				public  void inserted(R newRow) {
+				public void inserted(R newRow) {
 					rightInserted(newRow);
 				}
-			});
-		
+			};
+			right.addTableListener(rightListener);
+		}
+
 		for (Iterator<L> ileft = left.iterator(); ileft.hasNext();)
 			leftInserted(ileft.next()); // fake the insertion to fire events, and fill the table
 	}
+
+	
+	
+	@Override
+	public void drop(Database from) {
+		left.removeTableListener(leftListener);
+		if (rightListener != null) // might be null because auto join does not record twice
+			right.removeTableListener(rightListener);
+	}
+
+
 
 	private void leftInserted(L newRow) {
 		// there is a new lefter, need to reparse the right for matching pairs
@@ -79,8 +96,8 @@ import java.util.ListIterator;
 	}
 
 	private void leftUpdated(L oldRow, L newRow) {
-		System.out.println("left updated "+ oldRow + " -> "+ newRow );
-		
+		System.out.println("left updated " + oldRow + " -> " + newRow);
+
 		// handled what was
 		for (ListIterator<Pair<L, R>> i = data.listIterator(); i.hasNext();) {
 			Pair<L, R> old = i.next();
@@ -100,14 +117,13 @@ import java.util.ListIterator;
 		}
 		// handle every thing (including what was, but this case is skipped
 		for (R row : right) {
-			
+
 			boolean wasnt = false;
 			if (row == newRow) {
 				R r = (R) oldRow;
-				Pair<L, R> oldPair = new Pair<L, R>(oldRow,r); // this is the new pair that was in there
+				Pair<L, R> oldPair = new Pair<L, R>(oldRow, r); // this is the new pair that was in there
 				wasnt = !where.eval(oldPair);
-			}
-			else {
+			} else {
 				Pair<L, R> oldPair = new Pair<L, R>(oldRow, row); // this is the new pair that was in there
 				wasnt = !where.eval(oldPair);
 			}
@@ -146,8 +162,8 @@ import java.util.ListIterator;
 	}
 
 	private void rightUpdated(R oldRow, R newRow) {
-		System.out.println("right updated "+ oldRow + " -> "+ newRow );
-		
+		System.out.println("right updated " + oldRow + " -> " + newRow);
+
 		for (ListIterator<Pair<L, R>> i = data.listIterator(); i.hasNext();) {
 			Pair<L, R> old = i.next();
 
@@ -160,8 +176,8 @@ import java.util.ListIterator;
 					i.set(newPair);
 					events.fireUpdated(old, newPair);
 				} else {
-						i.remove();
-						events.fireDeleted(old); // act like if the new row was added
+					i.remove();
+					events.fireDeleted(old); // act like if the new row was added
 				}
 			}
 		}
@@ -174,13 +190,11 @@ import java.util.ListIterator;
 				L r = (L) oldRow;
 				Pair<L, R> oldPair = new Pair<L, R>(r, oldRow); // this is the new pair that was in there
 				wasnt = !where.eval(oldPair);
-			}
-			else {
+			} else {
 				Pair<L, R> oldPair = new Pair<L, R>(row, oldRow); // this is the new pair that was in there
 				wasnt = !where.eval(oldPair);
 			}
 
-			
 			if (wasnt) { // the case, was and will be was already handled
 				Pair<L, R> newPair = new Pair<L, R>(row, newRow); // this is the new pair that should be
 				boolean willbe = where.eval(newPair);
@@ -209,16 +223,16 @@ import java.util.ListIterator;
 	}
 
 	@Override
-	public  Iterator<Pair<L, R>> iterator() {
+	public Iterator<Pair<L, R>> iterator() {
 		return data.iterator();
 	}
 
 	void fill() {
 		Iterator<Pair<L, R>> i = new Iterator<Pair<L, R>>() {
-			Iterator<L>			ileft;
-			Iterator<R>			iright;
-			private Pair<L, R>	next;
-			private L			rleft	= null;
+			Iterator<L> ileft;
+			Iterator<R> iright;
+			private Pair<L, R> next;
+			private L rleft = null;
 
 			{
 				ileft = left.iterator();
@@ -229,11 +243,11 @@ import java.util.ListIterator;
 			}
 
 			@Override
-			public  boolean hasNext() {
+			public boolean hasNext() {
 				return next != null;
 			}
 
-			 void computeNext() {
+			void computeNext() {
 				do {
 					while (iright.hasNext()) {
 						R rnext = iright.next();
@@ -241,7 +255,7 @@ import java.util.ListIterator;
 						if (where.eval(next)) // based on outer right , left
 												// inner join the behaviour here
 												// is different
-							
+
 							// , in the meantime we use inner join
 							return;
 					}
@@ -253,14 +267,14 @@ import java.util.ListIterator;
 			}
 
 			@Override
-			public  Pair<L, R> next() {
+			public Pair<L, R> next() {
 				Pair<L, R> current = next;
 				computeNext();
 				return current;
 			}
 
 			@Override
-			public  void remove() {
+			public void remove() {
 				throw new UnsupportedOperationException();
 
 			}
@@ -271,12 +285,12 @@ import java.util.ListIterator;
 	}
 
 	@Override
-	public  void addTableListener(TableListener<Pair<L, R>> listener) {
+	public void addTableListener(TableListener<Pair<L, R>> listener) {
 		events.addTableListener(listener);
 	}
 
 	@Override
-	public  void removeTableListener(TableListener<Pair<L, R>> listener) {
+	public void removeTableListener(TableListener<Pair<L, R>> listener) {
 		events.addTableListener(listener);
 	}
 

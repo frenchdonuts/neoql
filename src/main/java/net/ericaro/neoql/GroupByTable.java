@@ -13,18 +13,6 @@ import net.ericaro.neoql.lang.Column;
  */
 class GroupByTable<S, T> implements Table<T> {
 	// TODO handle counts
-	// theory
-	/*
-	 * An equivalence relation is passed to this table. A Set is maintained with
-	 * a unique representant per equivalence classes.
-	 * 
-	 * row addition: the new row relation to every representant is evaluated. If
-	 * none is a match, then, the row is considered as the representant of a new
-	 * class. row update: considered as a remove then a add. row remove: if the
-	 * row is one of the representant, then one other representant is look for.
-	 * If one is found, it is used instead, if none is found the representent is
-	 * removed (and an event is fired)
-	 */
 
 	private Table<S> table;
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();

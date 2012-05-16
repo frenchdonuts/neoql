@@ -13,23 +13,39 @@ Hence, in NEOQL there are tables that are simply a list of objects.
 A top level manager (called a database) manages those lists|tables.
 It handles all the access, Create, Update Insert Delete, but also almost all SQL queries.
 
-The power of the solution is that there is no "good" way to model relations in pure object.
-There is always the case when you want to filter a list.
-For instance, in a GUI where you want to select items among existing ones, there are two way to do:
+The solution aim at answering a poorly adressed issue: middle man model.
+We all know of solution for the hardcore model ( ORM, database, JPA, JDO etc.).
+But we are left on our own to handle models between _Entities_ (i.e. objects extracted from the hardcore model) and the GUI.
+There is a necessary data buffer between both.
+The final GUI modeled everything the user can see:
 
-  - two lists: the selected ones, and the unselected ones. The problem with this models is that in the GUI you might need to display all the available ones.
+  - selection
+  - button status
+  - list order
+  - filtering
+  -  ...
+
+The hardcore model don't bother handling those stuff, fortunately.
+Nevertheless, GUI developper do have to bother, this is their job, and unfortunately there is no "good" tool to adress this issue.   
+NeoQL aim at solving this necessary in-between data-buffer.
+
+The idea behind NeoQL was to model data reusing the benefits of SQL-like data management.
+Because after at least 15 years of developping GUI we believe that there is no "good" way to model relations in pure object.
+relation tends to be modelled as collection attached to the object itself.
+Those collections should never be editable, for the same reason OOP recommends to hide data, and expose methods instead.
+If you expose those collections as editable collections, then in the GUI Controller you will add/remove items from those collections.
+Unfortunately, those collections are linked together by hidden relations (like selected list and unselected list, one beeing exlusive of the other).
+Therefore, the GUI Controller decides wich items goes where, therefore it's hard to change those list definition.
+So exposing editable list moves their definition into the client code, there is no need to explain why this is bad.
+
+Let's sum it up in a quick use case.
+In a GUI where you want to select items among existing ones, there are two way to do:
+
+  - two lists: the selected ones, and the unselected ones. You drag and drop items from one list to another.
   
-  - two lists: the selected ones, and all the availables.
+  - two lists: the selected ones, and all the availables. You display the available list, along with a check box and check selected items.
 
-The problem is that in the two solutions, you would not do the object operations (for instance selecting an items) in the same way:
 
-  - to select you need to move the items from one list to the other one.
-  
-  - to select you need to copy the items from the all list to the selected list. 
-
-This is just to describe the differences of implementations for just the selection behaviour.
-In a real life GUI there a hundreds of such small behaviours.
-But moving necessary
 Hence wrong silution
  
 

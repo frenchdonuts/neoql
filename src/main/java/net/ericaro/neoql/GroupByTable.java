@@ -1,6 +1,8 @@
 package net.ericaro.neoql;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Group By group items togethers
@@ -8,114 +10,88 @@ import java.util.Iterator;
  * 
  */
 class GroupByTable<S, T> implements Table<T> {
-// TODO handle counts
-// theory
-	/* (sorry for the french this is related to theories teached in french
-	 * une propriété collectivisante est définie, elle définie une class d'équivalence, et un des représentants est retourné
-	 * Mais pour pouvoir faire des count() il faut plus.
-	 * il faut des "projecteur" ( équivalent de columns) qui permettent d'accumuler les résultats.
-	 * le projecteur qui à un item associe son représentant est le projecteur par défaut ( dans select name () group by name
+	// TODO handle counts
+	// theory
+	/*
+	 * An equivalence relation is passed to this table. A Set is maintained with
+	 * a unique representant per equivalence classes.
 	 * 
-	 * mais d'autres projecteurs peuvent être employés: 
-	 *   - count()
-	 *   - max/min/avg ( column)
-	 *   en même temps cela ressemble fort à la feature (count, max ) usuelle, quel est le lien ?
-	 *   
-	 *   il ne peut s'agire du même count() 
-	 *   dans un cas count accumule, dans un représentant de la classe
-	 *   dans l'autre count accumule dans un unique représentant pout toute la query
-	 *   max: accumule le max dans un représentant
-	 *   => les représentant doivent être accumulable.
-	 *   
-	 *   accumulable => necessité de pouvoir maintenir le résultat pour l'ajout suppression update (équivalent à un ajout suppresion)
-	 *   => c'est chaud banane pour des trucs comme le "max" (on peut être amené à tout recalculer !)
-	 *   donc: l'accumulabilité peut aller d'un rapide et faible en mémoire ( count, average)
-	 *   à un potentiel énorme en mémoire (max )
-	 *   
-	 *   le principe est donc :
-	 *   ajout suppression update d'un item :
-	 *   ( group by c'est chaud banane aussi pour la mémoire, quand est ce qu'on tue un représentant d'une classe ?
-	 *   
-	 *   
-	 *   callback à un "accumulateur" f(accumulable )
-	 *   
-	 *   accumulateur : peut avoir une mémoire interne, peut avoir accès à l'intégralité de la table.
-	 *   il est acceptable de ne permettre qu'un set fixé d'accumulateur (intégré avec la table)
-	 *   
-	 *   
-	 *   et si :
-	 *   x = collect( row )
-	 *   if x not in keys:
-	 *   	keys.put(x, new Accu )
-	 *   	fire_added( accu ) # does not comply with the "imutable rule"
-	 *   keys.get(x).accumule( x )
-	 *   
-	 *   
-	 *   
-	  
-	  
+	 * row addition: the new row relation to every representant is evaluated. If
+	 * none is a match, then, the row is considered as the representant of a new
+	 * class. row update: considered as a remove then a add. row remove: if the
+	 * row is one of the representant, then one other representant is look for.
+	 * If one is found, it is used instead, if none is found the representent is
+	 * removed (and an event is fired)
 	 */
-	
+
 	private Table<S> table;
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
-	private Mapping<S, T> mapping;
+	private Column<S, T> groupByColumn;
 	private TableListener<S> listener;
+	private Set<T> equivalents = new HashSet<T>();
 
-	GroupByTable(Mapper<S,T> mapper, Table<S> table) {
+	GroupByTable(Column<S, T> groupBy, Table<S> table) {
 		super();
 		this.table = table;
-		this.mapping = new MapMapper<S, T>(mapper);
-		for (S s : table)
-			events.fireInserted(mapping.push(s)); // cause events to be fire just like if the items where appended
+		this.groupByColumn = groupBy;
 
 		// first fill the filtered table
 		// then add events to keep in touch with list content
 		listener = new TableListener<S>() {
 
 			public void inserted(S row) {
-				events.fireInserted(mapping.push(row));
+				T v = groupByColumn.get(row);
+				insertedByCol(v);
+			}
+
+			private void insertedByCol(T v) { // weird function, but this is the way I wan't to reuse it for the update, to avoid evaluatin get() twice
+				for (T eq : equivalents)
+					if (v.equals(eq))
+						return; // not real insertion
+
+				equivalents.add(v);// add and fire
+				events.fireInserted(v);
 			}
 
 			public void deleted(S row) {
-				events.fireDeleted(mapping.pop(row));
+				T v = groupByColumn.get(row);
+				deletedByCol(v);
+			}
+
+			private void deletedByCol(T v) {
+				for (S r : GroupByTable.this.table) {
+					if (v.equals(groupByColumn.get(r))) // I'm not alone, cool
+						return;
+				}
+				equivalents.remove(v);
+				events.fireDeleted(v);
 			}
 
 			public void updated(S old, S row) {
-				events.fireUpdated(mapping.pop(old), mapping.push(row));
+				T vold = groupByColumn.get(row);
+				T vnew = groupByColumn.get(row);
+
+				if (vold.equals(vnew))
+					return; // the new one is equivalent to the previous one, hence equivalent to others.
+				deletedByCol(vold);
+				insertedByCol(vnew);
 			}
 		};
-		table.addTableListener(listener);
+
+		// fake call to fireinserted
+		for (S r : table)
+			listener.inserted(r); // cause events to be fire just like if the items where appended
+		table.addTableListener(listener); // register to actual changes after the loop so that no changes can be tested twice
 	}
 
-	
-	
 	@Override
 	public void drop(Database from) {
 		table.removeTableListener(listener);
 	}
 
-
-
 	@Override
 	public Iterator<T> iterator() {
-		final Iterator<S> i = table.iterator();
-		return new Iterator<T>() {
-			@Override
-			public boolean hasNext() {
-				return i.hasNext();
-			}
-
-			@Override
-			public T next() {
-				return mapping.peek(i.next());
-			}
-
-			@Override
-			public void remove() {
-				i.remove();
-			}
-
-		};
+		return equivalents.iterator();
 	}
 
 	public void addTableListener(TableListener<T> l) {
@@ -125,5 +101,4 @@ class GroupByTable<S, T> implements Table<T> {
 	public void removeTableListener(TableListener<T> l) {
 		events.removeTableListener(l);
 	}
-
 }

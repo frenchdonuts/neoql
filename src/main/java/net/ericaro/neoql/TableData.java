@@ -27,30 +27,12 @@ class TableData<T> implements Table<T> {
 	private Database owner;
 	private TableListener[] columnListeners;
 
-	private static <T> Column<T, ?>[] columnsOf(Class<T> tableClass) {
-		List<Column<T, ?>> cols = new ArrayList<Column<T, ?>>();
-		try {
+	
 
-			for (Field f : tableClass.getDeclaredFields()) {
-				int mod = f.getModifiers();
-				if (Modifier.isStatic(mod) && Modifier.isPublic(mod)
-						&& f.get(null) instanceof Column) {
-					// I should write stuff in the col object, it will be reused
-					Column<T, ?> col = (Column<T, ?>) f.get(null);
-					col.init(tableClass);
-					cols.add(col);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return cols.toArray(new Column[cols.size()]);
-	}
-
-	TableData(Database owner, Class<T> metadata) {
+	TableData(Database owner, CreateTable<T> create) {
 		this.owner = owner;
-		this.type = metadata;
-		this.columns = columnsOf(metadata);
+		this.type = create.getTable();
+		this.columns = create.getColumns();
 		this.columnListeners = new TableListener[this.columns.length];
 
 	}

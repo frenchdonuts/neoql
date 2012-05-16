@@ -83,7 +83,7 @@ public class Database {
 	<T> void execute(CreateTable<T> createTable) {
 
 		Class<T> table = createTable.getTable();
-		TableData<T> data = new TableData<T>(this, table);
+		TableData<T> data = new TableData<T>(this, createTable);
 		this.tables.put(table, data);
 		data.install();
 	}

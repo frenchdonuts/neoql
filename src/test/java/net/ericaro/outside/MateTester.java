@@ -4,14 +4,14 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
 
-import net.ericaro.neoql.Column;
-import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.Pair;
 import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.Script;
 import net.ericaro.neoql.TableDef;
 import net.ericaro.neoql.TableList;
+import net.ericaro.neoql.lang.Column;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.lang.Script;
 
 public class MateTester {
 

@@ -1,16 +1,17 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.lang;
 
 import java.lang.reflect.Field;
 
-public class Column<T, V> implements Mapper<T,V>{
+import net.ericaro.neoql.Mapper;
+
+public class Column<T, V> implements Mapper<T, V> {
 
 	Class<V> foreignTable;
-	
+
 	// that's part of the 
 	Field field;
 	String fname;
 
-	
 	public Column(String fname) {
 		super();
 		this.fname = fname;
@@ -21,19 +22,18 @@ public class Column<T, V> implements Mapper<T,V>{
 		this.foreignTable = foreignTable;
 	}
 
-	public void copy(T src, T target ) {
-		set(target, get(src) );
+	public void copy(T src, T target) {
+		set(target, get(src));
 	}
-	
+
 	void set(T src, V value) {
 		try {
 			field.set(src, value);
 		} catch (Exception e) {
-			throw new RuntimeException("wrong field",e);
+			throw new RuntimeException("wrong field", e);
 		}
 	}
-	
-	
+
 	@Override
 	public V map(T source) {
 		return get(source);
@@ -43,7 +43,7 @@ public class Column<T, V> implements Mapper<T,V>{
 		try {
 			return (V) field.get(src);
 		} catch (Exception e) {
-			throw new RuntimeException("wrong field",e);
+			throw new RuntimeException("wrong field", e);
 		}
 	}
 
@@ -54,13 +54,13 @@ public class Column<T, V> implements Mapper<T,V>{
 	public boolean hasForeignKey() {
 		return foreignTable != null;
 	}
-	
-	public void init(Class<T> tableClass) throws NoSuchFieldException, SecurityException {
+
+	public void init(Class<T> tableClass) throws NoSuchFieldException,
+			SecurityException {
 		if (field == null) {// not init
 			field = tableClass.getDeclaredField(fname);
 			field.setAccessible(true);
 		}
 	}
-	
-	
+
 }

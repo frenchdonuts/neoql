@@ -3,16 +3,16 @@ package net.ericaro.neoql;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.ericaro.neoql.Column;
-import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.InnerJoinTable;
 import net.ericaro.neoql.Pair;
 import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.Script;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableData;
 import net.ericaro.neoql.TableDef;
+import net.ericaro.neoql.lang.Column;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.lang.Script;
 
 import org.junit.Test;
 
@@ -59,18 +59,19 @@ public  class InnerJoinTableTest {
 	@Test public void testSimple() {
 		
 		Database db = new Database();
-		Script s = new Script();
-		s.createTable(EntityA.class);
-		s.createTable(EntityB.class);
 		
-		s.insertInto(EntityA.class).set(EntityA.CODE, "alpha").set(EntityA.NAME, "toto");
-		s.insertInto(EntityA.class).set(EntityA.CODE, "beta").set(EntityA.NAME, "titi");
-		s.insertInto(EntityA.class).set(EntityA.CODE, "gamma").set(EntityA.NAME, "tutu");
+		db.execute(
+		new Script() {{
+		createTable(EntityA.class);
+		createTable(EntityB.class);
 		
-		s.insertInto(EntityB.class).set(EntityB.CODE, "alpha").set(EntityB.NAME, "btoto");
-		s.insertInto(EntityB.class).set(EntityB.CODE, "beta").set( EntityB.NAME, "btiti");
+		insertInto(EntityA.class).set(EntityA.CODE, "alpha").set(EntityA.NAME, "toto");
+		insertInto(EntityA.class).set(EntityA.CODE, "beta").set(EntityA.NAME, "titi");
+		insertInto(EntityA.class).set(EntityA.CODE, "gamma").set(EntityA.NAME, "tutu");
 		
-		s.executeOn(db);
+		insertInto(EntityB.class).set(EntityB.CODE, "alpha").set(EntityB.NAME, "btoto");
+		insertInto(EntityB.class).set(EntityB.CODE, "beta").set( EntityB.NAME, "btiti");
+		}});
 		
 		Table<EntityA> left  = db.tableFor(EntityA.class);
 		Table<EntityB> right = db.tableFor(EntityB.class);
@@ -92,9 +93,9 @@ public  class InnerJoinTableTest {
 		for (Pair<EntityA, EntityB> p: t)
 			System.out.println(p);
 		
-		s= new Script();
-		s.update(EntityA.class).set(EntityA.CODE, "alpha2").where(NeoQL.is(EntityA.CODE, "alpha"));
-		s.executeOn(db);
+		db.execute(new Script() {{
+			update(EntityA.class).set(EntityA.CODE, "alpha2").where(NeoQL.is(EntityA.CODE, "alpha"));
+		}});
 		
 		System.out.println("ENITY A UPDATED ##################");
 		for(EntityA a: left)

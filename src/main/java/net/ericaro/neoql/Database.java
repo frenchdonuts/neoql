@@ -4,12 +4,24 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import net.ericaro.neoql.lang.ColumnValuePair;
+import net.ericaro.neoql.lang.CreateTable;
+import net.ericaro.neoql.lang.DeleteFrom;
+import net.ericaro.neoql.lang.DropTable;
+import net.ericaro.neoql.lang.GroupBySelect;
+import net.ericaro.neoql.lang.InnerJoin;
+import net.ericaro.neoql.lang.InsertInto;
+import net.ericaro.neoql.lang.MapSelect;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.lang.Script;
+import net.ericaro.neoql.lang.Select;
+import net.ericaro.neoql.lang.Update;
+
 public class Database {
 	// real class -> table mapping
 	private Map<Class, TableData> tables = new HashMap<Class, TableData>();
 
-	// TODO find a way to "free" this list from the database (kind of close)
-	// TODO append sort, and group by
+	// TODO append sort
 	// TODO implement every possible joins
 	// TODO rethink this all 'introspection' thing
 
@@ -80,7 +92,7 @@ public class Database {
 	// EXECUTE SCRIPT VISITOR PATTERN BEGIN
 	// ##########################################################################
 
-	<T> void execute(CreateTable<T> createTable) {
+	public <T> void execute(CreateTable<T> createTable) {
 
 		Class<T> table = createTable.getTable();
 		TableData<T> data = new TableData<T>(this, createTable);
@@ -88,29 +100,28 @@ public class Database {
 		data.install();
 	}
 
-	<T> void execute(DropTable<T> dropTable) {
+	public <T> void execute(DropTable<T> dropTable) {
 
 		Class<T> table = dropTable.getTable();
 		drop(tableFor(table));
 	}
 
-	<T> void execute(DeleteFrom<T> deleteFrom) {
+	public <T> void execute(DeleteFrom<T> deleteFrom) {
 		TableData<T> data = tableFor(deleteFrom.getTable());
 		data.delete(deleteFrom.getWhere());
 	}
 
-	<T> T execute(InsertInto<T> insertInto) {
+	public <T> T execute(InsertInto<T> insertInto) {
 		TableData<T> data = tableFor(insertInto.getTable());
 		return data.insert(insertInto.getRow());
 
 	}
 
-	<T> void execute(Update<T> update) {
-		Class<T> table = update.getType();
+	public <T> void execute(Update<T> update) {
+		Class<T> table = update.getTable();
 		TableData<T> data = tableFor(table);
-
-		Predicate<? super T> where = update.getWhere();
 		ColumnValuePair<T, ?>[] setters = update.getColumnValuePairs();
+		Predicate<? super T> where = update.getWhere();
 		for (T row : data)
 			if (where.eval(row)) {
 				data.update(row, setters);
@@ -131,13 +142,11 @@ public class Database {
 		return select(table, NeoQL.True);
 	}
 
-	public <T> Iterable<T> select(Class<T> table, Predicate<? super T> where) {
-		final Select<T> select = new Select<T>(table, where);
+	public <T> Iterable<T> select(final Class<T> table, final Predicate<? super T> where) {
 		return new Iterable<T>() {
 			@Override
 			public Iterator<T> iterator() {
-				return new SelectIterator<T>(select,
-						tableFor(select.getTable()));
+				return new SelectIterator<T>(tableFor(table), where);
 			}
 		};
 	}
@@ -150,24 +159,25 @@ public class Database {
 	// VISITOR CALL BACK FOR TABLE CREATION BEGIN
 	// ##########################################################################
 
-	<T> Table<T> table(Select<T> select) {
-		return new SelectTable<T>(select, tableFor(select.getTable()));
-	}
-
-	
-	
-
-	<S, T> Table<T> table(MapSelect<S, T> select) {
-		SelectTable<S> table = new SelectTable<S>(select,
-				tableFor(select.getTable()));
-		return new MappedTable<S, T>(select.getMapper(), table);
-	}
-
-	<T> Table<T> table(Class<T> table) {
+	public <T> Table<T> table(Class<T> table) {
 		return tableFor(table);
 	}
+	
+	public <T> Table<T> table(Select<T> select) {
+		return new SelectTable<T>(tableFor(select.getTable()) , select.getWhere());
+	}
 
-	<L, R> Table<Pair<L, R>> table(InnerJoin<L, R> innerjoin) {
+	public <S, T> Table<T> table(MapSelect<S, T> select) {
+		SelectTable<S> table = new SelectTable<S>(tableFor(select.getTable()) , select.getWhere());
+		return new MappedTable<S, T>(select.getMapper(), table);
+	}
+	public <S, T> Table<T> table(GroupBySelect<S, T> select) {
+		SelectTable<S> table = new SelectTable<S>(tableFor(select.getTable()), select.getWhere());
+		return new GroupByTable<S, T>(select.getGroupBy(), table);
+	}
+
+
+	public <L, R> Table<Pair<L, R>> table(InnerJoin<L, R> innerjoin) {
 		Table<L> left = innerjoin.getLeftTable().asTable(this);
 		Table<R> right = innerjoin.getRightTable().asTable(this);
 		return new InnerJoinTable<L, R>(left, right, innerjoin.getOn());

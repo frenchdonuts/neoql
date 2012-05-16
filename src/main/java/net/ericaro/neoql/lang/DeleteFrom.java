@@ -1,4 +1,7 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.lang;
+
+import net.ericaro.neoql.Database;
+import net.ericaro.neoql.Predicate;
 
 /**
  * Delete From class statement
@@ -9,8 +12,8 @@ package net.ericaro.neoql;
  */
 public class DeleteFrom<T> implements Statement {
 
-	Class<T>						table;
-	private Predicate<? super T>	where;
+	Class<T> table;
+	private Predicate<? super T> where;
 
 	DeleteFrom(Class<T> table) {
 		super();
@@ -27,20 +30,12 @@ public class DeleteFrom<T> implements Statement {
 		return this;
 	}
 
-	Class<T> getTable() {
+	public Class<T> getTable() {
 		return table;
 	}
 
-	void setTable(Class<T> table) {
-		this.table = table;
-	}
-
-	Predicate<? super T> getWhere() {
+	public Predicate<? super T> getWhere() {
 		return where;
-	}
-
-	void setWhere(Predicate<? super T> where) {
-		this.where = where;
 	}
 
 	@Override

@@ -8,10 +8,10 @@ import java.util.Iterator;
 	T next = null;
 	private Predicate<? super T> where;
 
-	 SelectIterator(Select<T> select, Table<T> table) {
+	 SelectIterator(Table<T> table, Predicate<? super T> where) {
 		super();
 		sub = table.iterator();
-		this.where = select.getWhere() ;
+		this.where = where;
 		computeNext();
 	}
 

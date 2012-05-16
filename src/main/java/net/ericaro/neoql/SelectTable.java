@@ -10,14 +10,12 @@ import java.util.Iterator;
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
 
 	private Predicate<? super T> where;
-	private Select<T> select;
 	private TableListener<T> listener;
 
-	SelectTable(Select<T> select, Table<T> table) {
+	SelectTable(Table<T> table, Predicate<? super T> where) {
 		super();
 		this.table = table;
-		this.select = select;
-		where = select.getWhere();
+		this.where  = where;
 		for (T t : table)
 			if (where.eval(t))
 				events.fireInserted(t); // cause events to be fire just like if the items where appended
@@ -27,18 +25,18 @@ import java.util.Iterator;
 		listener = new TableListener<T>() {
 
 			public  void inserted(T row) {
-				if (where.eval(row))
+				if (where(row))
 					events.fireInserted(row);
 			}
 
 			public  void deleted(T row) {
-				if (where.eval(row))
+				if (where(row))
 					events.fireDeleted(row);
 			}
 
 			public  void updated(T old, T row) {
-				boolean was = where.eval(old);
-				boolean willbe = where.eval(row);
+				boolean was = where(old);
+				boolean willbe = where(row);
 				if (was && willbe) {
 					// it was before, it will be after too, I need to update the content
 					events.fireUpdated(old, row);
@@ -55,7 +53,9 @@ import java.util.Iterator;
 		table.addTableListener(listener);
 	}
 	
-	
+	protected boolean where(T row) {
+		return where.eval(row);
+	}
 
 	@Override
 	public void drop(Database from) {
@@ -66,7 +66,7 @@ import java.util.Iterator;
 
 	@Override
 	public  Iterator<T> iterator() {
-		return new SelectIterator<T>(select, table);
+		return new SelectIterator<T>(table, where);
 	}
 
 	public  void addTableListener(TableListener<T> l) {

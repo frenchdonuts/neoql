@@ -1,7 +1,5 @@
 package net.ericaro.neoql;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,13 +8,20 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import net.ericaro.neoql.lang.Column;
+import net.ericaro.neoql.lang.ColumnValuePair;
+import net.ericaro.neoql.lang.CreateTable;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.lang.Script;
+import net.ericaro.neoql.lang.Update;
+
 /**
  * basic table, essentially a metadata and an iterable of Object[]
  * 
  * @author eric
  * 
  */
-class TableData<T> implements Table<T> {
+public class TableData<T> implements Table<T> {
 
 	TableListenerSupport<T> events = new TableListenerSupport<T>();
 	TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
@@ -103,12 +108,12 @@ class TableData<T> implements Table<T> {
 		}
 
 		@Override
-		public void updated(V oldValue, V newValue) {
+		public void updated(final V oldValue, final V newValue) {
 			if (oldValue == newValue)
 				return;
-			Update<T> update = new Update<T>(type, NeoQL.is(col, oldValue),
-					new ColumnValuePair<T, V>(col, newValue));
-			owner.execute(update);
+			owner.execute(new Script() {{
+				update(type).where(NeoQL.is(col, oldValue) ).set(col, newValue);
+			}});
 		}
 
 		@Override
@@ -125,8 +130,8 @@ class TableData<T> implements Table<T> {
 
 		@Override
 		public String toString() {
-			return "Foreign Key:" + type.getName() + "." + col.fname + " → "
-					+ col.foreignTable.getName() + ".";
+			return "Foreign Key:" + type.getName() +  " → "
+					+ col.getForeignTable().getName() + ".";
 		}
 	}
 
@@ -171,7 +176,7 @@ class TableData<T> implements Table<T> {
 			}
 
 			for (ColumnValuePair s : setters) {
-				s.column.set(clone, s.value);
+				s.set(clone);
 			}
 
 			int i = rows.indexOf(row);

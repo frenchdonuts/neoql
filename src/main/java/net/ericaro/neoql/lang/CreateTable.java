@@ -1,9 +1,11 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.lang;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+
+import net.ericaro.neoql.Database;
 
 /**
  * a Create Table Statement
@@ -43,11 +45,9 @@ public class CreateTable<T> implements Statement {
 		columns = columnsOf(table);
 	}
 
-	Class<T> getTable() {
+	public Class<T> getTable() {
 		return table;
 	}
-
-	
 
 	public Column<T, ?>[] getColumns() {
 		return columns;

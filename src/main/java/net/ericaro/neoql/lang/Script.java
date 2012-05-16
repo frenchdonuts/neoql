@@ -1,7 +1,9 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.lang;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import net.ericaro.neoql.Database;
 
 
 /**
@@ -19,39 +21,27 @@ import java.util.List;
  * @author eric
  *
  */
-public class Script {
+public class Script implements Statement{
 
 	private List<Statement> statements = new ArrayList<Statement>();
 	
 	protected <T> CreateTable<T> createTable(Class<T> c) {
-		return schedule(new CreateTable<T>(c));
-		
-		
-		
+		return exec(new CreateTable<T>(c));
 	}
 
-
 	protected <T> InsertInto<T> insertInto(Class<T> table) {
-		return schedule(new InsertInto<T>(table));
+		return exec(new InsertInto<T>(table));
 	}
 
 	protected <T> Update<T> update(Class<T> table) {
-		return schedule(new Update<T>(table));
+		return exec(new Update<T>(table));
 	}
 
 	protected <T> DeleteFrom<T> deleteFrom(Class<T> table) {
-		return schedule(new DeleteFrom<T>(table));
+		return exec(new DeleteFrom<T>(table));
 	}
 	
-	protected <T> TableDef<T> table(Class<T> table){
-		return new ClassTableDef<T>(table);
-	}
-	
-	protected <T> TableDef<T> select(TableDef<T> table, Predicate<? super T> where){
-		return new SelectTableDef<T>(new Select<T>(table, where));
-	}
-	
-	private <T extends Statement> T schedule(T stm) {
+	protected <T extends Statement> T exec(T stm) {
 		statements.add(stm);
 		return stm;
 	}
@@ -61,7 +51,7 @@ public class Script {
 	 * 
 	 * @param database
 	 */
-	void executeOn(Database database) {
+	public void executeOn(Database database) {
 		for(Statement  stm: statements)
 			stm.executeOn(database);
 	}

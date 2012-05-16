@@ -1,13 +1,11 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.lang;
 
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
+import javax.swing.ListModel;
 
-import net.ericaro.neoql.Column;
-import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.Script;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableList;
 
@@ -32,8 +30,8 @@ import net.ericaro.neoql.TableList;
 	 static class Model {
 
 		Database db;
-		private Table<Student> selected;
-		private Table<Student> unselected;
+		private TableList<Student> selected;
+		private TableList<Student> unselected;
 
 		 Model() {
 			super();
@@ -47,9 +45,9 @@ import net.ericaro.neoql.TableList;
 			}; // init script
 
 			// create accessible queries
-			selected = db.tableFor(NeoQL.select(Student.class,
+			selected = db.listFor(NeoQL.select(Student.class,
 					NeoQL.is(Student.SELECTED, true)));
-			unselected = db.tableFor(NeoQL.select(Student.class,
+			unselected = db.listFor(NeoQL.select(Student.class,
 					NeoQL.is(Student.SELECTED, false)));
 
 		}
@@ -88,8 +86,8 @@ import net.ericaro.neoql.TableList;
 
 		// uses the observable queries selected, and unselected.
 		// uses a wrapper to listmodel to put it in a list model
-		left.setModel(new TableList<Student>(m.selected)); 
-		right.setModel(new TableList<Student>(m.unselected));
+		left.setModel(m.selected); 
+		right.setModel(m.unselected);
 
 		jf.getContentPane().add(
 				new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, right));

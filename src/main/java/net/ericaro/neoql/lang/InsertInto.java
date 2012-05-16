@@ -1,7 +1,9 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.lang;
 
 import java.util.Arrays;
 
+import net.ericaro.neoql.Database;
+import net.ericaro.neoql.NeoQLException;
 
 /**
  * INSERT INTO table set column = value, column= value
@@ -9,36 +11,37 @@ import java.util.Arrays;
  * @author eric
  * 
  */
- public class InsertInto<T> implements Statement {
+public class InsertInto<T> implements Statement {
 
 	private Class<T> table;
 	private ColumnValuePair<T, ?>[] columnValuePairs = new ColumnValuePair[0];
 	T row;
 
-	 InsertInto(Class<T> type) {
+	InsertInto(Class<T> type) {
 		super();
 		this.table = type;
-		build();
 	}
 
-	 public <V> InsertInto<T> set(Column<T, V> col, V value) {
+	public <V> InsertInto<T> set(Column<T, V> col, V value) {
 		int l = columnValuePairs.length;
 		columnValuePairs = Arrays.copyOf(columnValuePairs, l + 1);
 		columnValuePairs[l] = new ColumnValuePair<T, V>(col, value);
 		return this;
 	}
 
-	 Class<T> getTable() {
+	public Class<T> getTable() {
 		return table;
 	}
 
-	 ColumnValuePair<T, ?>[] getColumnValuePairs() {
+	ColumnValuePair<T, ?>[] getColumnValuePairs() {
 		return columnValuePairs;
 	}
 
-	T build() {
+	public T build() {
 		try {
 			row = table.newInstance();
+			for (ColumnValuePair s : columnValuePairs)
+				s.getColumn().set(row, s.getValue());
 			return row;
 		} catch (Exception e) {
 			throw new NeoQLException(
@@ -47,18 +50,20 @@ import java.util.Arrays;
 
 	}
 
-	/** Return the row that will be inserted. The insertion is made actually when this statement is executed on a database
+	/**
+	 * Return the row that will be inserted. The insertion is made actually when
+	 * this statement is executed on a database
 	 * 
 	 * @return
 	 */
-	 T getRow() {
-		for (ColumnValuePair s : columnValuePairs)
-			s.getColumn().set(row, s.getValue());
+	public T getRow() {
+		if (row == null)
+			build();
 		return row;
 	}
-	
+
 	@Override
-	public  void executeOn(Database database) {
+	public void executeOn(Database database) {
 		database.execute(this);
 	}
 }

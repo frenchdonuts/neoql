@@ -1,7 +1,7 @@
 package net.ericaro.neoql;
 
-import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Predicate;
+import net.ericaro.neoql.lang.Column;
 
 
 public class Model {

@@ -21,9 +21,10 @@ public class Database {
 	// real class -> table mapping
 	private Map<Class, TableData> tables = new HashMap<Class, TableData>();
 
-	// TODO append sort
+	// TODO append sort in EDSL
 	// TODO implement every possible joins
 	// TODO rethink this all 'introspection' thing
+	// TODO do some stress test
 
 	// ##########################################################################
 	// ACCESS TABLES OBJECT BEGIN

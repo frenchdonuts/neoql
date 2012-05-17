@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import net.ericaro.neoql.lang.ClassTableDef;
 import net.ericaro.neoql.lang.ColumnValuePair;
 import net.ericaro.neoql.lang.CreateTable;
 import net.ericaro.neoql.lang.DeleteFrom;
@@ -22,7 +21,7 @@ public class Database {
 	// real class -> table mapping
 	private Map<Class, TableData> tables = new HashMap<Class, TableData>();
 
-	// TODO append sort
+	// TODO append sort in EDSL
 	// TODO implement every possible joins
 	// TODO rethink this all 'introspection' thing:
 	//     - columns are passed to the create table statement
@@ -30,7 +29,7 @@ public class Database {
 	// TODO find a way to express the definition of a singleton 
 	//      for instance THE selected Item, so that it can be observed in the app, and reused
 	// TODO oops, found a bug in the drop stuff. If I create a table to serve another one, I need to drop it too. (for instance select(mapper) creates a normal select, then mapper table, hence the "normal select is never deleted
-
+// TODO do some stress test
 	// ##########################################################################
 	// ACCESS TABLES OBJECT BEGIN
 	// ##########################################################################
@@ -144,32 +143,16 @@ public class Database {
 	// SELECTS BEGIN
 	// ##########################################################################
 
-	public <T> Iterator<T> iterator(Class<T> table) {
-		
-		return new ClassTableDef<T>(table).iterator(this);// reverse visitor pattern
+	public <T> Iterable<T> select(Class<T> table) {
+		return select(table, NeoQL.True);
 	}
-	public <T> Iterator<T> iterator(final TableDef<T> table) {
-		return table.iterator(this);// reverse visitor pattern
-	}
-	
-	public <T> Iterable<T> select(final Class<T> table) {
-		return new Iterable<T>() {
 
+	public <T> Iterable<T> select(final Class<T> table, final Predicate<? super T> where) {
+		return new Iterable<T>() {
 			@Override
 			public Iterator<T> iterator() {
-				return Database.this.iterator(table);
+				return new SelectIterator<T>(tableFor(table), where);
 			}
-			
-		};
-	}
-	public <T> Iterable<T> select(final TableDef<T> table) {
-		return new Iterable<T>() {
-
-			@Override
-			public Iterator<T> iterator() {
-				return Database.this.iterator(table);
-			}
-			
 		};
 	}
 
@@ -194,7 +177,8 @@ public class Database {
 		return new MappedTable<S, T>(select.getMapper(), table);
 	}
 	public <S, T> Table<T> table(GroupBySelect<S, T> select) {
-		return new GroupByTable<S, T>(select.getGroupBy(), tableFor(select.getTable()));
+		SelectTable<S> table = new SelectTable<S>(tableFor(select.getTable()), select.getWhere());
+		return new GroupByTable<S, T>(select.getGroupBy(), table);
 	}
 
 

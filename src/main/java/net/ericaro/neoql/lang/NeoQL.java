@@ -142,22 +142,22 @@ public class NeoQL {
 	}
 
 	public static <S, T> TableDef<T> select(Class<S> table, Column<S, T> groupBy) {
-		return new GroupBySelect<S, T>(table, NeoQL.True, groupBy);
+		return new GroupBySelect<S, T>(table, groupBy);
 	}
 
 	public static <S, T> TableDef<T> select(TableDef<S> table,
 			Column<S, T> groupBy) {
-		return new GroupBySelect<S, T>(table, NeoQL.True, groupBy);
+		return new GroupBySelect<S, T>(table, groupBy);
 	}
 
 	public static <S, T> TableDef<T> select(TableDef<S> table,
 			Predicate<? super S> where, Column<S, T> groupBy) {
-		return new GroupBySelect<S, T>(table, where, groupBy);
+		return new GroupBySelect<S, T>(select(table, where), groupBy);
 	}
 
 	public static <S, T> TableDef<T> select(Class<S> table,
 			Predicate<? super S> where, Column<S, T> groupBy) {
-		return new GroupBySelect<S, T>(table, where, groupBy);
+		return new GroupBySelect<S, T>(select(table, where), groupBy);
 	}
 
 	public static <L, R> TableDef<Pair<L, R>> innerJoin(Class<L> left,

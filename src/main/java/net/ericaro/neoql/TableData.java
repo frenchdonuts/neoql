@@ -121,8 +121,9 @@ public class TableData<T> implements Table<T> {
 			// fire an exception ( forbidding the deleting if the value is in
 			// use ?
 			Predicate<T> inUse = NeoQL.is(col, oldValue);
-			for (T t : owner.select(type, inUse))
-				throw new NeoQLException("Foreign Key violation" + col);
+			for (T t : owner.select(type) )
+				if (inUse.eval(t))
+					throw new NeoQLException("Foreign Key violation" + col);
 		}
 
 		@Override

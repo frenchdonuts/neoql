@@ -1,6 +1,9 @@
 package net.ericaro.neoql.lang;
 
+import java.util.Iterator;
+
 import net.ericaro.neoql.Database;
+import net.ericaro.neoql.GroupByTable.GroupByIterator;
 import net.ericaro.neoql.Predicate;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableDef;
@@ -14,19 +17,15 @@ import net.ericaro.neoql.TableDef;
  */
 public class GroupBySelect<S, T> implements TableDef<T> {
 
-	Column<S, T> groupBy;
-	private TableDef<S> table;
-	private Predicate<? super S> where;
+	Column<S, T>					groupBy;
+	private TableDef<S>				table;
 
-	GroupBySelect(Class<S> table, Predicate<? super S> where,
-			Column<S, T> groupBy) {
-		this(new ClassTableDef<S>(table), where, groupBy);
+	GroupBySelect(Class<S> table,  Column<S, T> groupBy) {
+		this(new ClassTableDef<S>(table), groupBy);
 	}
 
-	GroupBySelect(TableDef<S> table, Predicate<? super S> where,
-			Column<S, T> groupBy) {
+	GroupBySelect(TableDef<S> table, Column<S, T> groupBy) {
 		this.table = table;
-		this.where = where;
 		this.groupBy = groupBy;
 	}
 
@@ -38,12 +37,14 @@ public class GroupBySelect<S, T> implements TableDef<T> {
 		return table;
 	}
 
-	public Predicate<? super S> getWhere() {
-		return where;
-	}
-
 	@Override
 	public Table<T> asTable(Database database) {
 		return database.table(this);
 	}
+
+	@Override
+	public Iterator<T> iterator(Database database) {
+		return new GroupByIterator<S, T>(database.iterator(table), groupBy);
+	}
+
 }

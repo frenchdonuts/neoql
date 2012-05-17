@@ -1,7 +1,10 @@
 package net.ericaro.neoql.lang;
 
+import java.util.Iterator;
+
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.Predicate;
+import net.ericaro.neoql.SelectTable;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableDef;
 
@@ -40,4 +43,11 @@ public class Select<T> implements TableDef<T> {
 		return database.table(this);
 	}
 
+	@Override
+	public Iterator<T> iterator(final Database database) {
+				return new SelectTable.SelectIterator<T>(database.select(table).iterator(), where);
+	}
+
+	
+	
 }

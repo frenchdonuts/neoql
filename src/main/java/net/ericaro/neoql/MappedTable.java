@@ -1,13 +1,17 @@
 package net.ericaro.neoql;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
+
+import net.ericaro.neoql.lang.Column;
 
 /**
  * Mapped By provides a way to turn a table of S into a table of T using a
  * map(S)-> T interface
  * 
  */
-class MappedTable<S, T> implements Table<T> {
+public class MappedTable<S, T> implements Table<T> {
 
 	private Table<S> table;
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
@@ -79,4 +83,23 @@ class MappedTable<S, T> implements Table<T> {
 		events.removeTableListener(l);
 	}
 
+	public static class MappedIterator<S, T> extends Generator<T> {
+
+		Iterator<S>					isource;
+		Mapper<S,T>				mapper;
+
+		public MappedIterator(Iterator<S> isource, Mapper<S,T> mapper) {
+			super();
+			this.isource = isource;
+			this.mapper = mapper;
+		}
+
+		@Override
+		protected T gen() throws StopIteration {
+			while (isource.hasNext())
+				return mapper.map(isource.next());
+			throw new StopIteration();
+		}
+	}
+	
 }

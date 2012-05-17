@@ -11,14 +11,13 @@ import net.ericaro.neoql.lang.Column;
  * 
  * 
  */
-class GroupByTable<S, T> implements Table<T> {
-	// TODO handle counts
+public class GroupByTable<S, T> implements Table<T> {
 
-	private Table<S> table;
-	private TableListenerSupport<T> events = new TableListenerSupport<T>();
-	private Column<S, T> groupByColumn;
-	private TableListener<S> listener;
-	private Set<T> equivalents = new HashSet<T>();
+	private Table<S>				table;
+	private TableListenerSupport<T>	events		= new TableListenerSupport<T>();
+	private Column<S, T>			groupByColumn;
+	private TableListener<S>		listener;
+	private Set<T>					equivalents	= new HashSet<T>();
 
 	GroupByTable(Column<S, T> groupBy, Table<S> table) {
 		super();
@@ -35,10 +34,8 @@ class GroupByTable<S, T> implements Table<T> {
 			}
 
 			private void insertedByCol(T v) { // weird function, but this is the way I wan't to reuse it for the update, to avoid evaluatin get() twice
-				for (T eq : equivalents)
-					if (v.equals(eq))
-						return; // not real insertion
-
+				if (equivalents.contains(v) )
+					return ;
 				equivalents.add(v);// add and fire
 				events.fireInserted(v);
 			}
@@ -90,5 +87,32 @@ class GroupByTable<S, T> implements Table<T> {
 
 	public void removeTableListener(TableListener<T> l) {
 		events.removeTableListener(l);
+	}
+
+	public static class GroupByIterator<S, T> extends Generator<T> {
+
+		Iterator<S>					isource;
+		Column<S, T>				groupByColumn;
+		private transient Set<T>	equivalents	= new HashSet<T>();
+
+		public GroupByIterator(Iterator<S> isource, Column<S, T> groupByColumn) {
+			super();
+			this.isource = isource;
+			this.groupByColumn = groupByColumn;
+		}
+
+		@Override
+		protected T gen() throws StopIteration {
+			while (isource.hasNext()) {
+				S snext = isource.next();
+				T next = groupByColumn.get(snext);
+				if (!equivalents.contains(next)) {
+					equivalents.add(next);// add and fire
+					return next;
+				}
+			}
+			throw new StopIteration();
+
+		}
 	}
 }

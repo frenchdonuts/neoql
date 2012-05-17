@@ -1,6 +1,9 @@
 package net.ericaro.neoql.lang;
 
+import java.util.Iterator;
+
 import net.ericaro.neoql.Database;
+import net.ericaro.neoql.InnerJoinTable.InnerJoinIterator;
 import net.ericaro.neoql.Pair;
 import net.ericaro.neoql.Predicate;
 import net.ericaro.neoql.Table;
@@ -42,4 +45,14 @@ public class InnerJoin<L, R> implements TableDef<Pair<L, R>> {
 		return database.table(this);
 	}
 
+	@Override
+	public Iterator<Pair<L, R>> iterator(Database database) {
+		return new InnerJoinIterator<L,R>(
+				database.iterator(leftTable),
+				database.select(rightTable),
+				on
+				);
+	}
+
+	
 }

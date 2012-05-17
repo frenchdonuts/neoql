@@ -2,20 +2,18 @@ package net.ericaro.neoql;
 
 import java.util.Iterator;
 
+public class SelectTable<T> implements Table<T> {
 
+	private Table<T>				table;
+	private TableListenerSupport<T>	events	= new TableListenerSupport<T>();
 
- class SelectTable<T> implements Table<T> {
-
-	private Table<T> table;
-	private TableListenerSupport<T> events = new TableListenerSupport<T>();
-
-	private Predicate<? super T> where;
-	private TableListener<T> listener;
+	private Predicate<? super T>	where;
+	private TableListener<T>		listener;
 
 	SelectTable(Table<T> table, Predicate<? super T> where) {
 		super();
 		this.table = table;
-		this.where  = where;
+		this.where = where;
 		for (T t : table)
 			if (where.eval(t))
 				events.fireInserted(t); // cause events to be fire just like if the items where appended
@@ -24,17 +22,17 @@ import java.util.Iterator;
 		// then add events to keep in touch with list content
 		listener = new TableListener<T>() {
 
-			public  void inserted(T row) {
+			public void inserted(T row) {
 				if (where(row))
 					events.fireInserted(row);
 			}
 
-			public  void deleted(T row) {
+			public void deleted(T row) {
 				if (where(row))
 					events.fireDeleted(row);
 			}
 
-			public  void updated(T old, T row) {
+			public void updated(T old, T row) {
 				boolean was = where(old);
 				boolean willbe = where(row);
 				if (was && willbe) {
@@ -52,7 +50,7 @@ import java.util.Iterator;
 		};
 		table.addTableListener(listener);
 	}
-	
+
 	protected boolean where(T row) {
 		return where.eval(row);
 	}
@@ -62,19 +60,37 @@ import java.util.Iterator;
 		table.removeTableListener(listener);
 	}
 
-
-
 	@Override
-	public  Iterator<T> iterator() {
-		return new SelectIterator<T>(table, where);
+	public Iterator<T> iterator() {
+		return new SelectIterator<T>(table.iterator(), where);
 	}
 
-	public  void addTableListener(TableListener<T> l) {
+	public void addTableListener(TableListener<T> l) {
 		events.addTableListener(l);
 	}
 
-	public  void removeTableListener(TableListener<T> l) {
+	public void removeTableListener(TableListener<T> l) {
 		events.removeTableListener(l);
+	}
+
+	public static class SelectIterator<T> extends Generator<T> {
+
+		Iterator<T>						sub;
+		private Predicate<? super T>	where;
+
+		public SelectIterator(Iterator<T> table, Predicate<? super T> where) {
+			super();
+			sub = table;
+			this.where = where;
+		}
+		protected T gen() throws StopIteration {
+			while (sub.hasNext()) {
+				T next = sub.next();
+				if (where.eval(next))
+					return next; // breaks
+			}
+			throw new StopIteration();
+		}
 	}
 
 }

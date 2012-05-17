@@ -1,6 +1,9 @@
 package net.ericaro.neoql.lang;
 
+import java.util.Iterator;
+
 import net.ericaro.neoql.Database;
+import net.ericaro.neoql.MappedTable;
 import net.ericaro.neoql.Mapper;
 import net.ericaro.neoql.Predicate;
 import net.ericaro.neoql.Table;
@@ -46,4 +49,12 @@ public class MapSelect<S, T> implements TableDef<T> {
 		return database.table(this);
 	}
 
+	@Override
+	public Iterator<T> iterator(Database database) {
+		return new MappedTable.MappedIterator<S, T>(database.iterator(table), mapper);
+	}
+	
+	
+
+	
 }

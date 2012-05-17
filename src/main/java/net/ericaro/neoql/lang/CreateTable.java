@@ -18,7 +18,9 @@ public class CreateTable<T> implements Statement {
 
 	private Class<T> table;
 	private Column<T, ?>[] columns;
-
+	// TODO pass columns instead of "finding" them.
+	// it will be user's responsibility to organize columns
+	
 	private static <T> Column<T, ?>[] columnsOf(Class<T> tableClass) {
 		List<Column<T, ?>> cols = new ArrayList<Column<T, ?>>();
 		try {

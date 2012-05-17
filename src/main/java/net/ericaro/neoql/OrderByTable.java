@@ -27,31 +27,65 @@ public class OrderByTable<T,V extends Comparable<? super V> > implements Table<T
 	 * removed (and an event is fired)
 	 */
 
+	public static final class ColumnComparator<T, V extends Comparable<? super V>> implements Comparator<T> {
+		Column<T,V> orderByColumn;
+		private int inf;
+		
+		public ColumnComparator(Column<T, V> orderByColumn, boolean ascendent) {
+			super();
+			this.orderByColumn = orderByColumn;
+			this.inf = (ascendent?1:-1);
+		}
+
+		@Override
+		public int compare(T t1, T t2) {
+			V v1 = orderByColumn.get(t1);
+			V v2 = orderByColumn.get(t2);
+			if (v1 == null || v2 == null)
+				if (v1 == null && v2 == null)
+					return 0;
+				else
+					return v1 == null? -inf : inf;
+			return inf*v1.compareTo(v2);
+		}
+	}
+
+	public static class OrderByIterator<T, V extends Comparable<? super V> > implements Iterator<T> {
+
+		private Iterator<T>	source;
+
+		public OrderByIterator(Iterator<T> iterator, Column<T, V> orderBy, boolean ascendent) {
+			List<T> unsorted = new ArrayList<T>();
+			while(iterator.hasNext())
+				unsorted.add(iterator.next());
+			Collections.sort(unsorted, new ColumnComparator<T, V>(orderBy, ascendent));
+			source = unsorted.iterator() ;
+		}
+
+		public boolean hasNext() {
+			return source.hasNext();
+		}
+
+		public T next() {
+			return source.next();
+		}
+
+		public void remove() {
+			source.remove();
+		}
+		
+	}
+
 	private Table<T> table;
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
-	private Column<T, V> orderByColumn;
 	private TableListener<T> listener;
 	private List<T> content = new ArrayList<T>();
 	private Comparator<? super T> comparator;
 
-	OrderByTable(Table<T> table, Column<T,V> orderBy ) {
+	OrderByTable(Table<T> table, Column<T,V> orderBy , boolean ascendent) {
 		super();
 		this.table = table;
-		this.orderByColumn = orderBy;
-		comparator = new Comparator<T>() {
-
-			@Override
-			public int compare(T t1, T t2) {
-				V v1 = orderByColumn.get(t1);
-				V v2 = orderByColumn.get(t2);
-				if (v1 == null || v2 == null)
-					if (v1 == null && v2 == null)
-						return 0;
-					else
-						return v1 == null? -1 : 1;
-				return v1.compareTo(v2);
-			}
-		};
+		comparator = new ColumnComparator<T, V>(orderBy, ascendent);
 
 		// first fill the filtered table
 		// then add events to keep in touch with list content

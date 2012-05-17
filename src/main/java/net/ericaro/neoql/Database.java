@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import net.ericaro.neoql.lang.ClassTableDef;
 import net.ericaro.neoql.lang.ColumnValuePair;
 import net.ericaro.neoql.lang.CreateTable;
 import net.ericaro.neoql.lang.DeleteFrom;
@@ -12,29 +13,29 @@ import net.ericaro.neoql.lang.GroupBySelect;
 import net.ericaro.neoql.lang.InnerJoin;
 import net.ericaro.neoql.lang.InsertInto;
 import net.ericaro.neoql.lang.MapSelect;
-import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.lang.OrderBySelect;
 import net.ericaro.neoql.lang.Script;
 import net.ericaro.neoql.lang.Select;
 import net.ericaro.neoql.lang.Update;
 
 public class Database {
 	// real class -> table mapping
-	private Map<Class, TableData> tables = new HashMap<Class, TableData>();
+	private Map<Class, TableData>	tables	= new HashMap<Class, TableData>();
 
 	// TODO append sort in EDSL
 	// TODO implement every possible joins
 	// TODO rethink this all 'introspection' thing:
-	//     - columns are passed to the create table statement
-	//     - user handle the columns the way he wants
-	// TODO find a way to express the definition of a singleton 
-	//      for instance THE selected Item, so that it can be observed in the app, and reused
+	// - columns are passed to the create table statement
+	// - user handle the columns the way he wants
+	// TODO find a way to express the definition of a singleton
+	// for instance THE selected Item, so that it can be observed in the app, and reused
 	// TODO oops, found a bug in the drop stuff. If I create a table to serve another one, I need to drop it too. (for instance select(mapper) creates a normal select, then mapper table, hence the "normal select is never deleted
-// TODO do some stress test
+	// TODO do some stress test
 	// ##########################################################################
 	// ACCESS TABLES OBJECT BEGIN
 	// ##########################################################################
 
-	// tables are like select except that they keep in sync with the database content (observable) 
+	// tables are like select except that they keep in sync with the database content (observable)
 
 	public <T> TableData<T> tableFor(Class<T> table) {
 		return tables.get(table);
@@ -44,16 +45,14 @@ public class Database {
 		return table.asTable(this);
 	}
 
-	
 	public <T> void drop(Class<T> table) {
 		tableFor(table).uninstall();
 		this.tables.remove(table);
 	}
-	
+
 	public <T> void drop(Table<T> table) {
 		table.drop(this);
 	}
-	
 
 	public <T> TableList<T> listFor(Class<T> table) {
 		return new TableList<T>(tableFor(table));
@@ -75,8 +74,7 @@ public class Database {
 		tableFor(table).addTableListener(listener);
 	}
 
-	public <T> void removeTableListener(Class<T> table,
-			TableListener<T> listener) {
+	public <T> void removeTableListener(Class<T> table, TableListener<T> listener) {
 		tableFor(table).removeTableListener(listener);
 	}
 
@@ -84,8 +82,7 @@ public class Database {
 		tableFor(table).addInternalTableListener(listener);
 	}
 
-	<T> void removeInternalTableListener(Class<T> table,
-			TableListener<T> listener) {
+	<T> void removeInternalTableListener(Class<T> table, TableListener<T> listener) {
 		tableFor(table).removeInternalTableListener(listener);
 	}
 
@@ -143,16 +140,34 @@ public class Database {
 	// SELECTS BEGIN
 	// ##########################################################################
 
-	public <T> Iterable<T> select(Class<T> table) {
-		return select(table, NeoQL.True);
+	public <T> Iterator<T> iterator(Class<T> table) {
+
+		return new ClassTableDef<T>(table).iterator(this);// reverse visitor pattern
 	}
 
-	public <T> Iterable<T> select(final Class<T> table, final Predicate<? super T> where) {
+	public <T> Iterator<T> iterator(final TableDef<T> table) {
+		return table.iterator(this);// reverse visitor pattern
+	}
+
+	public <T> Iterable<T> select(final Class<T> table) {
 		return new Iterable<T>() {
+
 			@Override
 			public Iterator<T> iterator() {
-				return new SelectIterator<T>(tableFor(table), where);
+				return Database.this.iterator(table);
 			}
+
+		};
+	}
+
+	public <T> Iterable<T> select(final TableDef<T> table) {
+		return new Iterable<T>() {
+
+			@Override
+			public Iterator<T> iterator() {
+				return Database.this.iterator(table);
+			}
+
 		};
 	}
 
@@ -167,21 +182,22 @@ public class Database {
 	public <T> Table<T> table(Class<T> table) {
 		return tableFor(table);
 	}
-	
+
 	public <T> Table<T> table(Select<T> select) {
-		return new SelectTable<T>(tableFor(select.getTable()) , select.getWhere());
+		return new SelectTable<T>(tableFor(select.getTable()), select.getWhere());
 	}
 
 	public <S, T> Table<T> table(MapSelect<S, T> select) {
-		SelectTable<S> table = new SelectTable<S>(tableFor(select.getTable()) , select.getWhere());
+		SelectTable<S> table = new SelectTable<S>(tableFor(select.getTable()), select.getWhere());
 		return new MappedTable<S, T>(select.getMapper(), table);
 	}
+
 	public <S, T> Table<T> table(GroupBySelect<S, T> select) {
-		SelectTable<S> table = new SelectTable<S>(tableFor(select.getTable()), select.getWhere());
-		return new GroupByTable<S, T>(select.getGroupBy(), table);
+		return new GroupByTable<S, T>(select.getGroupBy(), tableFor(select.getTable()));
 	}
-
-
+	public <T,V extends Comparable<? super V>> Table<T> table(OrderBySelect<T,V> select) {
+		return new OrderByTable<T,V>(tableFor(select.getTable()), select.getOrderBy(), select.isAscendent() );
+	}
 	public <L, R> Table<Pair<L, R>> table(InnerJoin<L, R> innerjoin) {
 		Table<L> left = innerjoin.getLeftTable().asTable(this);
 		Table<R> right = innerjoin.getRightTable().asTable(this);

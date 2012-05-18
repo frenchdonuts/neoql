@@ -1,16 +1,13 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
 import java.util.Iterator;
 
-import net.ericaro.neoql.Database;
-import net.ericaro.neoql.TableData;
-import net.ericaro.neoql.TableDef;
 
 public class ClassTableDef<T> implements TableDef<T> {
 
 	Class<T> table;
 
-	public ClassTableDef(Class<T> table) {
+	 ClassTableDef(Class<T> table) {
 		super();
 		this.table = table;
 	}

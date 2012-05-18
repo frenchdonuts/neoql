@@ -1,9 +1,8 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import net.ericaro.neoql.Database;
 
 
 /**
@@ -21,12 +20,18 @@ import net.ericaro.neoql.Database;
  * @author eric
  *
  */
-public class Script implements Statement{
+public class Script extends NeoQL implements Statement{
 
 	private List<Statement> statements = new ArrayList<Statement>();
 	
 	protected <T> CreateTable<T> createTable(Class<T> c) {
 		return exec(new CreateTable<T>(c));
+	}
+	protected <T> CreateProperty<T> createProperty(Class<T> c, Property<T> prop) {
+		return exec(new CreateProperty<T>(c, prop));
+	}
+	protected <T> DropProperty<T> dropProperty(Property<T> prop) {
+		return exec(new DropProperty<T>(prop));
 	}
 
 	protected <T> InsertInto<T> insertInto(Class<T> table) {
@@ -39,6 +44,10 @@ public class Script implements Statement{
 
 	protected <T> DeleteFrom<T> deleteFrom(Class<T> table) {
 		return exec(new DeleteFrom<T>(table));
+	}
+	
+	protected <T> PropertyValue<T> put(Property<T> prop, T value) {
+		return exec(new PropertyValue<T>(prop, value));
 	}
 	
 	protected <T extends Statement> T exec(T stm) {

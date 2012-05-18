@@ -2,6 +2,7 @@ package net.ericaro.neoql;
 
 import java.util.Iterator;
 
+
 public class SelectTable<T> implements Table<T> {
 
 	private Table<T>				table;

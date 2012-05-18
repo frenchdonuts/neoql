@@ -1,6 +1,6 @@
 package net.ericaro.neoql.demo;
 
-import net.ericaro.neoql.lang.Column;
+import net.ericaro.neoql.Column;
 
 /**
  * 

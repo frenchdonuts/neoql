@@ -3,9 +3,6 @@ package net.ericaro.neoql;
 import static org.junit.Assert.fail;
 import net.ericaro.neoql.Model.Student;
 import net.ericaro.neoql.Model.Teacher;
-import net.ericaro.neoql.lang.NeoQL;
-import net.ericaro.neoql.lang.Script;
-import net.ericaro.neoql.lang.Select;
 
 import org.junit.Test;
 

@@ -1,12 +1,16 @@
 package net.ericaro.neoql.demo;
 
+import java.util.Iterator;
+
 import net.ericaro.neoql.Database;
+import net.ericaro.neoql.InsertInto;
+import net.ericaro.neoql.NeoQL;
+import net.ericaro.neoql.Property;
+import net.ericaro.neoql.Script;
 import net.ericaro.neoql.TableDef;
-import net.ericaro.neoql.lang.InsertInto;
-import net.ericaro.neoql.lang.NeoQL;
-import net.ericaro.neoql.lang.Script;
 
 public class Demo {
+	public static final Property<Person> CURRENT = new Property<Person>();
 
 	public static void main(String[] args) {
 
@@ -61,8 +65,9 @@ public class Demo {
 		System.out.println("\n\n");
 		System.out.println("INSERT INTO Persons VALUES (5,'Nilsen', 'Johan', 'Bakken 2', 'Stavanger')");
 		
-		InsertInto<Person> insert = NeoQL.insertInto(Person.class).set(Person.ID, 5L).set(Person.LAST_NAME, "Nilsen"   ).set(Person.FIRST_NAME, "Johan").set(Person.ADDRESS, "Baken 2").set(Person.CITY, "Stavanger");
-		db.execute(insert);
+		db.execute(new Script() {{
+			insertInto(Person.class).set(Person.ID, 5L).set(Person.LAST_NAME, "Nilsen"   ).set(Person.FIRST_NAME, "Johan").set(Person.ADDRESS, "Baken 2").set(Person.CITY, "Stavanger");
+		}});
 		for (Person p : db.select(Person.class))
 			System.out.println(p);
 		
@@ -74,6 +79,37 @@ public class Demo {
 		}});
 		for (Person p : db.select(Person.class))
 			System.out.println(p);
+		
+		System.out.println("\n\n");
+		System.out.println("creates a property");
+		db.execute(new Script() {{
+			createProperty(Person.class, CURRENT);
+		}});
+		System.out.println("current is ");
+		System.out.println(db.get(CURRENT));
+		
+		TableDef<Person> selector = NeoQL.select(Person.class, NeoQL.is(Person.ID, 4L));
+		
+		Iterator<Person> i = db.iterator(selector);
+		i.hasNext();// there is a bug in my iterator, it needs a call to hasnext first sorry
+		final Person current = i.next();
+		System.out.println("\n\ncurrent person will be "+current);
+		db.execute(new Script() {{
+			put(CURRENT, current);
+		}});
+		System.out.println("\n\ncurrent is ");
+		System.out.println(db.get(CURRENT));
+
+		System.out.println("\n\nupdating the selected person in the database");
+		db.execute(new Script() {{
+			update(Person.class).where( is(Person.ID, 4L) ).set(Person.FIRST_NAME, "toto");
+		}});
+		
+		System.out.println("current is ");
+		System.out.println(db.get(CURRENT));
+		
+
+		
 		
 
 	}

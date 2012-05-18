@@ -1,8 +1,7 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
 import java.lang.reflect.Field;
 
-import net.ericaro.neoql.Mapper;
 
 public class Column<T, V> implements Mapper<T, V> {
 
@@ -22,7 +21,7 @@ public class Column<T, V> implements Mapper<T, V> {
 		this.foreignTable = foreignTable;
 	}
 
-	public void copy(T src, T target) {
+	 void copy(T src, T target) {
 		set(target, get(src));
 	}
 
@@ -39,7 +38,7 @@ public class Column<T, V> implements Mapper<T, V> {
 		return get(source);
 	}
 
-	public V get(Object src) {
+	 V get(Object src) {
 		try {
 			return (V) field.get(src);
 		} catch (Exception e) {
@@ -55,7 +54,7 @@ public class Column<T, V> implements Mapper<T, V> {
 		return foreignTable != null;
 	}
 
-	public void init(Class<T> tableClass) throws NoSuchFieldException,
+	 void init(Class<T> tableClass) throws NoSuchFieldException,
 			SecurityException {
 		if (field == null) {// not init
 			field = tableClass.getDeclaredField(fname);

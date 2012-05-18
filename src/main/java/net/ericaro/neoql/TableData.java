@@ -8,12 +8,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.ericaro.neoql.lang.Column;
-import net.ericaro.neoql.lang.ColumnValuePair;
-import net.ericaro.neoql.lang.CreateTable;
-import net.ericaro.neoql.lang.NeoQL;
-import net.ericaro.neoql.lang.Script;
-import net.ericaro.neoql.lang.Update;
 
 /**
  * basic table, essentially a metadata and an iterable of Object[]
@@ -165,7 +159,7 @@ public class TableData<T> implements Table<T> {
 	Map<T, T> updatedRows = new HashMap<T, T>();
 	int reintrant = -1;
 
-	void update(T row, ColumnValuePair<T, ?>[] setters) {
+	void update(T row, ColumnValue<T, ?>[] setters) {
 		reintrant++;
 		try {
 			T clone;
@@ -176,13 +170,13 @@ public class TableData<T> implements Table<T> {
 				updatedRows.put(clone, row);
 			}
 
-			for (ColumnValuePair s : setters) {
+			for (ColumnValue s : setters) {
 				s.set(clone);
 			}
 
 			int i = rows.indexOf(row);
 			rows.set(i, clone);
-			internals.fireUpdated(row, clone); // fire updates only once per session
+			internals.fireUpdated(row, clone); 
 
 		} finally {
 			reintrant--;

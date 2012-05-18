@@ -1,7 +1,5 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
-import net.ericaro.neoql.Database;
-import net.ericaro.neoql.Predicate;
 
 /**
  * Delete From class statement

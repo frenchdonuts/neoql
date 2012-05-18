@@ -1,13 +1,9 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.ericaro.neoql.Mapper;
-import net.ericaro.neoql.Pair;
-import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.TableDef;
 
 /**
  * EDSL for the Data Query Language
@@ -173,7 +169,7 @@ public class NeoQL {
 	}
 
 	
-	
+	/*
 	public static <T> CreateTable<T> createTable(Class<T> c) {
 		return new CreateTable<T>(c);
 	}
@@ -189,6 +185,6 @@ public class NeoQL {
 	public static <T> DeleteFrom<T> deleteFrom(Class<T> table) {
 		return new DeleteFrom<T>(table);
 	}
-	
+	*/
 	
 }

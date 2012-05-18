@@ -1,13 +1,16 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
 import javax.swing.ListModel;
 
+import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.Table;
+import net.ericaro.neoql.NeoQL;
+import net.ericaro.neoql.Script;
 import net.ericaro.neoql.TableList;
+
 
  class SelectTester {
 

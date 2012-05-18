@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.ericaro.neoql.Model.Teacher;
-import net.ericaro.neoql.lang.Script;
 
 import org.junit.Test;
 

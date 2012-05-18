@@ -1,6 +1,5 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
-import net.ericaro.neoql.Database;
 
 public interface Statement {
 

@@ -1,9 +1,7 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
 import java.util.Arrays;
 
-import net.ericaro.neoql.Database;
-import net.ericaro.neoql.Predicate;
 
 /**
  * Update from *
@@ -15,7 +13,7 @@ import net.ericaro.neoql.Predicate;
 public class Update<T> implements Statement {
 
 	private Class<T> type;
-	private ColumnValuePair<T, ?>[] columnValuePairs = new ColumnValuePair[0];
+	private ColumnValue<T, ?>[] columnValuePairs = new ColumnValue[0];
 	private Predicate<? super T> where;
 
 	public Update(Class<T> type) {
@@ -23,7 +21,7 @@ public class Update<T> implements Statement {
 	}
 
 	Update(Class<T> type, Predicate<? super T> where,
-			ColumnValuePair<T, ?>... columnValuePairs) {
+			ColumnValue<T, ?>... columnValuePairs) {
 		super();
 		this.type = type;
 		this.columnValuePairs = columnValuePairs;
@@ -33,7 +31,7 @@ public class Update<T> implements Statement {
 	public <V> Update<T> set(Column<T, V> col, V value) {
 		int l = columnValuePairs.length;
 		columnValuePairs = Arrays.copyOf(columnValuePairs, l + 1);
-		columnValuePairs[l] = new ColumnValuePair<T, V>(col, value);
+		columnValuePairs[l] = new ColumnValue<T, V>(col, value);
 		return this;
 	}
 
@@ -46,7 +44,7 @@ public class Update<T> implements Statement {
 		return type;
 	}
 
-	public ColumnValuePair<T, ?>[] getColumnValuePairs() {
+	public ColumnValue<T, ?>[] getColumnValuePairs() {
 		return columnValuePairs;
 	}
 

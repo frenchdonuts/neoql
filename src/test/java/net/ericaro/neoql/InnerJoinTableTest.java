@@ -3,17 +3,6 @@ package net.ericaro.neoql;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.ericaro.neoql.Database;
-import net.ericaro.neoql.InnerJoinTable;
-import net.ericaro.neoql.Pair;
-import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.Table;
-import net.ericaro.neoql.TableData;
-import net.ericaro.neoql.TableDef;
-import net.ericaro.neoql.lang.Column;
-import net.ericaro.neoql.lang.NeoQL;
-import net.ericaro.neoql.lang.Script;
-
 import org.junit.Test;
 
 
@@ -166,7 +155,7 @@ public  class InnerJoinTableTest {
 		}
 		
 		 Student getStudent(final String t) {
-			return db.select(Student.class, NeoQL.is(Student.NAME, t)).iterator().next();
+			return db.iterator(NeoQL.select(Student.class, NeoQL.is(Student.NAME, t))).next();
 		}
 
 		 void addStudent(final String name) {

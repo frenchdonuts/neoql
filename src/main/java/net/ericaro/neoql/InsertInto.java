@@ -1,9 +1,7 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
 import java.util.Arrays;
 
-import net.ericaro.neoql.Database;
-import net.ericaro.neoql.NeoQLException;
 
 /**
  * INSERT INTO table set column = value, column= value
@@ -14,7 +12,7 @@ import net.ericaro.neoql.NeoQLException;
 public class InsertInto<T> implements Statement {
 
 	private Class<T> table;
-	private ColumnValuePair<T, ?>[] columnValuePairs = new ColumnValuePair[0];
+	private ColumnValue<T, ?>[] columnValuePairs = new ColumnValue[0];
 	T row;
 
 	InsertInto(Class<T> type) {
@@ -25,7 +23,7 @@ public class InsertInto<T> implements Statement {
 	public <V> InsertInto<T> set(Column<T, V> col, V value) {
 		int l = columnValuePairs.length;
 		columnValuePairs = Arrays.copyOf(columnValuePairs, l + 1);
-		columnValuePairs[l] = new ColumnValuePair<T, V>(col, value);
+		columnValuePairs[l] = new ColumnValue<T, V>(col, value);
 		return this;
 	}
 
@@ -33,15 +31,15 @@ public class InsertInto<T> implements Statement {
 		return table;
 	}
 
-	ColumnValuePair<T, ?>[] getColumnValuePairs() {
+	ColumnValue<T, ?>[] getColumnValuePairs() {
 		return columnValuePairs;
 	}
 
 	public T build() {
 		try {
 			row = table.newInstance();
-			for (ColumnValuePair s : columnValuePairs)
-				s.getColumn().set(row, s.getValue());
+			for (ColumnValue s : columnValuePairs)
+				s.set(row);
 			return row;
 		} catch (Exception e) {
 			throw new NeoQLException(

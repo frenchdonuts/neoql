@@ -1,12 +1,7 @@
-package net.ericaro.neoql.lang;
+package net.ericaro.neoql;
 
 import java.util.Iterator;
 
-import net.ericaro.neoql.Database;
-import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.SelectTable;
-import net.ericaro.neoql.Table;
-import net.ericaro.neoql.TableDef;
 
 /**
  * SELECT * FROM table WHERE

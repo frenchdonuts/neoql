@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.ericaro.neoql.lang.Column;
 
 public class OrderByTable<T,V extends Comparable<? super V> > implements Table<T> {
 	// TODO handle counts

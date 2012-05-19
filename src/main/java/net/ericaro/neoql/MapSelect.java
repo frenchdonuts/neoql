@@ -16,10 +16,6 @@ public class MapSelect<S, T> implements TableDef<T> {
 	private TableDef<S> table;
 	private Predicate<? super S> where;
 
-	MapSelect(Mapper<S, T> mapper, Class<S> table, Predicate<? super S> where) {
-		this(mapper, new ClassTableDef<S>(table), where);
-	}
-
 	MapSelect(Mapper<S, T> mapper, TableDef<S> table, Predicate<? super S> where) {
 		this.table = table;
 		this.where = where;

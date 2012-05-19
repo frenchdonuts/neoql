@@ -22,16 +22,17 @@ public class TableData<T> implements Table<T> {
 
 	Column<T, ?>[] columns;
 	List<T> rows = new ArrayList<T>();
-	private Class<T> type;
+	//private Class<T> type;
+	private ClassTableDef<T> table;
 	private Database owner;
 	private TableListener[] columnListeners;
 
 	
 
-	TableData(Database owner, CreateTable<T> create) {
+	TableData(Database owner, ClassTableDef<T> table) {
 		this.owner = owner;
-		this.type = create.getTable();
-		this.columns = create.getColumns();
+		this.table = table;
+		this.columns = table.getColumns();
 		this.columnListeners = new TableListener[this.columns.length];
 
 	}
@@ -40,7 +41,7 @@ public class TableData<T> implements Table<T> {
 	
 	@Override
 	public void drop(Database from) {
-		from.drop(type);
+		from.drop(table);
 	}
 
 
@@ -55,7 +56,7 @@ public class TableData<T> implements Table<T> {
 		for (Column<T, ?> col : columns)
 			unInstallColumn(i++, col);
 		if (internals.getListenerCount() > 0)
-			throw new NeoQLException("Cannot drop table " + type.getName()
+			throw new NeoQLException("Cannot drop table " + table
 					+ ". Constraint violation(s)" + internals);
 
 	}
@@ -106,7 +107,7 @@ public class TableData<T> implements Table<T> {
 			if (oldValue == newValue)
 				return;
 			owner.execute(new Script() {{
-				update(type).where(NeoQL.is(col, oldValue) ).set(col, newValue);
+				update(table).where(NeoQL.is(col, oldValue) ).set(col, newValue);
 			}});
 		}
 
@@ -115,7 +116,7 @@ public class TableData<T> implements Table<T> {
 			// fire an exception ( forbidding the deleting if the value is in
 			// use ?
 			Predicate<T> inUse = NeoQL.is(col, oldValue);
-			for (T t : owner.select(type) )
+			for (T t : owner.select(table) )
 				if (inUse.eval(t))
 					throw new NeoQLException("Foreign Key violation" + col);
 		}
@@ -125,8 +126,8 @@ public class TableData<T> implements Table<T> {
 
 		@Override
 		public String toString() {
-			return "Foreign Key:" + type.getName() +  " → "
-					+ col.getForeignTable().getName() + ".";
+			return "Foreign Key:" + table +  " → "
+					+ col.getForeignTable() + ".";
 		}
 	}
 
@@ -145,15 +146,10 @@ public class TableData<T> implements Table<T> {
 	}
 
 	T clone(T row) {
-		try {
-			T clone = type.newInstance();
+			T clone = table.newInstance();
 			for (Column<T, ?> c : columns)
 				c.copy(row, clone);
 			return clone;
-		} catch (Exception e) {
-			throw new RuntimeException("unexpected exception while cloning", e);
-		}
-
 	}
 
 	Map<T, T> updatedRows = new HashMap<T, T>();

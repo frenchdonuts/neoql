@@ -24,25 +24,25 @@ public class Script extends NeoQL implements Statement{
 
 	private List<Statement> statements = new ArrayList<Statement>();
 	
-	protected <T> CreateTable<T> createTable(Class<T> c) {
+	protected <T> CreateTable<T> createTable(ClassTableDef<T> c) {
 		return exec(new CreateTable<T>(c));
 	}
-	protected <T> CreateProperty<T> createProperty(Class<T> c, Property<T> prop) {
+	protected <T> CreateProperty<T> createProperty(ClassTableDef<T> c, Property<T> prop) {
 		return exec(new CreateProperty<T>(c, prop));
 	}
 	protected <T> DropProperty<T> dropProperty(Property<T> prop) {
 		return exec(new DropProperty<T>(prop));
 	}
 
-	protected <T> InsertInto<T> insertInto(Class<T> table) {
+	protected <T> InsertInto<T> insertInto(ClassTableDef<T> table) {
 		return exec(new InsertInto<T>(table));
 	}
 
-	protected <T> Update<T> update(Class<T> table) {
+	protected <T> Update<T> update(ClassTableDef<T> table) {
 		return exec(new Update<T>(table));
 	}
 
-	protected <T> DeleteFrom<T> deleteFrom(Class<T> table) {
+	protected <T> DeleteFrom<T> deleteFrom(ClassTableDef<T> table) {
 		return exec(new DeleteFrom<T>(table));
 	}
 	

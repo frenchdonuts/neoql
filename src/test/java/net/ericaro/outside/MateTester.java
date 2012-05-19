@@ -4,47 +4,34 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
 
-import net.ericaro.neoql.Column;
+import net.ericaro.neoql.ClassTableDef;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Pair;
 import net.ericaro.neoql.Predicate;
 import net.ericaro.neoql.Script;
+import net.ericaro.neoql.StudentModel.Binome;
 import net.ericaro.neoql.TableDef;
 import net.ericaro.neoql.TableList;
 
 public class MateTester {
 
-	public static class Student {
-		public static Column<Student, String>	NAME	= new Column<Student, String>("name");
-		public static Column<Student, Student>	MATE	= new Column<Student, Student>("mate", Student.class);
-
-		private String					name;
-		private Student					mate;
-
-		@Override
-		public String toString() {
-			return "Student [name=" + name + (mate != null ? ", mate=" + mate.name : "") + "]";
-		}
-
-	}
-
 	
 	static class Model {
-
-		public static TableDef<Pair<Student, Student>>			MATES	= NeoQL.innerJoin(Student.class, Student.class, new Predicate<Pair<Student, Student>>() {
+		public static final ClassTableDef<Binome> BINOME = Binome.TABLE;
+		public static TableDef<Pair<Binome, Binome>>			MATES	= NeoQL.innerJoin(BINOME, BINOME, new Predicate<Pair<Binome, Binome>>() {
 
 														@Override
-														public boolean eval(Pair<Student, Student> t) {
-															return t.getLeft().mate == t.getRight();
+														public boolean eval(Pair<Binome, Binome> t) {
+															return t.getLeft().getMate() == t.getRight();
 														}
 													});
-		public static TableDef<String>			NAMES = NeoQL.select(Student.NAME, Student.class);		
+		public static TableDef<String>			NAMES = NeoQL.select(Binome.NAME, BINOME);		
 		
 
 		Database							db;
-		TableList<Pair<Student, Student>>	mates;
-		TableList<Student>					allStudents;
+		TableList<Pair<Binome, Binome>>	mates;
+		TableList<Binome>					allStudents;
 
 		TableList<String> allStudentNames;
 
@@ -54,16 +41,16 @@ public class MateTester {
 
 			db.execute(new Script() {
 				{
-					createTable(Student.class);
+					createTable(BINOME);
 				}
 			}); // init script
 
 		}
 		
 		
-		public TableList<Student> getAllStudents() {
+		public TableList<Binome> getAllStudents() {
 			if (allStudents == null)
-				allStudents = db.listFor(Student.class);	
+				allStudents = db.listFor(BINOME);	
 			return allStudents;
 		}
 		public TableList<String> getAllStudentNames() {
@@ -72,17 +59,17 @@ public class MateTester {
 			return allStudentNames;
 		}
 		
-		public TableList<Pair<Student,Student>> getMates() {
+		public TableList<Pair<Binome,Binome>> getMates() {
 			if (mates== null)
 				mates = db.listFor(MATES);	
 			return mates;
 		}
 
-		void editStudent(final Student t, final Student mate) {
+		void editStudent(final Binome t, final Binome mate) {
 			System.out.println("pair student" + t + " with " + mate);
 			db.execute(new Script() {
 				{
-					update(Student.class).set(Student.MATE, mate).where(NeoQL.is(Student.NAME, t.name));
+					update(BINOME).set(Binome.MATE, mate).where(Binome.NAME.is(t.getName()) );
 
 				}
 			});
@@ -91,14 +78,14 @@ public class MateTester {
 		void addStudent(final String name) {
 			db.execute(new Script() {
 				{
-					insertInto(Student.class).set(Student.NAME, name);
+					insertInto(BINOME).set(Binome.NAME, name);
 				}
 			});
 		}
 
 
-		public Iterable<Student> students() {
-			return db.select(Student.class);
+		public Iterable<Binome> students() {
+			return db.select(BINOME);
 		}
 	}
 
@@ -138,8 +125,8 @@ public class MateTester {
 
 					while (true) {
 
-						for (Student t : m.students()) {
-							for (Student t2 : m.students()) {
+						for (Binome t : m.students()) {
+							for (Binome t2 : m.students()) {
 								if (t != t2)
 									m.editStudent(t, t2);
 								sleep(2000);

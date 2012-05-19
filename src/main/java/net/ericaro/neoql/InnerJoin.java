@@ -10,11 +10,6 @@ public class InnerJoin<L, R> implements TableDef<Pair<L, R>> {
 	TableDef<R> rightTable;
 	Predicate<? super Pair<L, R>> on;
 
-	public InnerJoin(Class<L> left, Class<R> right,
-			Predicate<? super Pair<L, R>> on) {
-		this(new ClassTableDef<L>(left), new ClassTableDef<R>(right), on);
-	}
-
 	public InnerJoin(TableDef<L> left, TableDef<R> right,
 			Predicate<? super Pair<L, R>> on) {
 		super();

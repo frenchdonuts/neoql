@@ -11,11 +11,11 @@ import java.util.Arrays;
  */
 public class InsertInto<T> implements Statement {
 
-	private Class<T> table;
+	private ClassTableDef<T> table;
 	private ColumnValue<T, ?>[] columnValuePairs = new ColumnValue[0];
 	T row;
 
-	InsertInto(Class<T> type) {
+	InsertInto(ClassTableDef<T> type) {
 		super();
 		this.table = type;
 	}
@@ -27,7 +27,7 @@ public class InsertInto<T> implements Statement {
 		return this;
 	}
 
-	public Class<T> getTable() {
+	public ClassTableDef<T> getTable() {
 		return table;
 	}
 
@@ -36,15 +36,11 @@ public class InsertInto<T> implements Statement {
 	}
 
 	public T build() {
-		try {
 			row = table.newInstance();
 			for (ColumnValue s : columnValuePairs)
 				s.set(row);
 			return row;
-		} catch (Exception e) {
-			throw new NeoQLException(
-					"Exception while instanciating row for table " + table, e);
-		}
+		
 
 	}
 

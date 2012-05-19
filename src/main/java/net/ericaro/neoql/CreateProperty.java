@@ -11,16 +11,16 @@ package net.ericaro.neoql;
  */
 public class CreateProperty<T> implements Statement {
 
-	private Class<T> table;
+	private ClassTableDef<T> table;
 	private Property<T> property;
 	
-	CreateProperty(Class<T> table, Property<T> property) {
+	CreateProperty(ClassTableDef<T> table, Property<T> property) {
 		super();
 		this.table = table;
 		this.property = property;
 	}
 
-	public Class<T> getTable() {
+	public ClassTableDef<T> getTable() {
 		return table;
 	}
 

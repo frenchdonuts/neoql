@@ -16,9 +16,6 @@ public class GroupBySelect<S, T> implements TableDef<T> {
 	Column<S, T>					groupBy;
 	private TableDef<S>				table;
 
-	GroupBySelect(Class<S> table,  Column<S, T> groupBy) {
-		this(new ClassTableDef<S>(table), groupBy);
-	}
 
 	GroupBySelect(TableDef<S> table, Column<S, T> groupBy) {
 		this.table = table;

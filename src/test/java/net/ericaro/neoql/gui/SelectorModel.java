@@ -1,19 +1,22 @@
 package net.ericaro.neoql.gui;
 
+import static net.ericaro.neoql.NeoQL.select;
+import net.ericaro.neoql.ClassTableDef;
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
+import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Predicate;
 import net.ericaro.neoql.Script;
 import net.ericaro.neoql.TableDef;
 import net.ericaro.neoql.TableList;
-
-import static net.ericaro.neoql.NeoQL.*;
 public class SelectorModel {
 
 	// ##########################################################################
 	// ENTITY DEFINITION BEGIN
 	// ##########################################################################
-
+	
+	
+	
 	/**
 	 * A single selectable person
 	 * 
@@ -21,9 +24,11 @@ public class SelectorModel {
 	 * 
 	 */
 	public static class Person {
+		public static final ClassTableDef<Person> TABLE = new ClassTableDef<Person>(Person.class);
 
-		public static Column<Person, String>	NAME		= new Column<Person, String>("name");
-		public static Column<Person, Boolean>	SELECTED	= new Column<Person, Boolean>("selected");
+		public static Column<Person, String>	NAME		= TABLE.addColumn("name");
+		public static Column<Person, Boolean>	SELECTED	= TABLE.addColumn("selected");
+		
 
 		private String			name;
 		private boolean			selected = false;
@@ -40,6 +45,8 @@ public class SelectorModel {
 		}
 
 	}
+	// summary of all available tables in this model
+	public static final ClassTableDef<Person> PERSON = Person.TABLE;
 
 	// ##########################################################################
 	// ENTITY DEFINITION END
@@ -49,9 +56,9 @@ public class SelectorModel {
 	// TABLES DEFINITION BEGIN
 	// ##########################################################################
 	
-	public static TableDef<Person> SELECTED = select(Person.class, Person.SELECTED.is(true));
-	public static TableDef<Person> UNSELECTED = select(Person.class, Person.SELECTED.is(false));
-	public static TableDef<Person> ALL = select(Person.class);
+	public static TableDef<Person> SELECTED = select(PERSON, Person.SELECTED.is(true));
+	public static TableDef<Person> UNSELECTED = select(PERSON, Person.SELECTED.is(false));
+	public static TableDef<Person> ALL = select(PERSON);
 	
 	
 	// ##########################################################################
@@ -70,7 +77,7 @@ public class SelectorModel {
 		db.execute(new Script() {
 			{
 				// INIT script, here its trivial
-				createTable(Person.class);
+				createTable(PERSON);
 			}
 		});
 		addPerson("Joe");
@@ -92,7 +99,7 @@ public class SelectorModel {
 	public void addPerson(final String name) {
 		db.execute(new Script() {
 			{
-				insertInto(Person.class)
+				insertInto(PERSON)
 				.set(Person.NAME, name);
 			}
 		});
@@ -101,7 +108,7 @@ public class SelectorModel {
 	public void selectPerson(final Person p, final boolean selected) {
 		db.execute(new Script() {
 			{
-				update(Person.class)
+				update(PERSON)
 					.where(Person.is(p) )
 				.set(Person.SELECTED, selected);
 			}

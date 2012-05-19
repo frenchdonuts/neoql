@@ -1,69 +1,37 @@
 package net.ericaro.neoql;
 
-import java.util.HashSet;
+ import java.util.HashSet;
 import java.util.Set;
+
+import static net.ericaro.neoql.EntityModel.*;
+
+import net.ericaro.neoql.StudentModel.Binome;
 
 import org.junit.Test;
 
 
 public  class InnerJoinTableTest {
 
-	 public static class EntityA{
-		public static final Column<EntityA, String> CODE = new Column<EntityA, String>("code");
-		public static final Column<EntityA, String> NAME = new Column<EntityA, String>("name");
-		
-		String code;
-		String name;
-		 String getCode() {
-			return code;
-		}
-		 String getName() {
-			return name;
-		}
-		@Override
-		public  String toString() {
-			return "EntityA [code=" + code + ", name=" + name + "]";
-		}
-		
-		
-	}
-	 public static class EntityB{
-		 static final Column<EntityB, String> CODE = new Column<EntityB, String>("code");
-		 static final Column<EntityB, String> NAME = new Column<EntityB, String>("name");
-		
-		String code;
-		String name;
-		 String getCode() {
-			return code;
-		}
-		 String getName() {
-			return name;
-		}
-		@Override
-		public  String toString() {
-			return "EntityB [code=" + code + ", name=" + name + "]";
-		}
-		
-	}	
+	
 	@Test public void testSimple() {
 		
 		Database db = new Database();
 		
 		db.execute(
 		new Script() {{
-		createTable(EntityA.class);
-		createTable(EntityB.class);
+		createTable(ENTITYA);
+		createTable(ENTITYB);
 		
-		insertInto(EntityA.class).set(EntityA.CODE, "alpha").set(EntityA.NAME, "toto");
-		insertInto(EntityA.class).set(EntityA.CODE, "beta").set(EntityA.NAME, "titi");
-		insertInto(EntityA.class).set(EntityA.CODE, "gamma").set(EntityA.NAME, "tutu");
+		insertInto(ENTITYA).set(EntityA.CODE, "alpha").set(EntityA.NAME, "toto");
+		insertInto(ENTITYA).set(EntityA.CODE, "beta").set(EntityA.NAME, "titi");
+		insertInto(ENTITYA).set(EntityA.CODE, "gamma").set(EntityA.NAME, "tutu");
 		
-		insertInto(EntityB.class).set(EntityB.CODE, "alpha").set(EntityB.NAME, "btoto");
-		insertInto(EntityB.class).set(EntityB.CODE, "beta").set( EntityB.NAME, "btiti");
+		insertInto(ENTITYB).set(EntityB.CODE, "alpha").set(EntityB.NAME, "btoto");
+		insertInto(ENTITYB).set(EntityB.CODE, "beta").set( EntityB.NAME, "btiti");
 		}});
 		
-		Table<EntityA> left  = db.tableFor(EntityA.class);
-		Table<EntityB> right = db.tableFor(EntityB.class);
+		Table<EntityA> left  = db.tableFor(ENTITYA);
+		Table<EntityB> right = db.tableFor(ENTITYB);
 		
 		Predicate<Pair<EntityA, EntityB>> where = new Predicate<Pair<EntityA,EntityB> >(){
 
@@ -83,7 +51,7 @@ public  class InnerJoinTableTest {
 			System.out.println(p);
 		
 		db.execute(new Script() {{
-			update(EntityA.class).set(EntityA.CODE, "alpha2").where(NeoQL.is(EntityA.CODE, "alpha"));
+			update(ENTITYA).set(EntityA.CODE, "alpha2").where(NeoQL.is(EntityA.CODE, "alpha"));
 		}});
 		
 		System.out.println("ENITY A UPDATED ##################");
@@ -97,29 +65,17 @@ public  class InnerJoinTableTest {
 	
 	
 	
-	 public static class Student {
-		public static Column<Student, String>	NAME	= new Column<Student, String>("name");
-		public static Column<Student, Student>	MATE	= new Column<Student, Student>("mate", Student.class);
-
-		private String							name;
-		private Student							mate;
-
-		@Override
-		public  String toString() {
-			return "Student [name=" + name + (mate!=null?", mate=" + mate.name:"") + "]";
-		}
-
-	}
+	
 
 	 static class Model {
 
 		Database								db;
-		private Table<Pair<Student, Student>>	mates;
-		private TableData<Student>				students;
-		TableDef<Pair<Student, Student>> MATES = NeoQL.innerJoin(Student.class, Student.class, new Predicate<Pair<Student, Student>>() {
+		private Table<Pair<Binome, Binome>>	mates;
+		private TableData<Binome>				students;
+		TableDef<Pair<Binome, Binome>> MATES = NeoQL.innerJoin(Binome.TABLE, Binome.TABLE, new Predicate<Pair<Binome, Binome>>() {
 
 			@Override
-			public  boolean eval(Pair<Student, Student> t) {
+			public  boolean eval(Pair<Binome, Binome> t) {
 				return t.getLeft().mate == t.getRight();
 			}
 		});
@@ -130,17 +86,17 @@ public  class InnerJoinTableTest {
 			db.execute(
 			new Script() {
 				{
-					createTable(Student.class);
+					createTable(Binome.TABLE);
 				}
 			}); // init script
 
-			students = db.tableFor(Student.class);
+			students = db.tableFor(Binome.TABLE);
 			// create accessible queries
 			mates = db.tableFor(MATES);
 
 		}
 
-		 Table<Student> students() {
+		 Table<Binome> students() {
 			return students;
 		}
 
@@ -148,20 +104,20 @@ public  class InnerJoinTableTest {
 			System.out.println("pairing student "+t+" with "+mate);
 			db.execute( new Script() {
 				{
-					update(Student.class).set(Student.MATE, getStudent(mate)).where(NeoQL.is(Student.NAME, t));
+					update(Binome.TABLE).set(Binome.MATE, getStudent(mate)).where(Binome.NAME.is( t));
 					
 				}
 			});
 		}
 		
-		 Student getStudent(final String t) {
-			return db.iterator(NeoQL.select(Student.class, NeoQL.is(Student.NAME, t))).next();
+		 Binome getStudent(final String t) {
+			return db.iterator(NeoQL.select(Binome.TABLE, Binome.NAME.is(t))).next();
 		}
 
 		 void addStudent(final String name) {
 			db.execute( new Script() {
 				{
-					insertInto(Student.class).set(Student.NAME, name);
+					insertInto(Binome.TABLE).set(Binome.NAME, name);
 				}
 			});
 		}
@@ -176,13 +132,13 @@ public  class InnerJoinTableTest {
 		
 		m.editStudent("Alphonse", "Gerard" );
 		
-		for(Pair<Student, Student>  p : m.mates)
+		for(Pair<Binome, Binome>  p : m.mates)
 			System.out.println(p);
 		
 		System.out.println("# closing the loop");
 		m.editStudent("Gerard","Alphonse" );
-		Set<Student> students = new HashSet<Student>();
-		for(Pair<Student, Student>  p : m.db.tableFor(NeoQL.select(m.MATES)) )
+		Set<Binome> students = new HashSet<Binome>();
+		for(Pair<Binome, Binome>  p : m.db.tableFor(NeoQL.select(m.MATES)) )
 			students.add(p.getLeft());
 		// I trust the inner join algorithm to be correct if build from scratch, 
 		assert students.size() == 2 : "wrong final pair size";
@@ -190,7 +146,7 @@ public  class InnerJoinTableTest {
 		// but I'm testing the incremental one 
 		
 		int count=0;
-		for(Pair<Student, Student>  p : m.mates) {
+		for(Pair<Binome, Binome>  p : m.mates) {
 			count++;
 			assert students.contains(p.getLeft()) : p+" pair is missing from the golden set" ;
 		}

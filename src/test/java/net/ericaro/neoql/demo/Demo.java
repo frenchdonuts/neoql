@@ -2,6 +2,7 @@ package net.ericaro.neoql.demo;
 
 import java.util.Iterator;
 
+import net.ericaro.neoql.ClassTableDef;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Property;
@@ -11,6 +12,9 @@ import net.ericaro.neoql.TableDef;
 import net.ericaro.neoql.TableListener;
 
 public class Demo {
+	
+	static ClassTableDef<Person> PERSON = Person.TABLE;
+	
 	public static final class LogObserver<T> implements TableListener<T> {
 		
 		private String	label;
@@ -49,16 +53,16 @@ public class Demo {
 		db.execute(new Script() {
 			{
 
-				createTable(Person.class);
+				createTable(PERSON);
 
-				insertInto(Person.class).set(Person.ID, 1L).set(Person.LAST_NAME, "Hansen"   ).set(Person.FIRST_NAME, "Ola").set(Person.ADDRESS, "Timoteivn 10").set(Person.CITY, "Sandnes");
-				insertInto(Person.class).set(Person.ID, 2L).set(Person.LAST_NAME, "Svendson" ).set(Person.FIRST_NAME, "Tove").set(Person.ADDRESS, "Borgvn 23").set(Person.CITY, "Sandnes");
-				insertInto(Person.class).set(Person.ID, 3L).set(Person.LAST_NAME, "Pettersen").set(Person.FIRST_NAME, "Kari").set(Person.ADDRESS, "Storgt 20").set(Person.CITY, "Stavanger");
-				insertInto(Person.class).set(Person.ID, 4L).set(Person.LAST_NAME, "Nilsen"   ).set(Person.FIRST_NAME, "Tom").set(Person.ADDRESS, "Vingvn 23").set(Person.CITY, "Stavanger");
+				insertInto(PERSON).set(Person.ID, 1L).set(Person.LAST_NAME, "Hansen"   ).set(Person.FIRST_NAME, "Ola").set(Person.ADDRESS, "Timoteivn 10").set(Person.CITY, "Sandnes");
+				insertInto(PERSON).set(Person.ID, 2L).set(Person.LAST_NAME, "Svendson" ).set(Person.FIRST_NAME, "Tove").set(Person.ADDRESS, "Borgvn 23").set(Person.CITY, "Sandnes");
+				insertInto(PERSON).set(Person.ID, 3L).set(Person.LAST_NAME, "Pettersen").set(Person.FIRST_NAME, "Kari").set(Person.ADDRESS, "Storgt 20").set(Person.CITY, "Stavanger");
+				insertInto(PERSON).set(Person.ID, 4L).set(Person.LAST_NAME, "Nilsen"   ).set(Person.FIRST_NAME, "Tom").set(Person.ADDRESS, "Vingvn 23").set(Person.CITY, "Stavanger");
 			}
 		});
 		
-		for(Person p: db.select(Person.class)) // equivalent to select * from Person )
+		for(Person p: db.select(PERSON)) // equivalent to select * from Person )
 			System.out.println(p);
 		
 		System.out.println("\n\n");
@@ -67,7 +71,7 @@ public class Demo {
 		// statements creation, and statement execution can be separated, even more, the same statement can be executed on two different database instances.
 		
 		// this is the pure statement
-		TableDef<String> selectName = NeoQL.select(Person.FIRST_NAME, Person.class);
+		TableDef<String> selectName = NeoQL.select(Person.FIRST_NAME, PERSON);
 		// to use it I need to apply it to a db:
 		for(String p: db.select(selectName)) // equivalent to select * from Person )
 			System.out.println(p);
@@ -76,7 +80,7 @@ public class Demo {
 		
 		System.out.println("\n\n");
 		System.out.println("SELECT * FROM Persons WHERE City='Sandnes'");
-		TableDef<Person> selectSandnes = NeoQL.select(Person.class, Person.CITY.is("Sandnes") );
+		TableDef<Person> selectSandnes = NeoQL.select(PERSON, Person.CITY.is("Sandnes") );
 		for(Person p: db.select(selectSandnes)) // equivalent to select * from Person )
 			System.out.println(p);
 		
@@ -84,7 +88,7 @@ public class Demo {
 		
 		System.out.println("\n\n");
 		System.out.println("SELECT * FROM Persons ORDER BY LastName");
-		TableDef<Person> selectsortedBy= NeoQL.select(Person.class, Person.LAST_NAME, true);
+		TableDef<Person> selectsortedBy= NeoQL.select(PERSON, Person.LAST_NAME, true);
 		for(Person p: db.select(selectsortedBy)) // equivalent to select * from Person )
 			System.out.println(p);
 		
@@ -92,29 +96,29 @@ public class Demo {
 		System.out.println("INSERT INTO Persons VALUES (5,'Nilsen', 'Johan', 'Bakken 2', 'Stavanger')");
 		
 		db.execute(new Script() {{
-			insertInto(Person.class).set(Person.ID, 5L).set(Person.LAST_NAME, "Nilsen"   ).set(Person.FIRST_NAME, "Johan").set(Person.ADDRESS, "Baken 2").set(Person.CITY, "Stavanger");
+			insertInto(PERSON).set(Person.ID, 5L).set(Person.LAST_NAME, "Nilsen"   ).set(Person.FIRST_NAME, "Johan").set(Person.ADDRESS, "Baken 2").set(Person.CITY, "Stavanger");
 		}});
-		for (Person p : db.select(Person.class))
+		for (Person p : db.select(PERSON))
 			System.out.println(p);
 		
 		System.out.println("\n\n");
 		System.out.println("INSERT INTO Persons (P_Id, LastName, FirstName) VALUES (6, 'Tjessem', 'Jakob')");
 		
 		db.execute(new Script() {{
-			insertInto(Person.class).set(Person.ID, 6L).set(Person.LAST_NAME, "Tjessem").set(Person.FIRST_NAME, "Jakob");
+			insertInto(PERSON).set(Person.ID, 6L).set(Person.LAST_NAME, "Tjessem").set(Person.FIRST_NAME, "Jakob");
 		}});
-		for (Person p : db.select(Person.class))
+		for (Person p : db.select(PERSON))
 			System.out.println(p);
 		
 		System.out.println("\n\n");
 		System.out.println("creates a property");
 		db.execute(new Script() {{
-			createProperty(Person.class, CURRENT);
+			createProperty(PERSON, CURRENT);
 		}});
 		System.out.println("current is ");
 		System.out.println(db.get(CURRENT));
 		
-		TableDef<Person> selector = NeoQL.select(Person.class, Person.ID.is( 4L));
+		TableDef<Person> selector = NeoQL.select(PERSON, Person.ID.is( 4L));
 		
 		Iterator<Person> i = db.iterator(selector);
 		i.hasNext();// there is a bug in my iterator, it needs a call to hasnext first sorry
@@ -128,7 +132,7 @@ public class Demo {
 
 		System.out.println("\n\nupdating the selected person in the database");
 		db.execute(new Script() {{
-			update(Person.class).where( is(Person.ID, 4L) ).set(Person.FIRST_NAME, "toto");
+			update(PERSON).where( is(Person.ID, 4L) ).set(Person.FIRST_NAME, "toto");
 		}});
 		
 		System.out.println("current is ");
@@ -137,7 +141,7 @@ public class Demo {
 		
 		System.out.println("observability demo");
 		System.out.println("it is possible to observe any query");
-		TableDef<Person> stavangers = NeoQL.select(Person.class, Person.CITY.is("Stavanger" ));
+		TableDef<Person> stavangers = NeoQL.select(PERSON, Person.CITY.is("Stavanger" ));
 		Table<Person> stavangersTable = db.tableFor(stavangers);
 		System.out.println("initially strnvangers were ");
 		for (Person p : stavangersTable)
@@ -148,7 +152,7 @@ public class Demo {
 		System.out.println("adding some observability");
 		stavangersTable.addTableListener(new LogObserver<Person>("stavangers"));
 		
-		Table<String> cities = db.tableFor(NeoQL.select(Person.class, Person.CITY));
+		Table<String> cities = db.tableFor(NeoQL.select(PERSON, Person.CITY));
 		cities.addTableListener(new LogObserver<String>("city") );
 		System.out.println("initially cities were");
 		for(String city : cities)
@@ -156,13 +160,13 @@ public class Demo {
 		
 		System.out.println("insert some stavanger");
 		db.execute(new Script() {{
-			insertInto(Person.class)
+			insertInto(PERSON)
 				.set(Person.ID, 7L)
 				.set(Person.FIRST_NAME, "Olaf")
 				.set(Person.LAST_NAME, "Splaf")
 				.set(Person.ADDRESS, "Nowhere 20")
 				.set(Person.CITY, "Stavanger");
-			insertInto(Person.class)
+			insertInto(PERSON)
 			.set(Person.ID, 8L)
 				.set(Person.FIRST_NAME, "Olafson")
 				.set(Person.LAST_NAME, "Splaf")
@@ -173,19 +177,19 @@ public class Demo {
 		
 		System.out.println("deleting some stavanger");
 		db.execute(new Script() {{
-			deleteFrom(Person.class)
+			deleteFrom(PERSON)
 			.where(Person.ID.is( 7L))
 			;
-			update(Person.class)
+			update(PERSON)
 				.where(Person.ID.is( 8L))
 				.set(Person.ADDRESS, "Somewhere 24")
 			;
-			update(Person.class)
+			update(PERSON)
 			.where(Person.ID.is( 8L))
 			.set(Person.CITY, "New York")
 			;
 			
-			update(Person.class)
+			update(PERSON)
 			.where(Person.ID.is( 8L))
 			.set(Person.CITY, "Stavanger")
 			;

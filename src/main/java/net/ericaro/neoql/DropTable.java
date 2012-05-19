@@ -10,14 +10,14 @@ package net.ericaro.neoql;
  */
 public class DropTable<T> implements Statement {
 
-	private Class<T> table;
+	private ClassTableDef<T> table;
 
-	DropTable(Class<T> table) {
+	DropTable(ClassTableDef<T> table) {
 		super();
 		this.table = table;
 	}
 
-	public Class<T> getTable() {
+	public ClassTableDef<T> getTable() {
 		return table;
 	}
 

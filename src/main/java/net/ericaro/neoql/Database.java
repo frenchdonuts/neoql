@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class Database {
 	// real class -> table mapping
-	private Map<Class, TableData>	tables	= new HashMap<Class, TableData>();
+	private Map<ClassTableDef, TableData>	tables	= new HashMap<ClassTableDef, TableData>();
 	private Map<Property, Singleton> values = new HashMap<Property, Singleton>();
 	
 	// TODO fix the package layout, and permissions (protected, package etc) 
@@ -33,7 +33,7 @@ public class Database {
 	 * @param table
 	 * @return
 	 */
-	public <T> TableData<T> tableFor(Class<T> table) {
+	public <T> TableData<T> tableFor(ClassTableDef<T> table) {
 		return tables.get(table);
 	}
 
@@ -48,7 +48,7 @@ public class Database {
 		return table.asTable(this);
 	}
 
-	public <T> void drop(Class<T> table) {
+	public <T> void drop(ClassTableDef<T> table) {
 		tableFor(table).uninstall();
 		this.tables.remove(table);
 	}
@@ -61,33 +61,15 @@ public class Database {
 
 	
 
-	public <T> TableList<T> listFor(Class<T> table) {
-		return new TableList<T>(tableFor(table));
-	}
-
 	public <T> TableList<T> listFor(TableDef<T> table) {
 		return new TableList<T>(tableFor(table));
 	}
 
-	public <T> Iterator<T> iterator(Class<T> table) {
-
-		return new ClassTableDef<T>(table).iterator(this);// reverse visitor pattern
-	}
 
 	public <T> Iterator<T> iterator(final TableDef<T> table) {
 		return table.iterator(this);// reverse visitor pattern
 	}
 
-	public <T> Iterable<T> select(final Class<T> table) {
-		return new Iterable<T>() {
-
-			@Override
-			public Iterator<T> iterator() {
-				return Database.this.iterator(table);
-			}
-
-		};
-	}
 
 	public <T> Iterable<T> select(final TableDef<T> table) {
 		return new Iterable<T>() {
@@ -120,19 +102,19 @@ public class Database {
 	// EVENTS BEGIN
 	// ##########################################################################
 
-	public <T> void addTableListener(Class<T> table, TableListener<T> listener) {
+	public <T> void addTableListener(ClassTableDef<T> table, TableListener<T> listener) {
 		tableFor(table).addTableListener(listener);
 	}
 
-	public <T> void removeTableListener(Class<T> table, TableListener<T> listener) {
+	public <T> void removeTableListener(ClassTableDef<T> table, TableListener<T> listener) {
 		tableFor(table).removeTableListener(listener);
 	}
 
-	<T> void addInternalTableListener(Class<T> table, TableListener<T> listener) {
+	<T> void addInternalTableListener(ClassTableDef<T> table, TableListener<T> listener) {
 		tableFor(table).addInternalTableListener(listener);
 	}
 
-	<T> void removeInternalTableListener(Class<T> table, TableListener<T> listener) {
+	<T> void removeInternalTableListener(ClassTableDef<T> table, TableListener<T> listener) {
 		tableFor(table).removeInternalTableListener(listener);
 	}
 	
@@ -153,15 +135,15 @@ public class Database {
 
 	<T> void execute(CreateTable<T> createTable) {
 
-		Class<T> table = createTable.getTable();
-		TableData<T> data = new TableData<T>(this, createTable);
+		ClassTableDef<T> table = createTable.getTableDef();
+		TableData<T> data = new TableData<T>(this, table);
 		this.tables.put(table, data);
 		data.install();
 	}
 
 	<T> void execute(DropTable<T> dropTable) {
 
-		Class<T> table = dropTable.getTable();
+		ClassTableDef<T> table = dropTable.getTable();
 		drop(tableFor(table));
 	}
 
@@ -177,8 +159,7 @@ public class Database {
 	}
 
 	<T> void execute(Update<T> update) {
-		Class<T> table = update.getTable();
-		TableData<T> data = tableFor(table);
+		TableData<T> data = tableFor(update.getTable());
 		ColumnValue<T, ?>[] setters = update.getColumnValuePairs();
 		Predicate<? super T> where = update.getWhere();
 		for (T row : data)
@@ -212,7 +193,7 @@ public class Database {
 	// VISITOR CALL BACK FOR TABLE CREATION BEGIN
 	// ##########################################################################
 
-	public <T> Table<T> table(Class<T> table) {
+	public <T> Table<T> table(ClassTableDef<T> table) {
 		return tableFor(table);
 	}
 

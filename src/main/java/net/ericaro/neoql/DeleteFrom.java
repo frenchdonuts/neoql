@@ -10,15 +10,15 @@ package net.ericaro.neoql;
  */
 public class DeleteFrom<T> implements Statement {
 
-	Class<T> table;
+	ClassTableDef<T> table;
 	private Predicate<? super T> where;
 
-	DeleteFrom(Class<T> table) {
+	DeleteFrom(ClassTableDef<T> table) {
 		super();
 		this.table = table;
 	}
 
-	DeleteFrom(Class<T> table, Predicate<? super T> where) {
+	DeleteFrom(ClassTableDef<T> table, Predicate<? super T> where) {
 		this(table);
 		this.where = where;
 	}
@@ -28,7 +28,7 @@ public class DeleteFrom<T> implements Statement {
 		return this;
 	}
 
-	public Class<T> getTable() {
+	public ClassTableDef<T> getTable() {
 		return table;
 	}
 

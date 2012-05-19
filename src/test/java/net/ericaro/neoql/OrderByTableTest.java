@@ -1,35 +1,32 @@
 package net.ericaro.neoql;
 
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import net.ericaro.neoql.Model.Teacher;
-import net.ericaro.neoql.lang.Script;
+import net.ericaro.neoql.StudentModel.Teacher;
 
 import org.junit.Test;
 
 public class OrderByTableTest {
-
+	public static final ClassTableDef<Teacher> TEACHER = Teacher.TABLE;
 	@Test
 	public void testIterator() {
 		
 			Database db = new Database();
 			db.execute(new Script() {{
-				createTable(Teacher.class) ;
-				insertInto(Teacher.class).set(Teacher.NAME, "Allison");
-				insertInto(Teacher.class).set(Teacher.NAME, "Madison");
-				insertInto(Teacher.class).set(Teacher.NAME, "Bedison");
-				insertInto(Teacher.class).set(Teacher.NAME, "Allison");
-				insertInto(Teacher.class).set(Teacher.NAME, "Madison");
-				insertInto(Teacher.class).set(Teacher.NAME, "Toto"   ); 
+				createTable(TEACHER) ;
+				insertInto(TEACHER).set(Teacher.NAME, "Allison");
+				insertInto(TEACHER).set(Teacher.NAME, "Madison");
+				insertInto(TEACHER).set(Teacher.NAME, "Bedison");
+				insertInto(TEACHER).set(Teacher.NAME, "Allison");
+				insertInto(TEACHER).set(Teacher.NAME, "Madison");
+				insertInto(TEACHER).set(Teacher.NAME, "Toto"   ); 
 			}});
 			
 			
-			Table<Teacher> table = db.table(Teacher.class);
+			Table<Teacher> table = db.table(TEACHER);
 			// no EDSL for simple test
-			OrderByTable<Teacher,String> gtable = new OrderByTable<Teacher, String>(table, Teacher.NAME);
+			OrderByTable<Teacher,String> gtable = new OrderByTable<Teacher, String>(table, Teacher.NAME, true);
 			
 			
 			List<String> res = new ArrayList<String>();

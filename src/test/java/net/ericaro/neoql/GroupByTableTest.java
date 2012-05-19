@@ -1,29 +1,31 @@
 package net.ericaro.neoql;
 
-import java.util.HashSet;
+ import java.util.HashSet;
 import java.util.Set;
 
-import net.ericaro.neoql.Model.Teacher;
+import net.ericaro.neoql.StudentModel.Teacher;
 
 import org.junit.Test;
 
+import static net.ericaro.neoql.StudentModel.*;
+import static net.ericaro.neoql.StudentModel.*;
 
 public class GroupByTableTest {
 
 	@Test public void testSimple() {
 		Database db = new Database();
 		db.execute(new Script() {{
-			createTable(Teacher.class) ;
-			insertInto(Teacher.class).set(Teacher.NAME, "Allison");
-			insertInto(Teacher.class).set(Teacher.NAME, "Madison");
-			insertInto(Teacher.class).set(Teacher.NAME, "Bedison");
-			insertInto(Teacher.class).set(Teacher.NAME, "Allison");
-			insertInto(Teacher.class).set(Teacher.NAME, "Madison");
-			insertInto(Teacher.class).set(Teacher.NAME, "Toto"   ); 
+			createTable(TEACHER) ;
+			insertInto(TEACHER).set(Teacher.NAME, "Allison");
+			insertInto(TEACHER).set(Teacher.NAME, "Madison");
+			insertInto(TEACHER).set(Teacher.NAME, "Bedison");
+			insertInto(TEACHER).set(Teacher.NAME, "Allison");
+			insertInto(TEACHER).set(Teacher.NAME, "Madison");
+			insertInto(TEACHER).set(Teacher.NAME, "Toto"   ); 
 		}});
 		
 		
-		Table<Teacher> table = db.table(Teacher.class);
+		Table<Teacher> table = db.table(TEACHER);
 		// no EDSL for simple test
 		GroupByTable<Teacher, String> gtable = new GroupByTable<Teacher, String>(Teacher.NAME, table);
 		

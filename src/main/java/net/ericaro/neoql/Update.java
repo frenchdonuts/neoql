@@ -12,15 +12,15 @@ import java.util.Arrays;
  */
 public class Update<T> implements Statement {
 
-	private Class<T> type;
+	private ClassTableDef<T> type;
 	private ColumnValue<T, ?>[] columnValuePairs = new ColumnValue[0];
 	private Predicate<? super T> where;
 
-	public Update(Class<T> type) {
+	public Update(ClassTableDef<T> type) {
 		this.type = type;
 	}
 
-	Update(Class<T> type, Predicate<? super T> where,
+	Update(ClassTableDef<T> type, Predicate<? super T> where,
 			ColumnValue<T, ?>... columnValuePairs) {
 		super();
 		this.type = type;
@@ -40,7 +40,7 @@ public class Update<T> implements Statement {
 		return this;
 	}
 
-	public Class<T> getTable() {
+	public ClassTableDef<T> getTable() {
 		return type;
 	}
 

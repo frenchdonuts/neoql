@@ -18,9 +18,6 @@ public class OrderBySelect<T,V extends Comparable<? super V>> implements TableDe
 	private TableDef<T>				table;
 	private boolean ascendent = true;
 
-	OrderBySelect(Class<T> table,  Column<T,V> orderBy, boolean ascendent) {
-		this(new ClassTableDef<T>(table), orderBy, ascendent);
-	}
 
 	OrderBySelect(TableDef<T> table, Column<T,V> orderBy,boolean ascendent) {
 		this.table = table;

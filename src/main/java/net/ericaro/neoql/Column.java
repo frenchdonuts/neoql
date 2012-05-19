@@ -5,18 +5,18 @@ import java.lang.reflect.Field;
 
 public class Column<T, V> implements Mapper<T, V> {
 
-	Class<V> foreignTable;
+	ClassTableDef<V> foreignTable;
 
 	// that's part of the 
 	Field field;
 	String fname;
 
-	public Column(String fname) {
+	Column(String fname) {
 		super();
 		this.fname = fname;
 	}
 
-	public Column(String fname, Class<V> foreignTable) {
+	Column(String fname, ClassTableDef<V> foreignTable) {
 		this(fname);
 		this.foreignTable = foreignTable;
 	}
@@ -48,7 +48,7 @@ public class Column<T, V> implements Mapper<T, V> {
 		}
 	}
 
-	public Class<V> getForeignTable() {
+	public ClassTableDef<V> getForeignTable() {
 		return foreignTable;
 	}
 
@@ -56,11 +56,14 @@ public class Column<T, V> implements Mapper<T, V> {
 		return foreignTable != null;
 	}
 
-	 void init(Class<T> tableClass) throws NoSuchFieldException,
-			SecurityException {
+	void init(Class<T> tableClass)  {
 		if (field == null) {// not init
-			field = tableClass.getDeclaredField(fname);
-			field.setAccessible(true);
+			try {
+				field = tableClass.getDeclaredField(fname);
+				field.setAccessible(true);
+			} catch (NoSuchFieldException e) {
+				throw new RuntimeException("Introspection Error initializing column "+fname, e);
+			}
 		}
 	}
 

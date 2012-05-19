@@ -15,9 +15,6 @@ public class Select<T> implements TableDef<T> {
 	TableDef<T> table;
 	Predicate<? super T> where;
 
-	public Select(Class<T> table, Predicate<? super T> where) {
-		this(new ClassTableDef<T>(table), where);
-	}
 
 	public Select(TableDef<T> table, Predicate<? super T> where) {
 		super();

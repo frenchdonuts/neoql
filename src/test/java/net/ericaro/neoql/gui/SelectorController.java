@@ -22,11 +22,11 @@ import net.ericaro.neoql.gui.SelectorModel.Person;
 /**
  * @author eric
  */
-public class SelectorView extends JFrame {
+public class SelectorController extends JFrame {
 	// keep a reference to a model
 	SelectorModel	model;
 
-	public SelectorView() {
+	public SelectorController() {
 		initComponents();
 	}
 
@@ -60,7 +60,7 @@ public class SelectorView extends JFrame {
 	}
 	
 	public static void main(String[] args) {
-		new SelectorView().start();
+		new SelectorController().start();
 	}
 	
 	// util to retrieve the selected items in a list but casted as Person, unfortunately until java 7 there is no

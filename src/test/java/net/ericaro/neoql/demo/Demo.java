@@ -3,13 +3,39 @@ package net.ericaro.neoql.demo;
 import java.util.Iterator;
 
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.InsertInto;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Property;
 import net.ericaro.neoql.Script;
+import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableDef;
+import net.ericaro.neoql.TableListener;
 
 public class Demo {
+	public static final class LogObserver<T> implements TableListener<T> {
+		
+		private String	label;
+
+		public LogObserver(String label) {
+			super();
+			this.label = label;
+		}
+
+		@Override
+		public void updated(T oldRow, T newRow) {
+			System.out.println("updated "+label+": \nwas: "+oldRow+"\n is : "+newRow);
+		}
+
+		@Override
+		public void inserted(T newRow) {
+			System.out.println("inserted "+label+": \n is: "+newRow);
+		}
+
+		@Override
+		public void deleted(T oldRow) {
+			System.out.println("deleted "+label+": \n is: "+oldRow);
+		}
+	}
+
 	public static final Property<Person> CURRENT = new Property<Person>();
 
 	public static void main(String[] args) {
@@ -50,7 +76,7 @@ public class Demo {
 		
 		System.out.println("\n\n");
 		System.out.println("SELECT * FROM Persons WHERE City='Sandnes'");
-		TableDef<Person> selectSandnes = NeoQL.select(Person.class, NeoQL.is(Person.CITY, "Sandnes"));
+		TableDef<Person> selectSandnes = NeoQL.select(Person.class, Person.CITY.is("Sandnes") );
 		for(Person p: db.select(selectSandnes)) // equivalent to select * from Person )
 			System.out.println(p);
 		
@@ -88,7 +114,7 @@ public class Demo {
 		System.out.println("current is ");
 		System.out.println(db.get(CURRENT));
 		
-		TableDef<Person> selector = NeoQL.select(Person.class, NeoQL.is(Person.ID, 4L));
+		TableDef<Person> selector = NeoQL.select(Person.class, Person.ID.is( 4L));
 		
 		Iterator<Person> i = db.iterator(selector);
 		i.hasNext();// there is a bug in my iterator, it needs a call to hasnext first sorry
@@ -108,7 +134,63 @@ public class Demo {
 		System.out.println("current is ");
 		System.out.println(db.get(CURRENT));
 		
-
+		
+		System.out.println("observability demo");
+		System.out.println("it is possible to observe any query");
+		TableDef<Person> stavangers = NeoQL.select(Person.class, Person.CITY.is("Stavanger" ));
+		Table<Person> stavangersTable = db.tableFor(stavangers);
+		System.out.println("initially strnvangers were ");
+		for (Person p : stavangersTable)
+			System.out.println(p);
+		
+		
+		
+		System.out.println("adding some observability");
+		stavangersTable.addTableListener(new LogObserver<Person>("stavangers"));
+		
+		Table<String> cities = db.tableFor(NeoQL.select(Person.class, Person.CITY));
+		cities.addTableListener(new LogObserver<String>("city") );
+		System.out.println("initially cities were");
+		for(String city : cities)
+			System.out.println("city: "+city);
+		
+		System.out.println("insert some stavanger");
+		db.execute(new Script() {{
+			insertInto(Person.class)
+				.set(Person.ID, 7L)
+				.set(Person.FIRST_NAME, "Olaf")
+				.set(Person.LAST_NAME, "Splaf")
+				.set(Person.ADDRESS, "Nowhere 20")
+				.set(Person.CITY, "Stavanger");
+			insertInto(Person.class)
+			.set(Person.ID, 8L)
+				.set(Person.FIRST_NAME, "Olafson")
+				.set(Person.LAST_NAME, "Splaf")
+				.set(Person.ADDRESS, "Nowhere 22")
+				.set(Person.CITY, "Stavanger");
+			
+		}});
+		
+		System.out.println("deleting some stavanger");
+		db.execute(new Script() {{
+			deleteFrom(Person.class)
+			.where(Person.ID.is( 7L))
+			;
+			update(Person.class)
+				.where(Person.ID.is( 8L))
+				.set(Person.ADDRESS, "Somewhere 24")
+			;
+			update(Person.class)
+			.where(Person.ID.is( 8L))
+			.set(Person.CITY, "New York")
+			;
+			
+			update(Person.class)
+			.where(Person.ID.is( 8L))
+			.set(Person.CITY, "Stavanger")
+			;
+			
+		}});
 		
 		
 

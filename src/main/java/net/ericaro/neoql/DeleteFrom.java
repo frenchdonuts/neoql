@@ -23,7 +23,7 @@ public class DeleteFrom<T> implements Statement {
 		this.where = where;
 	}
 
-	DeleteFrom<T> where(Predicate<? super T> where) {
+	public DeleteFrom<T> where(Predicate<? super T> where) {
 		this.where = where;
 		return this;
 	}

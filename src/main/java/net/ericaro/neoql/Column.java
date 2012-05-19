@@ -21,6 +21,8 @@ public class Column<T, V> implements Mapper<T, V> {
 		this.foreignTable = foreignTable;
 	}
 
+	
+	
 	 void copy(T src, T target) {
 		set(target, get(src));
 	}
@@ -62,4 +64,17 @@ public class Column<T, V> implements Mapper<T, V> {
 		}
 	}
 
+	 public Predicate<T> is(final V value) {
+			return new Predicate<T>() {
+
+				@Override
+				public boolean eval(T t) {
+					if (value == null)
+						return false; // null is always false
+					return value.equals(Column.this.get(t));
+				}
+
+			};
+		}
+	 
 }

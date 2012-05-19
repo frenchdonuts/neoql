@@ -54,7 +54,7 @@ public class GroupByTable<S, T> implements Table<T> {
 			}
 
 			public void updated(S old, S row) {
-				T vold = groupByColumn.get(row);
+				T vold = groupByColumn.get(old);
 				T vnew = groupByColumn.get(row);
 
 				if (vold.equals(vnew))

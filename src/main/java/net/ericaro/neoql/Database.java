@@ -19,6 +19,7 @@ public class Database {
 	// for instance THE selected Item, so that it can be observed in the app, and reused
 	// TODO oops, found a bug in the drop stuff. If I create a table to serve another one, I need to drop it too. (for instance select(mapper) creates a normal select, then mapper table, hence the "normal select is never deleted
 	// TODO do some stress test
+	// TODO provide an SQL like toString for table def
 	
 	// ##########################################################################
 	// PUBLIC API BEGIN

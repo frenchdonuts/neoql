@@ -2,11 +2,13 @@ package net.ericaro.neoql;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 
 /**
@@ -25,6 +27,7 @@ public class TableData<T> implements Table<T> {
 	//private Class<T> type;
 	private ClassTableDef<T> table;
 	private Database owner;
+	private TableListener[] internalColumnListeners;
 	private TableListener[] columnListeners;
 
 	
@@ -33,7 +36,9 @@ public class TableData<T> implements Table<T> {
 		this.owner = owner;
 		this.table = table;
 		this.columns = table.getColumns();
+		this.internalColumnListeners = new TableListener[this.columns.length];
 		this.columnListeners = new TableListener[this.columns.length];
+		
 
 	}
 
@@ -63,17 +68,26 @@ public class TableData<T> implements Table<T> {
 
 	private <V> void installColumn(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			ForeignKeyColumnListener<V> listener = new ForeignKeyColumnListener<V>(
-					col);
-			columnListeners[i] = listener;
-			owner.addInternalTableListener(col.getForeignTable(), listener);
+			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
+			owner.addInternalTableListener(col.getForeignTable(), internalColumnListeners[i]);
+			columnListeners[i] = new AbstractTableListener<V>() {
+				public void updated(V oldRow, V newRow) {
+					fireUpdate();
+				}
+			};
+			owner.addTableListener(col.getForeignTable(), columnListeners[i]);
+			
 		}
 	}
 
 	private <V> void unInstallColumn(int i, Column<T, V> col) {
-		if (col.hasForeignKey())
+		if (col.hasForeignKey()) {
 			owner.removeInternalTableListener(col.getForeignTable(),
+					internalColumnListeners[i]);
+			owner.removeTableListener(col.getForeignTable(),
 					columnListeners[i]);
+			
+		}
 	}
 
 	public void addTableListener(TableListener<T> listener) {
@@ -93,7 +107,7 @@ public class TableData<T> implements Table<T> {
 		internals.removeTableListener(listener);
 	}
 
-	class ForeignKeyColumnListener<V> implements TableListener<V> {
+	class ForeignKeyColumnListener<V> extends AbstractTableListener<V> {
 
 		private Column<T, V> col;
 
@@ -106,9 +120,14 @@ public class TableData<T> implements Table<T> {
 		public void updated(final V oldValue, final V newValue) {
 			if (oldValue == newValue)
 				return;
-			owner.execute(new Script() {{
-				update(table).where(NeoQL.is(col, oldValue) ).set(col, newValue);
-			}});
+			
+			Predicate<T> p = NeoQL.is(col, oldValue) ;
+			ColumnValue<T, ?>[] setters = new ColumnValue[] {
+					new ColumnValue<T, V>(col, newValue)
+			};
+			for(T row: rows)
+				if(p.eval(row))
+					update(row, setters);
 		}
 
 		@Override
@@ -120,9 +139,6 @@ public class TableData<T> implements Table<T> {
 				if (inUse.eval(t))
 					throw new NeoQLException("Foreign Key violation" + col);
 		}
-
-		@Override
-		public void inserted(V newRow) {}
 
 		@Override
 		public String toString() {
@@ -153,11 +169,8 @@ public class TableData<T> implements Table<T> {
 	}
 
 	Map<T, T> updatedRows = new HashMap<T, T>();
-	int reintrant = -1;
 
 	void update(T row, ColumnValue<T, ?>[] setters) {
-		reintrant++;
-		try {
 			T clone;
 			if (updatedRows.containsKey(row))
 				clone = row;
@@ -173,40 +186,37 @@ public class TableData<T> implements Table<T> {
 			int i = rows.indexOf(row);
 			rows.set(i, clone);
 			internals.fireUpdated(row, clone); 
-
-		} finally {
-			reintrant--;
-			if (reintrant < 0) {
-				for (Entry<T, T> e : updatedRows.entrySet())
-					events.fireUpdated(e.getValue(), e.getKey());
-				updatedRows.clear();
-			} else
-				System.out
-						.println("reintrant update: do not clean the updated set");
-
-		}
-
 	}
+	
+	void fireUpdate() {
+		HashSet<Entry<T, T>> temp = new HashSet<Entry<T, T>>(updatedRows.entrySet() );// copy entries
+		updatedRows.clear(); // clear before causing any reintrant calls
+		for (Entry<T, T> e : temp )
+			events.fireUpdated(e.getValue(), e.getKey());
+	}
+	
 
 	private boolean contains(T value) {
 		return rows.contains(value);
 	}
 
+	
 	void delete(Predicate<? super T> where) {
 		for (ListIterator<T> i = rows.listIterator(); i.hasNext();) {
 			T row = i.next();
 			if (where.eval(row)) {
 				i.remove();
-				internals.fireDeleted(row);
-				events.fireDeleted(row);
+				internals.fireDeleted(row); // eventually I'll had to use the same protocol as for the update operation. But for now, there is no need, internals only fire exeception
+				events.fireInserted(row);
 			}
 		}
 	}
+	
+	
 
 	T insert(T row) {
 		rows.add(row);
 		internals.fireInserted(row);
-		events.fireInserted(row);
 		return row;
 	}
 

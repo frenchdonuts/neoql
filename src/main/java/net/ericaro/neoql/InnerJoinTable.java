@@ -97,8 +97,8 @@ public class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 	}
 
 	private void leftUpdated(L oldRow, L newRow) {
-		System.out.println("left updated " + oldRow + " -> " + newRow);
 
+		
 		// handled what was
 		for (ListIterator<Pair<L, R>> i = data.listIterator(); i.hasNext();) {
 			Pair<L, R> old = i.next();
@@ -132,7 +132,7 @@ public class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 			if (wasnt) { // the case, was and will be was already handled
 				Pair<L, R> newPair = new Pair<L, R>(newRow, row); // this is the new pair that should be
 				boolean willbe = on.eval(newPair);
-				if (willbe) {
+				if (willbe && ! data.contains(newPair)) {
 					data.add(newPair);
 					events.fireInserted(newPair); // act like if the new row was added
 				}

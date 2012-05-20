@@ -166,6 +166,7 @@ public class Database {
 			if (where.eval(row)) {
 				data.update(row, setters);
 			}
+		data.fireUpdate() ;
 	}
 	
 	<T> void execute(CreateProperty<T> createProperty) {
@@ -202,8 +203,7 @@ public class Database {
 	}
 
 	public <S, T> Table<T> table(MapSelect<S, T> select) {
-		SelectTable<S> table = new SelectTable<S>(tableFor(select.getTable()), select.getWhere());
-		return new MappedTable<S, T>(select.getMapper(), table);
+		return new MappedTable<S, T>(select.getMapper(), tableFor(select.getTable()) );
 	}
 
 	public <S, T> Table<T> table(GroupBySelect<S, T> select) {

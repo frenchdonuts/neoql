@@ -47,6 +47,9 @@ public abstract class Generator<T> implements Iterator<T>{
 		if (exception !=null )
 			throw exception;
 		
+		if (! init)
+			computeNext();
+		
 		T last = next;
 		computeNext();
 		return last;

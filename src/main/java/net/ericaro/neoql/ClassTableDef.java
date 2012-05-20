@@ -54,6 +54,19 @@ public class ClassTableDef<T> implements TableDef<T> {
 	}
 	}
 	
+	public Predicate<T> is(final T value) {
+		return new Predicate<T>() {
+
+			@Override
+			public boolean eval(T t) {
+				if (value == null)
+					return false; // null is always false, is it ?
+				return t == value ;
+			}
+
+		};
+	}
+	
 	
 
 }

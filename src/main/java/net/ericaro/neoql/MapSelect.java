@@ -14,11 +14,9 @@ public class MapSelect<S, T> implements TableDef<T> {
 
 	Mapper<S, T> mapper;
 	private TableDef<S> table;
-	private Predicate<? super S> where;
 
-	MapSelect(Mapper<S, T> mapper, TableDef<S> table, Predicate<? super S> where) {
+	MapSelect(Mapper<S, T> mapper, TableDef<S> table) {
 		this.table = table;
-		this.where = where;
 		this.mapper = mapper;
 	}
 
@@ -28,10 +26,6 @@ public class MapSelect<S, T> implements TableDef<T> {
 
 	public TableDef<S> getTable() {
 		return table;
-	}
-
-	public Predicate<? super S> getWhere() {
-		return where;
 	}
 
 	@Override

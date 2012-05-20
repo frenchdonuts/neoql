@@ -109,12 +109,12 @@ public class NeoQL {
 	}
 
 	public static <S, T> TableDef<T> select(Mapper<S, T> mapper, TableDef<S> table) {
-		return new MapSelect<S, T>(mapper, table, NeoQL.True);
+		return new MapSelect<S, T>(mapper, table);
 	}
 
 
 	public static <S, T> TableDef<T> select(Mapper<S, T> mapper, TableDef<S> table, Predicate<? super S> where) {
-		return new MapSelect<S, T>(mapper, table, where);
+		return new MapSelect<S, T>(mapper, select(table, where));
 	}
 
 
@@ -140,5 +140,14 @@ public class NeoQL {
 
 	public static <L, R> TableDef<Pair<L, R>> innerJoin(TableDef<L> left, TableDef<R> right, Predicate<? super Pair<L, R>> on) {
 		return new InnerJoin<L, R>(left, right, on);
+	}
+
+	public static <L,R> TableDef<L> left(TableDef<Pair<L,R>> table) {
+		Mapper<Pair<L,R>, L> map= Pair.left() ;
+		return new MapSelect<Pair<L,R>, L>(map, table);
+	}
+	public static <L,R> TableDef<R> right(TableDef<Pair<L,R>> table) {
+		Mapper<Pair<L,R>, R> map= Pair.right() ;
+		return new MapSelect<Pair<L,R>, R>(map, table);
 	}
 }

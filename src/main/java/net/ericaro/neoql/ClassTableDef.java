@@ -15,17 +15,37 @@ public class ClassTableDef<T> implements TableDef<T> {
 		this.columns = new AbstractColumn[0];
 	}
 	
+	 /** add a column by introspecting the fields.
+	  * 
+	  * @param name
+	  * @return
+	  */
 	 public <V> AbstractColumn<T,V> addColumn(String name){
 		 return addColumn(name, null);
 	 }
-
+	 /** add a Column by introspecting the fields
+	  * 
+	  * @param name
+	  * @param foreignKey
+	  * @return
+	  */
 	 public <V> AbstractColumn<T,V> addColumn(String name, ClassTableDef<V> foreignKey ){
-		 AbstractColumn<T, V> c = new IntrospectionColumn<T, V>(name, foreignKey);
+		 return doAddCol(new IntrospectionColumn<T, V>(name, foreignKey));
+	 }
+
+	 
+	 public <V> AbstractColumn<T,V> addColumn(Attribute<T,V> attr, ClassTableDef<V> foreignKey ){
+		 return doAddCol(new AttributeColumn<T,V>(attr, foreignKey));
+	 }
+	 
+	 
+	 private <V> AbstractColumn<T, V> doAddCol(AbstractColumn<T, V> c) {
 		 columns = Arrays.copyOf(columns, columns.length+1);
 		 columns[columns.length-1] = c;
 		 c.init(table);
 		 return c;
 	 }
+	  
 	
 	public Class<T> getTable() {
 		return table;

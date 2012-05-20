@@ -2,10 +2,10 @@ package net.ericaro.neoql;
 
  class ColumnValue<T, V> {
 
-	Column<T, V> column;
+	AbstractColumn<T, V> column;
 	V value;
 
-	ColumnValue(Column<T, V> column, V value) {
+	ColumnValue(AbstractColumn<T, V> column, V value) {
 		super();
 		this.column = column;
 		this.value = value;

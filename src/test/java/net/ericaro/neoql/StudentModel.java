@@ -27,7 +27,7 @@ public class StudentModel {
 	public static class Student {
 		public static final ClassTableDef<Student> TABLE = new ClassTableDef<Student>(Student.class);
 
-		public static final Column<Student, Integer> RANK = new Column<Student, Integer>("rank");
+		public static final Column<Student, Integer> RANK       = TABLE.addColumn("rank");
 		public static final Column<Student, String> NAME 		= TABLE.addColumn("name");
 		public static final Column<Student, Teacher> TEACHER    = TABLE.addColumn("teacher", Teacher.TABLE);
 

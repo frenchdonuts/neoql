@@ -7,20 +7,20 @@ import java.util.Iterator;
 public class ClassTableDef<T> implements TableDef<T> {
 
 	Class<T> table;
-	private Column<T, ?>[] columns;
+	private AbstractColumn<T, ?>[] columns;
 
 	 public ClassTableDef(Class<T> table) {
 		super();
 		this.table = table;
-		this.columns = new Column[0];
+		this.columns = new AbstractColumn[0];
 	}
 	
-	 public <V> Column<T,V> addColumn(String name){
+	 public <V> AbstractColumn<T,V> addColumn(String name){
 		 return addColumn(name, null);
 	 }
 
-	 public <V> Column<T,V> addColumn(String name, ClassTableDef<V> foreignKey ){
-		 Column<T, V> c = new Column<T, V>(name, foreignKey);
+	 public <V> AbstractColumn<T,V> addColumn(String name, ClassTableDef<V> foreignKey ){
+		 AbstractColumn<T, V> c = new IntrospectionColumn<T, V>(name, foreignKey);
 		 columns = Arrays.copyOf(columns, columns.length+1);
 		 columns[columns.length-1] = c;
 		 c.init(table);

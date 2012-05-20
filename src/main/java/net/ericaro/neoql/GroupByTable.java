@@ -91,7 +91,7 @@ public class GroupByTable<S, T> implements Table<T> {
 	public static class GroupByIterator<S, T> extends Generator<T> {
 
 		Iterator<S>					isource;
-		Column<S, T>				groupByColumn;
+		Column<S, T>		groupByColumn;
 		private transient Set<T>	equivalents	= new HashSet<T>();
 
 		public GroupByIterator(Iterator<S> isource, Column<S, T> groupByColumn) {

@@ -23,7 +23,7 @@ public class InsertInto<T> implements Statement {
 	public <V> InsertInto<T> set(Column<T, V> col, V value) {
 		int l = columnValuePairs.length;
 		columnValuePairs = Arrays.copyOf(columnValuePairs, l + 1);
-		columnValuePairs[l] = new ColumnValue<T, V>(col, value);
+		columnValuePairs[l] = new ColumnValue<T, V>((AbstractColumn<T, V>) col, value);
 		return this;
 	}
 

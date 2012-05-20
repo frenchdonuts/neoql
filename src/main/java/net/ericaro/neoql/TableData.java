@@ -1,6 +1,7 @@
 package net.ericaro.neoql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,7 +23,7 @@ public class TableData<T> implements Table<T> {
 	TableListenerSupport<T> events = new TableListenerSupport<T>();
 	TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
 
-	Column<T, ?>[] columns;
+	AbstractColumn<T, ?>[] columns;
 	List<T> rows = new ArrayList<T>();
 	//private Class<T> type;
 	private ClassTableDef<T> table;
@@ -35,7 +36,11 @@ public class TableData<T> implements Table<T> {
 	TableData(Database owner, ClassTableDef<T> table) {
 		this.owner = owner;
 		this.table = table;
-		this.columns = table.getColumns();
+		Column[] cols = table.getColumns();
+		
+		this.columns = new AbstractColumn[cols.length];
+		System.arraycopy(cols, 0, columns, 0, cols.length);
+		
 		this.internalColumnListeners = new TableListener[this.columns.length];
 		this.columnListeners = new TableListener[this.columns.length];
 		
@@ -52,13 +57,13 @@ public class TableData<T> implements Table<T> {
 
 	void install() {
 		int i = 0;
-		for (Column<T, ?> col : columns)
+		for (AbstractColumn<T, ?> col : columns)
 			installColumn(i++, col);
 	}
 
 	void uninstall() {
 		int i = 0;
-		for (Column<T, ?> col : columns)
+		for (AbstractColumn<T, ?> col : columns)
 			unInstallColumn(i++, col);
 		if (internals.getListenerCount() > 0)
 			throw new NeoQLException("Cannot drop table " + table
@@ -66,7 +71,7 @@ public class TableData<T> implements Table<T> {
 
 	}
 
-	private <V> void installColumn(int i, Column<T, V> col) {
+	private <V> void installColumn(int i, AbstractColumn<T, V> col) {
 		if (col.hasForeignKey()) {
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(col.getForeignTable(), internalColumnListeners[i]);
@@ -80,7 +85,7 @@ public class TableData<T> implements Table<T> {
 		}
 	}
 
-	private <V> void unInstallColumn(int i, Column<T, V> col) {
+	private <V> void unInstallColumn(int i, AbstractColumn<T, V> col) {
 		if (col.hasForeignKey()) {
 			owner.removeInternalTableListener(col.getForeignTable(),
 					internalColumnListeners[i]);
@@ -109,9 +114,9 @@ public class TableData<T> implements Table<T> {
 
 	class ForeignKeyColumnListener<V> extends AbstractTableListener<V> {
 
-		private Column<T, V> col;
+		private AbstractColumn<T, V> col;
 
-		ForeignKeyColumnListener(Column<T, V> col) {
+		ForeignKeyColumnListener(AbstractColumn<T, V> col) {
 			super();
 			this.col = col;
 		}
@@ -163,7 +168,7 @@ public class TableData<T> implements Table<T> {
 
 	T clone(T row) {
 			T clone = table.newInstance();
-			for (Column<T, ?> c : columns)
+			for (AbstractColumn<T, ?> c : columns)
 				c.copy(row, clone);
 			return clone;
 	}

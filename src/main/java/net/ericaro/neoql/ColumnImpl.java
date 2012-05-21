@@ -1,8 +1,7 @@
 package net.ericaro.neoql;
 
 /**
- * An Abstract column handles the foreign table definition, and some EDSL implementations.
- * 
+ * The column implementation. Separated from the interface to avoid references to it in the client's model.
  * @author eric
  * 
  * @param <T>
@@ -10,7 +9,7 @@ package net.ericaro.neoql;
  */
 class ColumnImpl<T, V> implements Column<T, V> {
 
-	// the foreign class definition, null if there is no foreign class defeintion.
+	// the foreign class definition, null if there is no foreign class definition
 	private ClassTableDef<V>	foreignTable;
 	Attribute<T, V>				attr;
 
@@ -48,6 +47,12 @@ class ColumnImpl<T, V> implements Column<T, V> {
 	@Override
 	public V map(T source) {
 		return get(source);
+	}
+	
+
+	@Override
+	public String getName() {
+		return attr.getName();
 	}
 
 	public ClassTableDef<V> getForeignTable() {
@@ -93,4 +98,16 @@ class ColumnImpl<T, V> implements Column<T, V> {
 		};
 	}
 
+	private Class<V> getType() {
+		return attr.getType();
+	}
+	@Override
+	public String toString() {
+		return getName()+" "+getType().getSimpleName()+(foreignTable==null?"":" FOREIGN KEY REFERENCES "+foreignTable.getName());
+	}
+
+
+	
+	
+	
 }

@@ -10,11 +10,7 @@ public class Database {
 	private Map<ClassTableDef, TableData>	tables	= new HashMap<ClassTableDef, TableData>();
 	private Map<Property, Singleton> values = new HashMap<Property, Singleton>();
 	
-	// TODO fix the package layout, and permissions (protected, package etc) 
 	// TODO implement every possible joins
-	// TODO rethink this all 'introspection' thing:
-	// - columns are passed to the create table statement
-	// - user handle the columns the way he wants
 	// TODO find a way to express the definition of a singleton
 	// for instance THE selected Item, so that it can be observed in the app, and reused
 	// TODO oops, found a bug in the drop stuff. If I create a table to serve another one, I need to drop it too. (for instance select(mapper) creates a normal select, then mapper table, hence the "normal select is never deleted

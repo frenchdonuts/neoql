@@ -14,6 +14,21 @@ public class IntrospectionAttribute<T, V> implements Attribute<T, V> {
 		init(tableClass);
 	}
 
+	
+	
+	@Override
+	public Class<V> getType() {
+		return (Class<V>) field.getType();
+	}
+
+
+
+	@Override
+	public String getName() {
+		return fname;
+	}
+
+
 	public void set(T src, V value) {
 		try {
 			field.set(src, value);

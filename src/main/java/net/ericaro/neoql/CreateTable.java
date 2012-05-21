@@ -3,7 +3,8 @@ package net.ericaro.neoql;
 
 
 /**
- * a Create Table Statement
+ * a Create Table Statement: SQL like
+ * CREATE TABLE
  * 
  * @author eric
  * 
@@ -26,5 +27,12 @@ public class CreateTable<T> implements Statement {
 	public void executeOn(Database database) {
 		database.execute(this);
 	}
+
+	@Override
+	public String toString() {
+		return "CREATE TABLE " + tableDef + ";";
+	}
+	
+	
 
 }

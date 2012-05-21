@@ -1,6 +1,13 @@
 package net.ericaro.neoql;
 
- class ColumnValue<T, V> {
+/** Simple column-value pair
+ * 
+ * @author eric
+ *
+ * @param <T>
+ * @param <V>
+ */
+class ColumnValue<T, V> {
 
 	ColumnImpl<T, V> column;
 	V value;
@@ -11,16 +18,16 @@ package net.ericaro.neoql;
 		this.value = value;
 	}
 
-	 Column<T, V> getColumn() {
+	Column<T, V> getColumn() {
 		return column;
 	}
 
-	 V getValue() {
+	V getValue() {
 		return value;
 	}
-	
-	 void set(T row) {
-		column.set(row, value ) ;
+
+	void set(T row) {
+		column.set(row, value);
 	}
 
 }

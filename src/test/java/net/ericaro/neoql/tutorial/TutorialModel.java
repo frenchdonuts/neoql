@@ -26,11 +26,13 @@ public class TutorialModel {
 		public boolean isSelected() {
 			return selected;
 		}
-		
+
 		@Override
 		public String toString() {
-			return "Teacher [name=" + name + "]";
+			return "Teacher [name=" + name + ", selected=" + selected + "]";
 		}
+		
+	
 	}
 
 	public static class Student {

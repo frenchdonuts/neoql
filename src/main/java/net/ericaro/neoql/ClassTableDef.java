@@ -7,12 +7,12 @@ import java.util.Iterator;
 public class ClassTableDef<T> implements TableDef<T> {
 
 	Class<T> table;
-	private AbstractColumn<T, ?>[] columns;
+	private ColumnImpl<T, ?>[] columns;
 
 	 public ClassTableDef(Class<T> table) {
 		super();
 		this.table = table;
-		this.columns = new AbstractColumn[0];
+		this.columns = new ColumnImpl[0];
 	}
 	
 	 /** add a column by introspecting the fields.
@@ -20,7 +20,7 @@ public class ClassTableDef<T> implements TableDef<T> {
 	  * @param name
 	  * @return
 	  */
-	 public <V> AbstractColumn<T,V> addColumn(String name){
+	 public <V> ColumnImpl<T,V> addColumn(String name){
 		 return addColumn(name, null);
 	 }
 	 /** add a Column by introspecting the fields
@@ -29,17 +29,18 @@ public class ClassTableDef<T> implements TableDef<T> {
 	  * @param foreignKey
 	  * @return
 	  */
-	 public <V> AbstractColumn<T,V> addColumn(String name, ClassTableDef<V> foreignKey ){
-		 return doAddCol(new IntrospectionColumn<T, V>(name, foreignKey));
+	 public <V> ColumnImpl<T,V> addColumn(String name, ClassTableDef<V> foreignKey ){
+		 IntrospectionAttribute<T, V> attr = new IntrospectionAttribute<T, V>(table, name);
+		 return doAddCol(new ColumnImpl<T, V>(attr, foreignKey));
 	 }
 
 	 
-	 public <V> AbstractColumn<T,V> addColumn(Attribute<T,V> attr, ClassTableDef<V> foreignKey ){
-		 return doAddCol(new AttributeColumn<T,V>(attr, foreignKey));
+	 public <V> ColumnImpl<T,V> addColumn(Attribute<T,V> attr, ClassTableDef<V> foreignKey ){
+		 return doAddCol(new ColumnImpl<T,V>(attr, foreignKey));
 	 }
 	 
 	 
-	 private <V> AbstractColumn<T, V> doAddCol(AbstractColumn<T, V> c) {
+	 private <V> ColumnImpl<T, V> doAddCol(ColumnImpl<T, V> c) {
 		 columns = Arrays.copyOf(columns, columns.length+1);
 		 columns[columns.length-1] = c;
 		 c.init(table);

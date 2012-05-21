@@ -31,7 +31,7 @@ public class Update<T> implements Statement {
 	public <V> Update<T> set(Column<T, V> col, V value) {
 		int l = columnValuePairs.length;
 		columnValuePairs = Arrays.copyOf(columnValuePairs, l + 1);
-		columnValuePairs[l] = new ColumnValue<T, V>((AbstractColumn<T, V>) col, value);
+		columnValuePairs[l] = new ColumnValue<T, V>((ColumnImpl<T, V>) col, value);
 		return this;
 	}
 

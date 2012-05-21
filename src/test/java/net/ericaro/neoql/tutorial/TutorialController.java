@@ -42,6 +42,7 @@ public class TutorialController {
 	}
 	
 	private void onAddStudent(){
+		System.out.println("adding student");
 		model.addStudent(RandName.next());
 	}
 	

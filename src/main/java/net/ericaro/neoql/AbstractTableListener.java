@@ -1,5 +1,12 @@
 package net.ericaro.neoql;
 
+
+/** dev/null listener for TableListener. Make it simpler to override a single method
+ * 
+ * @author eric
+ *
+ * @param <T>
+ */
 public abstract class AbstractTableListener<T> implements TableListener<T> {
 
 	@Override

@@ -1,7 +1,6 @@
 package net.ericaro.neoql;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,7 +8,17 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+
+import net.ericaro.neoql.lang.ClassTableDef;
+import net.ericaro.neoql.lang.ColumnValue;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.system.AbstractTableListener;
+import net.ericaro.neoql.system.Column;
+import net.ericaro.neoql.system.NeoQLException;
+import net.ericaro.neoql.system.Predicate;
+import net.ericaro.neoql.system.Table;
+import net.ericaro.neoql.system.TableListener;
+import net.ericaro.neoql.system.TableListenerSupport;
 
 
 /**
@@ -20,11 +29,10 @@ import java.util.Set;
  */
 public class TableData<T> implements Table<T> {
 
-	TableListenerSupport<T> events = new TableListenerSupport<T>();
-	TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
-
-	ColumnImpl<T, ?>[] columns;
-	List<T> rows = new ArrayList<T>();
+	private TableListenerSupport<T> events = new TableListenerSupport<T>();
+	private TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
+	private Column<T, ?>[] columns;
+	private List<T> rows = new ArrayList<T>();
 	//private Class<T> type;
 	private ClassTableDef<T> table;
 	private Database owner;
@@ -38,7 +46,7 @@ public class TableData<T> implements Table<T> {
 		this.table = table;
 		Column[] cols = table.getColumns();
 		
-		this.columns = new ColumnImpl[cols.length];
+		this.columns = new Column[cols.length];
 		System.arraycopy(cols, 0, columns, 0, cols.length);
 		
 		this.internalColumnListeners = new TableListener[this.columns.length];
@@ -57,13 +65,13 @@ public class TableData<T> implements Table<T> {
 
 	void install() {
 		int i = 0;
-		for (ColumnImpl<T, ?> col : columns)
+		for (Column<T, ?> col : columns)
 			installColumn(i++, col);
 	}
 
 	void uninstall() {
 		int i = 0;
-		for (ColumnImpl<T, ?> col : columns)
+		for (Column<T, ?> col : columns)
 			unInstallColumn(i++, col);
 		if (internals.getListenerCount() > 0)
 			throw new NeoQLException("Cannot drop table " + table
@@ -71,7 +79,7 @@ public class TableData<T> implements Table<T> {
 
 	}
 
-	private <V> void installColumn(int i, ColumnImpl<T, V> col) {
+	private <V> void installColumn(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(col.getForeignTable(), internalColumnListeners[i]);
@@ -85,7 +93,7 @@ public class TableData<T> implements Table<T> {
 		}
 	}
 
-	private <V> void unInstallColumn(int i, ColumnImpl<T, V> col) {
+	private <V> void unInstallColumn(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
 			owner.removeInternalTableListener(col.getForeignTable(),
 					internalColumnListeners[i]);
@@ -114,9 +122,9 @@ public class TableData<T> implements Table<T> {
 
 	class ForeignKeyColumnListener<V> extends AbstractTableListener<V> {
 
-		private ColumnImpl<T, V> col;
+		private Column<T, V> col;
 
-		ForeignKeyColumnListener(ColumnImpl<T, V> col) {
+		ForeignKeyColumnListener(Column<T, V> col) {
 			super();
 			this.col = col;
 		}
@@ -166,13 +174,6 @@ public class TableData<T> implements Table<T> {
 		return row;
 	}
 
-	T clone(T row) {
-			T clone = table.newInstance();
-			for (ColumnImpl<T, ?> c : columns)
-				c.copy(row, clone);
-			return clone;
-	}
-
 	Map<T, T> updatedRows = new HashMap<T, T>();
 
 	void update(T row, ColumnValue<T, ?>[] setters) {
@@ -180,12 +181,13 @@ public class TableData<T> implements Table<T> {
 			if (updatedRows.containsKey(row))
 				clone = row;
 			else {
-				clone = clone(row);
+				clone = table.clone(row);
 				updatedRows.put(clone, row);
 			}
-
+			
 			for (ColumnValue s : setters) {
-				s.set(clone);
+				s.set(row);
+				
 			}
 
 			int i = rows.indexOf(row);
@@ -224,6 +226,12 @@ public class TableData<T> implements Table<T> {
 		internals.fireInserted(row);
 		events.fireInserted(row);
 		return row;
+	}
+
+
+
+	T newInstance() {
+		return table.newInstance();
 	}
 
 }

@@ -1,8 +1,8 @@
 package net.ericaro.neoql.demo;
 
-import net.ericaro.neoql.ClassTableDef;
-import net.ericaro.neoql.Column;
-import net.ericaro.neoql.NeoQL;
+import net.ericaro.neoql.lang.ClassTableDef;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.system.Column;
 
 /**
  * 

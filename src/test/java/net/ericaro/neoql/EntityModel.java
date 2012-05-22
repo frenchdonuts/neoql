@@ -1,5 +1,8 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.lang.ClassTableDef;
+import net.ericaro.neoql.system.Column;
+
 
 public class EntityModel {
 
@@ -17,7 +20,7 @@ public class EntityModel {
 			
 			String code;
 			String name;
-			 String getCode() {
+			public String getCode() {
 				return code;
 			}
 			 String getName() {
@@ -33,13 +36,13 @@ public class EntityModel {
 		 public static class EntityB{
 			 public static final ClassTableDef<EntityB> TABLE = new ClassTableDef<EntityB>(EntityB.class);
 			 
-			 static final Column<EntityB, String> CODE = TABLE.addColumn("code");
-			 static final Column<EntityB, String> NAME = TABLE.addColumn("name");
+			 public static final Column<EntityB, String> CODE = TABLE.addColumn("code");
+			 public static final Column<EntityB, String> NAME = TABLE.addColumn("name");
 			 
 				
 			String code;
 			String name;
-			 String getCode() {
+			public String getCode() {
 				return code;
 			}
 			 String getName() {

@@ -1,14 +1,14 @@
 package net.ericaro.neoql.gui;
 
-import static net.ericaro.neoql.NeoQL.select;
-import net.ericaro.neoql.ClassTableDef;
-import net.ericaro.neoql.Column;
+import static net.ericaro.neoql.lang.NeoQL.select;
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.NeoQL;
-import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.Script;
-import net.ericaro.neoql.TableDef;
 import net.ericaro.neoql.TableList;
+import net.ericaro.neoql.lang.ClassTableDef;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.lang.Script;
+import net.ericaro.neoql.system.Column;
+import net.ericaro.neoql.system.Predicate;
+import net.ericaro.neoql.system.TableDef;
 public class SelectorModel {
 
 	// ##########################################################################

@@ -7,6 +7,9 @@ import java.util.List;
 import javax.swing.AbstractListModel;
 import javax.swing.ListModel;
 
+import net.ericaro.neoql.system.Table;
+import net.ericaro.neoql.system.TableListener;
+
 
 // TODO find a way to "free" this list from the database (kind of close)
 /**

@@ -1,12 +1,14 @@
 package net.ericaro.neoql.tutorial;
 
+import javax.swing.ListModel;
+
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.TableList;
 import net.ericaro.neoql.lang.ClassTableDef;
 import net.ericaro.neoql.lang.NeoQL;
 import net.ericaro.neoql.lang.Script;
 import net.ericaro.neoql.system.Column;
 import net.ericaro.neoql.system.TableDef;
+import net.ericaro.neoql.system.TableList;
 
 public class TutorialModel {
 	
@@ -130,7 +132,7 @@ public class TutorialModel {
 		return database.select(TEACHERS);
 	}
 	
-	public TableList<Student> getStudents() {
+	public ListModel getStudents() {
 		return database.listFor(STUDENTS);
 	}
 	public TableList<Teacher> getTeachers() {

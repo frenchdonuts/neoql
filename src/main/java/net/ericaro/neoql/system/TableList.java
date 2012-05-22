@@ -1,4 +1,4 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.system;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -7,8 +7,6 @@ import java.util.List;
 import javax.swing.AbstractListModel;
 import javax.swing.ListModel;
 
-import net.ericaro.neoql.system.Table;
-import net.ericaro.neoql.system.TableListener;
 
 
 // TODO find a way to "free" this list from the database (kind of close)
@@ -24,7 +22,7 @@ public class TableList<T> extends AbstractListModel implements ListModel, Iterab
 	List<T> content = new ArrayList<T>();
 	private Table<T> table;
 
-	TableList(Table<T> table) {
+	public TableList(Table<T> table) {
 		super();
 		this.table = table;
 		for (T t : table)

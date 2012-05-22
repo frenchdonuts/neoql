@@ -6,6 +6,7 @@ import net.ericaro.neoql.system.TableListener;
 
 
 
+
 public class Singleton<T> {
 
 	PropertyListenerSupport<T>	support	= new PropertyListenerSupport<T>();

@@ -1,9 +1,9 @@
 package net.ericaro.neoql.tutorial;
 
 import net.ericaro.neoql.RandName;
-import net.ericaro.neoql.TableList;
 import net.ericaro.neoql.lang.NeoQL;
 import net.ericaro.neoql.lang.Script;
+import net.ericaro.neoql.system.TableList;
 import net.ericaro.neoql.tutorial.TutorialModel.Student;
 import net.ericaro.neoql.tutorial.TutorialModel.Teacher;
 

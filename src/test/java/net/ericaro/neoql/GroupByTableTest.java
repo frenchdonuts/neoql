@@ -5,11 +5,9 @@ package net.ericaro.neoql;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.ericaro.neoql.GroupByTable;
 import net.ericaro.neoql.StudentModel.Teacher;
-import net.ericaro.neoql.system.Table;
-
 import net.ericaro.neoql.lang.Script;
+import net.ericaro.neoql.system.Table;
 
 import org.junit.Test;
 

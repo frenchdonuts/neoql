@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.swing.ListModel;
+
 import net.ericaro.neoql.lang.ClassTableDef;
 import net.ericaro.neoql.lang.ColumnValue;
 import net.ericaro.neoql.lang.CreateProperty;
@@ -26,6 +28,7 @@ import net.ericaro.neoql.system.Property;
 import net.ericaro.neoql.system.PropertyListener;
 import net.ericaro.neoql.system.Table;
 import net.ericaro.neoql.system.TableDef;
+import net.ericaro.neoql.system.TableList;
 import net.ericaro.neoql.system.TableListener;
 
 public class Database {
@@ -82,8 +85,8 @@ public class Database {
 		table.drop(this);
 	}
 
-	public <T> TableList<T> listFor(TableDef<T> table) {
-		return new TableList<T>(tableFor(table));
+	public <T, U extends ListModel&Iterable<T>> U listFor(TableDef<T> table) {
+		return (U) new TableList<T>(tableFor(table));
 	}
 
 	public <T> Iterator<T> iterator(final TableDef<T> table) {

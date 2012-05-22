@@ -5,6 +5,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import net.ericaro.neoql.system.Generator;
+import net.ericaro.neoql.system.Pair;
+import net.ericaro.neoql.system.Predicate;
+import net.ericaro.neoql.system.StopIteration;
+import net.ericaro.neoql.system.Table;
+import net.ericaro.neoql.system.TableListener;
+import net.ericaro.neoql.system.TableListenerSupport;
+
 
 public class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 

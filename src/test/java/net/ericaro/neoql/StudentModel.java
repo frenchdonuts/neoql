@@ -1,5 +1,9 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.lang.ClassTableDef;
+import net.ericaro.neoql.system.Column;
+import net.ericaro.neoql.system.Predicate;
+
 
 public class StudentModel {
 
@@ -13,7 +17,7 @@ public class StudentModel {
 		public static final Column<Teacher, String> NAME = TABLE.addColumn("name");
 		private String name;
 
-		String getName() {
+		public String getName() {
 			return name;
 		}
 

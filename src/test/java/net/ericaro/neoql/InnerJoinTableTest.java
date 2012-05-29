@@ -1,11 +1,20 @@
 package net.ericaro.neoql;
 
- import java.util.HashSet;
+ import static net.ericaro.neoql.EntityModel.ENTITYA;
+import static net.ericaro.neoql.EntityModel.ENTITYB;
+
+import java.util.HashSet;
 import java.util.Set;
 
-import static net.ericaro.neoql.EntityModel.*;
-
+import net.ericaro.neoql.EntityModel.EntityA;
+import net.ericaro.neoql.EntityModel.EntityB;
 import net.ericaro.neoql.StudentModel.Binome;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.lang.Script;
+import net.ericaro.neoql.system.Pair;
+import net.ericaro.neoql.system.Predicate;
+import net.ericaro.neoql.system.Table;
+import net.ericaro.neoql.system.TableDef;
 
 import org.junit.Test;
 
@@ -76,7 +85,7 @@ public  class InnerJoinTableTest {
 
 			@Override
 			public  boolean eval(Pair<Binome, Binome> t) {
-				return t.getLeft().mate == t.getRight();
+				return t.getLeft().getMate() == t.getRight();
 			}
 		});
 

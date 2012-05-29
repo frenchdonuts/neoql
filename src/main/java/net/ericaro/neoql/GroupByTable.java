@@ -4,6 +4,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.system.Column;
+import net.ericaro.neoql.system.Generator;
+import net.ericaro.neoql.system.StopIteration;
+import net.ericaro.neoql.system.Table;
+import net.ericaro.neoql.system.TableListener;
+import net.ericaro.neoql.system.TableListenerSupport;
+
 
 /**
  * Group By group items togethers

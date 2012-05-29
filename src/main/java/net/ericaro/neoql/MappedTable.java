@@ -4,6 +4,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.system.Generator;
+import net.ericaro.neoql.system.MapMapper;
+import net.ericaro.neoql.system.Mapper;
+import net.ericaro.neoql.system.Mapping;
+import net.ericaro.neoql.system.StopIteration;
+import net.ericaro.neoql.system.Table;
+import net.ericaro.neoql.system.TableListener;
+import net.ericaro.neoql.system.TableListenerSupport;
+
 
 /**
  * Mapped By provides a way to turn a table of S into a table of T using a

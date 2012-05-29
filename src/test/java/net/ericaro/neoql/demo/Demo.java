@@ -2,14 +2,14 @@ package net.ericaro.neoql.demo;
 
 import java.util.Iterator;
 
-import net.ericaro.neoql.ClassTableDef;
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.NeoQL;
-import net.ericaro.neoql.Property;
-import net.ericaro.neoql.Script;
-import net.ericaro.neoql.Table;
-import net.ericaro.neoql.TableDef;
-import net.ericaro.neoql.TableListener;
+import net.ericaro.neoql.lang.ClassTableDef;
+import net.ericaro.neoql.lang.NeoQL;
+import net.ericaro.neoql.lang.Script;
+import net.ericaro.neoql.system.Property;
+import net.ericaro.neoql.system.Table;
+import net.ericaro.neoql.system.TableDef;
+import net.ericaro.neoql.system.TableListener;
 
 public class Demo {
 	

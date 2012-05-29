@@ -186,7 +186,7 @@ public class TableData<T> implements Table<T> {
 			}
 			
 			for (ColumnValue s : setters) {
-				s.set(row);
+				s.set(clone);
 				
 			}
 
@@ -214,7 +214,7 @@ public class TableData<T> implements Table<T> {
 			if (where.eval(row)) {
 				i.remove();
 				internals.fireDeleted(row); // eventually I'll had to use the same protocol as for the update operation. But for now, there is no need, internals only fire exeception
-				events.fireInserted(row);
+				events.fireDeleted(row);
 			}
 		}
 	}

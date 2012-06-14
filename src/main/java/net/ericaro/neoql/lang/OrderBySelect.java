@@ -44,7 +44,7 @@ public class OrderBySelect<T,V extends Comparable<? super V>> implements TableDe
 
 	@Override
 	public Table<T> asTable(Database database) {
-		return database.table(this);
+		return database.createTable(this);
 	}
 
 	@Override
@@ -52,4 +52,8 @@ public class OrderBySelect<T,V extends Comparable<? super V>> implements TableDe
 		return new OrderByIterator<T,V>( database.iterator(table), orderBy, ascendent);
 	}
 
+	@Override
+	public String toTableDefinition() {
+		return "SELECT FROM "+ table+" ORDER BY "+ orderBy;
+	}
 }

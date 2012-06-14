@@ -27,7 +27,7 @@ public class OrderByTableTest {
 			}});
 			
 			
-			Table<Teacher> table = db.table(TEACHER);
+			Table<Teacher> table = db.get(TEACHER);
 			// no EDSL for simple test
 			OrderByTable<Teacher,String> gtable = new OrderByTable<Teacher, String>(table, Teacher.NAME, true);
 			

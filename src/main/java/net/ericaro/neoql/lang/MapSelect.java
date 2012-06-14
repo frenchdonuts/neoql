@@ -37,7 +37,7 @@ public class MapSelect<S, T> implements TableDef<T> {
 
 	@Override
 	public Table<T> asTable(Database database) {
-		return database.table(this);
+		return database.createTable(this);
 	}
 
 	@Override
@@ -46,6 +46,9 @@ public class MapSelect<S, T> implements TableDef<T> {
 	}
 	
 	
-
+	@Override
+	public String toTableDefinition() {
+		return "SELECT "+mapper+" FROM "+ table;
+	}
 	
 }

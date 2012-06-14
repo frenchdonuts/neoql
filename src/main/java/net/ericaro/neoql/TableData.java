@@ -76,7 +76,7 @@ public class TableData<T> implements Table<T> {
 		if (internals.getListenerCount() > 0)
 			throw new NeoQLException("Cannot drop table " + table
 					+ ". Constraint violation(s)" + internals);
-
+		
 	}
 
 	private <V> void installColumn(int i, Column<T, V> col) {
@@ -163,6 +163,10 @@ public class TableData<T> implements Table<T> {
 	Database getOwner() {
 		return owner;
 	}
+	
+	ClassTableDef<T> getDef(){
+		return table;
+	}
 
 	@Override
 	public Iterator<T> iterator() {
@@ -185,14 +189,20 @@ public class TableData<T> implements Table<T> {
 				updatedRows.put(clone, row);
 			}
 			
-			for (ColumnValue s : setters) {
+			for (ColumnValue s : setters)
 				s.set(clone);
-				
-			}
 
 			int i = rows.indexOf(row);
 			rows.set(i, clone);
 			internals.fireUpdated(row, clone); 
+	}
+	
+	void update(T row, T clone) {
+		assert !updatedRows.containsKey(row) : "update with an instance should only be called first";
+		updatedRows.put(clone, row);
+		int i = rows.indexOf(row);
+		rows.set(i, clone);
+		internals.fireUpdated(row, clone); 
 	}
 	
 	void fireUpdate() {

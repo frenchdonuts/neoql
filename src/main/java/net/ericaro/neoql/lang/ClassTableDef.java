@@ -9,6 +9,7 @@ import net.ericaro.neoql.system.Attribute;
 import net.ericaro.neoql.system.Column;
 import net.ericaro.neoql.system.NeoQLException;
 import net.ericaro.neoql.system.Predicate;
+import net.ericaro.neoql.system.Table;
 import net.ericaro.neoql.system.TableDef;
 
 /**
@@ -79,7 +80,7 @@ public class ClassTableDef<T> implements TableDef<T> {
 	 * 
 	 * @return
 	 */
-	Class<T> getTable() {
+	public Class<T> getTable() {
 		return table;
 	}
 
@@ -88,13 +89,13 @@ public class ClassTableDef<T> implements TableDef<T> {
 	}
 
 	@Override
-	public TableData<T> asTable(Database database) {
-		return database.tableFor(this);
+	public Table<T> asTable(Database database) {
+		return database.createTable(this);
 	}
 
 	@Override
 	public Iterator<T> iterator(final Database database) {
-		return database.tableFor(this).iterator();
+		return database.get(this).iterator();
 	}
 
 	/**

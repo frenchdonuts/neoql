@@ -37,7 +37,7 @@ public class GroupBySelect<S, T> implements TableDef<T> {
 
 	@Override
 	public Table<T> asTable(Database database) {
-		return database.table(this);
+		return database.createTable(this);
 	}
 
 	@Override
@@ -48,6 +48,11 @@ public class GroupBySelect<S, T> implements TableDef<T> {
 	@Override
 	public String toString() {
 		return table +" GROUP BY "+ groupBy.getName() ;
+	}
+
+	@Override
+	public String toTableDefinition() {
+		return "SELECT FROM "+ this;
 	}
 	
 

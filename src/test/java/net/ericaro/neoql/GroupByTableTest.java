@@ -25,8 +25,7 @@ public class GroupByTableTest {
 			insertInto(TEACHER).set(Teacher.NAME, "Toto"   ); 
 		}});
 		
-		
-		Table<Teacher> table = db.table(TEACHER);
+		Table<Teacher> table = db.get(TEACHER);
 		// no EDSL for simple test
 		GroupByTable<Teacher, String> gtable = new GroupByTable<Teacher, String>(Teacher.NAME, table);
 		

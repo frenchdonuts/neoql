@@ -11,4 +11,6 @@ public interface TableDef<T> {
 
 	Iterator<T> iterator(Database database);
 
+	String toTableDefinition();
+
 }

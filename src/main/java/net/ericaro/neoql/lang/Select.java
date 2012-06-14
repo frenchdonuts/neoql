@@ -39,7 +39,7 @@ public class Select<T> implements TableDef<T> {
 
 	@Override
 	public Table<T> asTable(Database database) {
-		return database.table(this);
+		return database.createTable(this);
 	}
 
 	@Override
@@ -47,6 +47,9 @@ public class Select<T> implements TableDef<T> {
 				return new SelectTable.SelectIterator<T>(database.select(table).iterator(), where);
 	}
 
-	
+	@Override
+	public String toTableDefinition() {
+		return "SELECT * FROM "+ table+" WHERE "+ where;
+	}
 	
 }

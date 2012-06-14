@@ -2,6 +2,7 @@ package net.ericaro.neoql.lang;
 
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.system.Statement;
+import net.ericaro.neoql.system.TableDef;
 
 
 
@@ -15,15 +16,15 @@ import net.ericaro.neoql.system.Statement;
  */
 public class CreateTable<T> implements Statement {
 
-	private ClassTableDef<T> tableDef;
+	private TableDef<T> tableDef;
 	
 	
-	CreateTable(ClassTableDef<T> tableDef) {
+	CreateTable(TableDef<T> tableDef) {
 		super();
 		this.tableDef = tableDef;
 	}
 
-	public ClassTableDef<T> getTableDef() {
+	public TableDef<T> getTableDef() {
 		return tableDef;
 	}
 	@Override
@@ -33,7 +34,10 @@ public class CreateTable<T> implements Statement {
 
 	@Override
 	public String toString() {
-		return "CREATE TABLE " + tableDef.toTableDefinition() + ";";
+		if (tableDef instanceof ClassTableDef)
+			return "CREATE TABLE " + ((ClassTableDef)tableDef).toTableDefinition() + ";";
+		else
+			return "CREATE TABLE (" + tableDef + ");";
 	}
 	
 	

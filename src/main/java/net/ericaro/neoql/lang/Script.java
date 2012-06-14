@@ -6,6 +6,7 @@ import java.util.List;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.system.Property;
 import net.ericaro.neoql.system.Statement;
+import net.ericaro.neoql.system.TableDef;
 
 
 
@@ -28,9 +29,10 @@ public class Script extends NeoQL implements Statement{
 
 	private List<Statement> statements = new ArrayList<Statement>();
 	
-	protected <T> CreateTable<T> createTable(ClassTableDef<T> c) {
+	protected <T> CreateTable<T> createTable(TableDef<T> c) {
 		return exec(new CreateTable<T>(c));
 	}
+	
 	protected <T> CreateProperty<T> createProperty(ClassTableDef<T> c, Property<T> prop) {
 		return exec(new CreateProperty<T>(c, prop));
 	}

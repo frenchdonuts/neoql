@@ -39,8 +39,8 @@ public  class InnerJoinTableTest {
 		insertInto(ENTITYB).set(EntityB.CODE, "beta").set( EntityB.NAME, "btiti");
 		}});
 		
-		Table<EntityA> left  = db.tableFor(ENTITYA);
-		Table<EntityB> right = db.tableFor(ENTITYB);
+		Table<EntityA> left  = db.get(ENTITYA);
+		Table<EntityB> right = db.get(ENTITYB);
 		
 		Predicate<Pair<EntityA, EntityB>> where = new Predicate<Pair<EntityA,EntityB> >(){
 
@@ -99,9 +99,9 @@ public  class InnerJoinTableTest {
 				}
 			}); // init script
 
-			students = db.tableFor(Binome.TABLE);
+			students = db.get(Binome.TABLE);
 			// create accessible queries
-			mates = db.tableFor(MATES);
+			mates = db.getOrCreate(MATES);
 
 		}
 
@@ -147,7 +147,7 @@ public  class InnerJoinTableTest {
 		System.out.println("# closing the loop");
 		m.editStudent("Gerard","Alphonse" );
 		Set<Binome> students = new HashSet<Binome>();
-		for(Pair<Binome, Binome>  p : m.db.tableFor(NeoQL.select(m.MATES)) )
+		for(Pair<Binome, Binome>  p : m.db.getOrCreate(NeoQL.select(m.MATES)) )
 			students.add(p.getLeft());
 		// I trust the inner join algorithm to be correct if build from scratch, 
 		assert students.size() == 2 : "wrong final pair size";

@@ -38,7 +38,7 @@ public class InnerJoin<L, R> implements TableDef<Pair<L, R>> {
 
 	@Override
 	public Table<Pair<L, R>> asTable(Database database) {
-		return database.table(this);
+		return database.createTable(this);
 	}
 
 	@Override
@@ -50,5 +50,9 @@ public class InnerJoin<L, R> implements TableDef<Pair<L, R>> {
 				);
 	}
 
+	@Override
+	public String toTableDefinition() {
+		return "SELECT FROM "+ leftTable+" INNER JOIN "+ rightTable+" on "+ on;
+	}
 	
 }

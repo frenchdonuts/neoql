@@ -78,6 +78,10 @@ class ColumnDef<T, V> implements Column<T, V> {
 					return false; // null is always false
 				return value.equals(ColumnDef.this.get(t));
 			}
+			
+			public String toString(){
+				return ColumnDef.this.attr.getName()+" = "+value ;
+			}
 
 		};
 	}
@@ -97,6 +101,9 @@ class ColumnDef<T, V> implements Column<T, V> {
 			@Override
 			public boolean eval(Pair<T, V> t) {
 				return get(t.getLeft()) == t.getRight();
+			}
+			public String toString(){
+				return ColumnDef.this.attr.getName()+".id = that.id";
 			}
 
 		};

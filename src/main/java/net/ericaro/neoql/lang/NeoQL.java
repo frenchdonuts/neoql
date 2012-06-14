@@ -9,6 +9,7 @@ import net.ericaro.neoql.system.Mapper;
 import net.ericaro.neoql.system.Pair;
 import net.ericaro.neoql.system.Predicate;
 import net.ericaro.neoql.system.TableDef;
+import net.ericaro.neoql.tutorial.TutorialModel.Teacher;
 
 
 /**
@@ -18,23 +19,30 @@ import net.ericaro.neoql.system.TableDef;
  * 
  */
 public class NeoQL {
-	
+	// TODO add javadoc in there, once the api is stable
 	
 
+	/** Simple 'true' predicate (always returns true)
+	 * 
+	 */
 	public static Predicate<Object>	True	= new Predicate<Object>() {
-												@Override
-												public boolean eval(Object t) {
-													return true;
-												}
+												public boolean eval(Object t) {	return true; }
 											};
-
+											
+	/** Simple 'false' predicate (always returns false)
+	 * 
+	 */
 	public static Predicate<Object>	False	= new Predicate<Object>() {
-												@Override
-												public boolean eval(Object t) {
-													return false;
-												}
+												public boolean eval(Object t) { return false; }
 											};
-
+    
+	/** creates a table definition
+	 * 
+	 * @param type
+	 * @return
+	 */
+	public static final <T> ClassTableDef<T> table(Class<T> type){return new ClassTableDef<T>(type);}
+											
 	public static <T, V> Predicate<T> is(final Column<T, V> col, final V value) {
 		return new Predicate<T>() {
 

@@ -144,7 +144,7 @@ public class TutorialModel {
 	}
 	
 	public Iterable<Teacher> teachers(){
-		return database.select(teachers);
+		return NeoQL.select(teachers);
 	}
 	
 	public ListModel getStudents() {

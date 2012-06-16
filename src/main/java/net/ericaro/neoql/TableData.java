@@ -75,24 +75,26 @@ public class TableData<T> implements Table<T> {
 
 	private <V> void installColumn(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
+			TableData<V> ftable = owner.get(col.getForeignTable().table);
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
-			owner.addInternalTableListener(col.getForeignTable(), internalColumnListeners[i]);
+			owner.addInternalTableListener(ftable, internalColumnListeners[i]);
 			
 			columnListeners[i] = new AbstractTableListener<V>() {
 				public void updated(V oldRow, V newRow) {
 					fireUpdate();
 				}
 			};
-			owner.addTableListener(col.getForeignTable(), columnListeners[i]);
+			owner.addTableListener(ftable, columnListeners[i]);
 			
 		}
 	}
 
 	private <V> void unInstallColumn(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			owner.removeInternalTableListener(col.getForeignTable(),
+			TableData<V> ftable = owner.get(col.getForeignTable().table);
+			owner.removeInternalTableListener(ftable,
 					internalColumnListeners[i]);
-			owner.removeTableListener(col.getForeignTable(),
+			owner.removeTableListener(ftable,
 					columnListeners[i]);
 			
 		}
@@ -143,7 +145,7 @@ public class TableData<T> implements Table<T> {
 			// fire an exception ( forbidding the deleting if the value is in
 			// use ?
 			Predicate<T> inUse = NeoQL.is(col, oldValue);
-			for (T t : owner.select(TableData.this) )
+			for (T t : NeoQL.select(TableData.this) )
 				if (inUse.eval(t))
 					throw new NeoQLException("Foreign Key violation" + col);
 		}

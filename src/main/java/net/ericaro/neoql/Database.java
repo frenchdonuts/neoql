@@ -65,6 +65,10 @@ public class Database {
 		data.install();
 		return data;
 	}
+	
+	public <T> TableData<T> get(Class<T> type){
+		return typed.get(type);
+	}
 
 	
 	// ##########################################################################
@@ -221,20 +225,20 @@ public class Database {
 	// EVENTS BEGIN
 	// ##########################################################################
 
-	public <T> void addTableListener(ClassTableDef<T> table, TableListener<T> listener) {
-		typed.get(table.getTable()).addTableListener(listener);
+	public <T> void addTableListener(Table<T> table, TableListener<T> listener) {
+		table.addTableListener(listener);
 	}
 
-	public <T> void removeTableListener(ClassTableDef<T> table, TableListener<T> listener) {
-		typed.get(table.getTable()).removeTableListener(listener);
+	public <T> void removeTableListener(Table<T> table, TableListener<T> listener) {
+		table.removeTableListener(listener);
 	}
 
-	<T> void addInternalTableListener(ClassTableDef<T> table, TableListener<T> listener) {
-		typed.get(table.getTable()).addInternalTableListener(listener);
+	<T> void addInternalTableListener(TableData<T> table, TableListener<T> listener) {
+		table.addInternalTableListener(listener);
 	}
 
-	<T> void removeInternalTableListener(ClassTableDef<T> table, TableListener<T> listener) {
-		typed.get(table.getTable()).removeInternalTableListener(listener);
+	<T> void removeInternalTableListener(TableData<T> table, TableListener<T> listener) {
+		table.removeInternalTableListener(listener);
 	}
 
 	public <T> void addPropertyListener(Singleton<T> prop, PropertyListener<T> l) {

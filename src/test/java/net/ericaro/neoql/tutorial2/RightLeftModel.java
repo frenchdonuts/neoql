@@ -2,12 +2,13 @@ package net.ericaro.neoql.tutorial2;
 
 import javax.swing.ListModel;
 
+import net.ericaro.neoql.ClassTableDef;
+import net.ericaro.neoql.Column;
+import net.ericaro.neoql.ColumnValue;
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.lang.ClassTableDef;
-import net.ericaro.neoql.lang.NeoQL;
-import net.ericaro.neoql.lang.Script;
-import net.ericaro.neoql.system.Column;
-import net.ericaro.neoql.system.TableDef;
+import net.ericaro.neoql.NeoQL;
+import net.ericaro.neoql.TableData;
+import net.ericaro.neoql.TableDef;
 
 public class RightLeftModel {
 
@@ -36,20 +37,15 @@ public class RightLeftModel {
 	private Database	database;
 	private ListModel<Student>	ins;
 	private ListModel<Student>	outs;
-	private static TableDef<Student> INS = NeoQL.select(Student.TABLE, Student.IN.is(true));
 
 	public RightLeftModel() {
 		super();
 		database = new Database();
-		database.execute(new Script() {{
-			createTable(Student.TABLE);
-			// TODO also create the tables from the definition
-			//createTable(INS);
-		}});
-		
+		TableData<Student> students = database.createTable(Student.TABLE);
+		NeoQL.select(students, Student.IN.is(true));
 		/// creates the relations
-		ins  = database.listFor(INS	);
-		outs = database.listFor(NeoQL.select(Student.TABLE, Student.IN.is(false))	);
+		ins  = database.listFor(students );
+		outs = database.listFor(NeoQL.select(students, Student.IN.is(false))	);
 	}
 
 	ListModel<Student> getIns() {
@@ -60,11 +56,8 @@ public class RightLeftModel {
 		return outs;
 	}
 
-	public void createStudent(final String name) {
-		database.execute(new Script() {{
-			insertInto(Student.TABLE).set(Student.NAME, name);
-		}});
-		
+	public void createStudent(String name) {
+		database.insert(Student.NAME.set(name) );
 	}
 
 	public void selectStudent(final Student student) {
@@ -73,9 +66,7 @@ public class RightLeftModel {
 	}
 
 	protected void setSelected(final Student student, final boolean value) {
-		database.execute(new Script() {{
-			update(Student.TABLE).where(Student.TABLE.is(student)).set(Student.IN, value);
-		}});
+		database.update(student, Student.IN.set(value));
 	}
 
 	public void deselectStudent(Student t) {

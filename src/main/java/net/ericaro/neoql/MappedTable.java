@@ -4,14 +4,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import net.ericaro.neoql.system.Generator;
-import net.ericaro.neoql.system.MapMapper;
-import net.ericaro.neoql.system.Mapper;
-import net.ericaro.neoql.system.Mapping;
-import net.ericaro.neoql.system.StopIteration;
-import net.ericaro.neoql.system.Table;
-import net.ericaro.neoql.system.TableListener;
-import net.ericaro.neoql.system.TableListenerSupport;
 
 
 /**
@@ -48,6 +40,10 @@ public class MappedTable<S, T> implements Table<T> {
 			public void updated(S old, S row) {
 				events.fireUpdated(mapping.pop(old), mapping.push(row));
 			}
+			@Override
+			public void dropped(Table<S> table) {
+				drop();
+			}
 		};
 		table.addTableListener(listener);
 	}
@@ -55,8 +51,9 @@ public class MappedTable<S, T> implements Table<T> {
 	
 	
 	@Override
-	public void drop(Database from) {
+	public void drop() {
 		table.removeTableListener(listener);
+		events.fireDrop(this);
 	}
 
 

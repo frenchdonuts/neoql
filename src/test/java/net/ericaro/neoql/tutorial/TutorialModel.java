@@ -2,13 +2,15 @@ package net.ericaro.neoql.tutorial;
 
 import javax.swing.ListModel;
 
+import net.ericaro.neoql.ClassTableDef;
+import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.lang.ClassTableDef;
-import net.ericaro.neoql.lang.NeoQL;
-import net.ericaro.neoql.lang.Script;
-import net.ericaro.neoql.system.Column;
-import net.ericaro.neoql.system.TableDef;
-import net.ericaro.neoql.system.TableList;
+import net.ericaro.neoql.NeoQL;
+import net.ericaro.neoql.SelectTable;
+import net.ericaro.neoql.Table;
+import net.ericaro.neoql.TableData;
+import net.ericaro.neoql.TableDef;
+import net.ericaro.neoql.TableList;
 
 public class TutorialModel {
 	
@@ -26,11 +28,6 @@ public class TutorialModel {
 		public Teacher(String name) {
 			super();
 			this.name = name;
-		}
-		public Teacher(String name, boolean selected) {
-			super();
-			this.name = name;
-			this.selected = selected;
 		}
 		String getName() {
 			return name;
@@ -63,11 +60,6 @@ public class TutorialModel {
 			super();
 			this.name = name;
 		}
-		public Student(String name, Teacher teacher) {
-			super();
-			this.name = name;
-			this.teacher = teacher;
-		}
 
 		String getName() { // for external use
 			return name;
@@ -83,27 +75,34 @@ public class TutorialModel {
 		}
 	}
 	
-	// building relations, these are relations definitions (totally static, they are but in a public static just for fun
-	public static final TableDef<Student> STUDENTS = NeoQL.select(Student.TABLE);
-	public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
-	public static final TableDef<Teacher> SELECTED_TEACHERS = NeoQL.select(Teacher.TABLE, Teacher.SELECTED.is(true) );
-	public static final TableDef<Student> SELECTED_STUDENTS = NeoQL.left(  NeoQL.innerJoin(Student.TABLE, SELECTED_TEACHERS, Student.TEACHER.joins() ));
 	
 	
 	// instance definition
 	Database database;
+	private ListModel studentList;
+	private ListModel teacherList;
+	private ListModel selectedTeacherList;
+	private ListModel selectedStudentList;
+	private TableData<Teacher> teachers;
+	private TableData<Student> students;
 	
 	public TutorialModel() {
 		super();
 		this.database = new Database();
-		database.createTable(Teacher.TABLE);
-		database.createTable(Student.TABLE);
-		database.createTable(STUDENTS);
-		database.createTable(TEACHERS);
-		database.createTable(SELECTED_STUDENTS);
-		database.createTable(SELECTED_TEACHERS);
 		
-		System.out.println(database);
+		teachers = database.createTable(Teacher.TABLE);
+		students = database.createTable(Student.TABLE);
+		SelectTable<Teacher> selectedTeachers = NeoQL.select(teachers, Teacher.SELECTED.is(true) );
+		Table<Student> selectedStudents = NeoQL.left(  NeoQL.innerJoin(students, selectedTeachers, Student.TEACHER.joins() ));
+		
+//		public static final TableDef<Student> STUDENTS = NeoQL.select(Student.TABLE);
+//		public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
+//		public static final TableDef<Teacher> SELECTED_TEACHERS = NeoQL.select(Teacher.TABLE, Teacher.SELECTED.is(true) );
+//		public static final TableDef<Student> SELECTED_STUDENTS = NeoQL.left(  NeoQL.innerJoin(Student.TABLE, SELECTED_TEACHERS, Student.TEACHER.joins() ));
+		studentList = database.listFor(students);
+		teacherList = database.listFor(teachers);
+		selectedTeacherList = database.listFor(selectedTeachers);
+		selectedStudentList = database.listFor(selectedStudents);
 	}
 	
 	// operations
@@ -114,7 +113,7 @@ public class TutorialModel {
 	 * @param name
 	 */
 	public void addStudent(final String name) {
-		database.insert(new Student(name) );
+		database.insert(Student.NAME.set(name));
 //		database.execute(new Script() {{
 //			insertInto(Student.TABLE).set(Student.NAME, name);
 //		}});
@@ -125,7 +124,7 @@ public class TutorialModel {
 	 * @param name
 	 */
 	public void addTeacher(final String name) {
-		database.insert(new Teacher(name));
+		database.insert(Teacher.NAME.set(name) );
 //			database.execute(new Script() {{
 //				insertInto(Teacher.TABLE).set(Teacher.NAME, name);
 //			}});
@@ -137,45 +136,28 @@ public class TutorialModel {
 	 * @param teacher
 	 */
 	public void link(final Student student, final Teacher teacher) {
-		database.update(student, new Student(student.name, teacher) );
-//		
-//		database.execute(new Script() {{
-//			update(Student.TABLE)
-//				.where(Student.TABLE.is(student) )
-//				.set(Student.TEACHER, teacher);
-//			;
-//		}});
+		database.update(student, Student.TEACHER.set(teacher) );
 	}
 	
 	public void selectTeacher(final Teacher teacher, final boolean selected) {
-		
-		
-		database.update(teacher, new Teacher(teacher.name, selected) );
-//		
-//		database.execute(new Script() {{
-//			update(Teacher.TABLE)
-//				.where(Teacher.TABLE.is(teacher) )
-//				.set(Teacher.SELECTED, selected);
-//			;
-//		}});
+		database.update(teacher, Teacher.SELECTED.set(selected) );
 	}
 	
 	public Iterable<Teacher> teachers(){
-		return database.select(TEACHERS);
+		return database.select(teachers);
 	}
 	
 	public ListModel getStudents() {
-		return database.listFor(STUDENTS);
+		return studentList;
 	}
-	public TableList<Teacher> getTeachers() {
-		return database.listFor(TEACHERS);
+	public ListModel getTeachers() {
+		return teacherList;
 	}
-	public TableList<Teacher> getSelectedTeachers() {
-		// this should be a lazy access
-		return database.listFor(SELECTED_TEACHERS);
+	public ListModel getSelectedTeachers() {
+		return selectedTeacherList;
 	}
-	public TableList<Student> getSelectedStudents() {
-		return database.listFor(SELECTED_STUDENTS);
+	public ListModel getSelectedStudents() {
+		return selectedStudentList;
 	}
 	
 	

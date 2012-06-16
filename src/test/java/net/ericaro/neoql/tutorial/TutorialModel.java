@@ -99,10 +99,10 @@ public class TutorialModel {
 //		public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
 //		public static final TableDef<Teacher> SELECTED_TEACHERS = NeoQL.select(Teacher.TABLE, Teacher.SELECTED.is(true) );
 //		public static final TableDef<Student> SELECTED_STUDENTS = NeoQL.left(  NeoQL.innerJoin(Student.TABLE, SELECTED_TEACHERS, Student.TEACHER.joins() ));
-		studentList = database.listFor(students);
-		teacherList = database.listFor(teachers);
-		selectedTeacherList = database.listFor(selectedTeachers);
-		selectedStudentList = database.listFor(selectedStudents);
+		studentList = NeoQL.listFor(students);
+		teacherList = NeoQL.listFor(teachers);
+		selectedTeacherList = NeoQL.listFor(selectedTeachers);
+		selectedStudentList = NeoQL.listFor(selectedStudents);
 	}
 	
 	// operations

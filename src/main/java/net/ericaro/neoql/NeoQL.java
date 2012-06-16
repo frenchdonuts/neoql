@@ -2,7 +2,10 @@ package net.ericaro.neoql;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+
+import javax.swing.ListModel;
 
 
 
@@ -154,4 +157,17 @@ public class NeoQL {
 		return map(table, map);
 	}
 	
+	public static <T> Iterable<T> select(final Table<T> table) {
+		return new Iterable<T>() {
+			@Override
+			public Iterator<T> iterator() {
+				return table.iterator();
+			}
+		};
+	}
+	
+	public static <T, U extends ListModel&Iterable<T>> U listFor(Table<T> table) {
+		return (U) new TableList<T>(table);
+	}
+
 }

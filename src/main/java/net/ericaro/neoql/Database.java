@@ -6,6 +6,10 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.swing.ListModel;
+import javax.swing.event.EventListenerList;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.text.Document;
 
 
 public class Database {
@@ -14,12 +18,16 @@ public class Database {
 	
 	// real class -> table mapping
 	private Map<Class, TableData>			typed   = new HashMap<Class, TableData>();
+	
+    protected EventListenerList listenerList = new EventListenerList();
+
 //	private Map<Property, Singleton>		values	= new HashMap<Property, Singleton>();
 
 	
 	// TODO handle transaction ?
 	// TODO handle undo/redo ? (isn't it related to transaction ? yes it is
 	// TODO provide generic JTAble for every table for debug purpose )
+	// TODO add unit tests
 	
 	// TODO implement every possible joins (mainly outter join )
 	// TODO find a way to express the definition of a singleton (or improve the existing one)
@@ -107,11 +115,15 @@ public class Database {
 	 * 
 	 * @param oldValue
 	 * @param values
+	 * @return 
 	 */
-	public <T> void update(T oldValue, ColumnValue<T,?>... values){
+	public <T> T update(T oldValue, ColumnValue<T,?>... values){
 		TableData<T> data = typed.get(oldValue.getClass());
 		Predicate<T> p = NeoQL.is(oldValue);
-		_update(data, values, p);
+		T n = data.update(oldValue, values);
+		data.fireUpdate();
+		return n;
+		
 	}
 	
 	/** Update rows matching the given predicate, with the given setters.
@@ -160,39 +172,50 @@ public class Database {
 	// DROP END
 	// ##########################################################################
 	
-	public <T, U extends ListModel&Iterable<T>> U listFor(Table<T> table) {
-		return (U) new TableList<T>(table);
+	// ##########################################################################
+	// SINGLETON EDIT BEGIN
+	// ##########################################################################
+	public <T> void put(Singleton<T> prop, T value) {
+		prop.set(value);
 	}
-
 	
-	
-	// clean in progress below
-	public <T> Iterator<T> iterator(final Table<T> table) {
-		return table.iterator();// reverse visitor pattern
-	}
-
-	public <T> Iterable<T> select(final Table<T> table) {
-		return new Iterable<T>() {
-			@Override
-			public Iterator<T> iterator() {
-				return table.iterator();
-			}
-		};
-	}
-
 	public <T> T get(Singleton<T> prop) {
 		return prop.get();
 	}
-
-	// execute a script
-
-//	public void execute(Script script) {
-//		script.executeOn(this);
-//	}
-
+	
 	// ##########################################################################
-	// ACCESS TABLES OBJECT END
+	// SINGLETON EDIT END
 	// ##########################################################################
+	
+	
+	// ##########################################################################
+	// UNDO BEGIN
+	// ##########################################################################
+	
+		
+    /**
+     * Notifies all listeners that have registered interest for
+     * notification on this event type.  The event instance
+     * is lazily created using the parameters passed into
+     * the fire method.
+     *
+     * @param e the event
+     * @see EventListenerList
+     */
+    protected void fireUndoableEditUpdate(UndoableEditEvent e) {
+        // Guaranteed to return a non-null array
+        Object[] listeners = listenerList.getListenerList();
+        for (int i = listeners.length-2; i>=0; i-=2) 
+            if (listeners[i]==UndoableEditListener.class) 
+                ((UndoableEditListener)listeners[i+1]).undoableEditHappened(e);
+    }
+
+    
+	// ##########################################################################
+	// UNDO END
+	// ##########################################################################
+
+	
 
 	// ##########################################################################
 	// EVENTS BEGIN
@@ -222,32 +245,21 @@ public class Database {
 		prop.removePropertyListener(l);
 	}
 
+	
+//    public void addUndoableEditListener(UndoableEditListener listener) {
+//        listenerList.add(UndoableEditListener.class, listener);
+//    }
+//
+//    public void removeUndoableEditListener(UndoableEditListener listener) {
+//        listenerList.remove(UndoableEditListener.class, listener);
+//    }
+
+	
 	// ##########################################################################
 	// EVENTS END
 	// ##########################################################################
 
 
-	public <T> void put(Singleton<T> prop, T value) {
-		prop.set(value);
-	}
-
-	// ##########################################################################
-	// EXECUTE SCRIPT VISITOR PATTERN END
-	// ##########################################################################
-
-	// ##########################################################################
-	// VISITOR CALL BACK FOR TABLE CREATION BEGIN
-	// ##########################################################################
-
-	
-
-	// ##########################################################################
-	// VISITOR CALL BACK FOR TABLE CREATION END
-	// ##########################################################################
 
 
-//	<T> Singleton<T> getSingleton(Property<T> prop) {
-//		Singleton<T> ton = values.get(prop);
-//		return ton;
-//	}
 }

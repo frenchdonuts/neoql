@@ -179,7 +179,7 @@ public class TableData<T> implements Table<T> {
 
 	Map<T, T> updatedRows = new HashMap<T, T>();
 
-	void update(T row, ColumnValue<T, ?>[] setters) {
+	T update(T row, ColumnValue<T, ?>[] setters) {
 			T clone;
 			if (updatedRows.containsKey(row))
 				clone = row;
@@ -193,7 +193,8 @@ public class TableData<T> implements Table<T> {
 
 			int i = rows.indexOf(row);
 			rows.set(i, clone);
-			internals.fireUpdated(row, clone); 
+			internals.fireUpdated(row, clone);
+			return clone;
 	}
 	
 	void update(T row, T clone) {

@@ -36,7 +36,8 @@ public class ChangeSet {
 
 	public void addChange(Change... operation) {
 		for (Change o: operation)
-			operations.add(o);
+			if(o !=null)
+				operations.add(o);
 	}
 	
 	

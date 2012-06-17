@@ -63,17 +63,22 @@ public class TableDataTest {
 		CloneTable<Student> clone = new CloneTable<Student>(students);
 		
 		Student s1 = db.insert(Student.NAME.set("toto") );
+		Singleton<Student> t1 = db.track(s1);
 		ChangeSet c1 = db.commit();
 		clone.add(s1);
 		assert clone.areEquals() : "insert was not sucessfully redone";
+		assert t1.get() == s1 : "failed to update";
+		
 		
 		db.revert(c1);
 		clone.remove(s1);
 		assert clone.areEquals() : "insert was not sucessfully undone";
+		assert t1.get() == null : "revert should also untrack";
 		
 		db.commit(c1);
 		clone.add(s1);
 		assert clone.areEquals() : "insert was not sucessfully redone";
+		assert t1.get() == s1 : "redo should also retrack";
 		
 		db.revert(c1);
 		clone.remove(s1);
@@ -90,6 +95,7 @@ public class TableDataTest {
 		clone.remove(s2);
 		clone.add(s1);
 		assert clone.areEquals() : "insert was not sucessfully redone";
+		assert t1.get() == s1 : "redo should also retrack";
 		
 		
 		
@@ -100,20 +106,25 @@ public class TableDataTest {
 	@Test public void testSelfRef() {
 		Database db = new Database();
 		TableData<Killer> killers = db.createTable(Killer.TABLE);
-		Killer a = db.insert(Killer.NAME.set("a"));
-		Killer b = db.insert(Killer.NAME.set("b"), Killer.TARGET.set(a));
-		assert b.target == a : "wrong target ref";
-		// updating a into a' to check that b is updated
-		a = db.update(a, Killer.NAME.set("a'"));
-		b = NeoQL.select(killers, Killer.TARGET.is(a) ).iterator().next();
-		assert b.target == a : "wrong target ref";
 		
-		a = db.update(a, Killer.NAME.set("a''"), Killer.TARGET.set(b));
-		b = NeoQL.select(killers, Killer.TARGET.is(a) ).iterator().next();
+		Singleton<Killer> a = db.track( db.insert(Killer.NAME.set("a")) );
+		
+		Singleton<Killer> b = db.track(db.insert(Killer.NAME.set("b"), Killer.TARGET.set(a)));
+		
+		assert b.get().target == a.get() : "wrong target ref";
+		// updating a into a' to check that b is updated
+		
+		db.update(a, Killer.NAME.set("a'"));
+		assert b.get().target == a.get() : "wrong target ref";
+		
+		
+		db.update(a, Killer.NAME.set("a''"), Killer.TARGET.set(b));
+		
 		for (Killer k : NeoQL.select(killers) )
 			System.out.println(k);
-		assert b.target == a : "wrong target ref";
-		assert a.target == b : "wrong target ref";
+		
+		assert b.get().target == a.get() : "wrong target ref";
+		assert a.get().target == b.get() : "wrong target ref";
 
 		
 		

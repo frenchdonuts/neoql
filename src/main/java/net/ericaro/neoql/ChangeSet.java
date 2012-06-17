@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,32 +13,33 @@ import java.util.List;
 public class ChangeSet {
 
 	List<Change> operations = new ArrayList<Change>();
-	ChangeSet parent ;
+	Reference<ChangeSet> parent ;
 	// TODO when I'll handle merge, need to have a list of merge parent
 	
 	
 	public ChangeSet() {
 		super();
-		parent = this;
+		parent = new WeakReference<ChangeSet>(this);
 	}
 	
 
 
 	public ChangeSet(ChangeSet parent) {
 		super();
-		this.parent = parent;
+		this.parent = new WeakReference<ChangeSet>(parent);
 	}
 
 
 	public ChangeSet getParent() {
-		return parent;
+		return parent.get();
 	}
 
 
 
 	public void addChange(Change... operation) {
 		for (Change o: operation)
-			operations.add(o);
+			if(o !=null)
+				operations.add(o);
 	}
 	
 	

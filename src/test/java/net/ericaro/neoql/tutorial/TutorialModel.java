@@ -1,5 +1,7 @@
 package net.ericaro.neoql.tutorial;
 
+import java.util.List;
+
 import javax.swing.ListModel;
 
 import net.ericaro.neoql.ClassTableDef;
@@ -158,6 +160,18 @@ public class TutorialModel {
 	}
 	public ListModel getSelectedStudents() {
 		return selectedStudentList;
+	}
+
+	public void select(List<Teacher> selected) {
+		try {
+			database.stage(); // use transaction mode to avoid concurrent modification
+			for(Teacher t: teachers())
+				selectTeacher(t, selected.contains(t) );
+			database.commit();
+		} finally {
+			database.unstage() ;
+		}
+		
 	}
 	
 	

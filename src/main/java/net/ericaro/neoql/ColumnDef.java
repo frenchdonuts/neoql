@@ -27,6 +27,10 @@ class ColumnDef<T, V> implements Column<T, V> {
 	}
 	
 	@Override
+	public ColumnValue<T, V> set(Singleton<V> value) {
+		return set(value.get());
+	}
+	@Override
 	public ColumnValue<T, V> set(V value) {
 		return new ColumnValue<T, V>( this, value);
 	}

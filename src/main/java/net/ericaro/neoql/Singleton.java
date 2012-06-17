@@ -10,8 +10,9 @@ public class Singleton<T> {
 	T							value;
 	private TableData<T>		source;
 	private TableListener<T>	listener;
+	SingletonChange<T> 			singletonChange = null;
 
-	public Singleton(TableData<T> source) {
+	Singleton(TableData<T> source) {
 		super();
 		this.source = source;
 		this.listener = new TableListener<T>() {
@@ -38,21 +39,22 @@ public class Singleton<T> {
 			}
 
 		};
-		source.addTableListener(listener);
+		source.addInternalTableListener(listener);
 	}
 	
 	public void drop() {
-		this.source.removeTableListener(listener);
+		this.source.removeInternalTableListener(listener);
 		set(null); // also nullify the value
 	}
 
 	
 	void set(T newValue) {
-		T old = value;
-		value = newValue;
-		support.fireUpdated(old, newValue);
+		T oldValue = value;
+		if (singletonChange == null)
+			singletonChange = new MySingletonChange();
+		singletonChange.set(oldValue, newValue);
 	}
-
+	
 	public T get() {
 		return value;
 	}
@@ -64,9 +66,25 @@ public class Singleton<T> {
 	public void removePropertyListener(PropertyListener<T> l) {
 		support.removePropertyListener(l);
 	}
+	
+	
+	class MySingletonChange extends SingletonChange<T>{
+		
+		@Override
+		public void commit() {
+			value = newValue;
+			support.fireUpdated(oldValue, newValue);
+		}
 
-	public void dropTable() {
-		source.removeTableListener(listener);
+		@Override
+		public void revert() {
+			value = oldValue;
+			support.fireUpdated(newValue, oldValue);
+		}
 	}
 
+
+	public Class<T> getType() {
+		return source.getType();
+	}
 }

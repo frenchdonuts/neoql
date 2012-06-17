@@ -37,8 +37,7 @@ public class TutorialController {
 	
 	private void onTeacherSelectionChanged() {
 		List selected = Arrays.asList(allTeachers.getSelectedValues());
-		for(Teacher t: model.teachers())
-				model.selectTeacher(t, selected.contains(t) );
+		model.select(selected);
 	}
 	
 	private void onAddStudent(){

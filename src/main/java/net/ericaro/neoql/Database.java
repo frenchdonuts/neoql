@@ -1,7 +1,10 @@
 package net.ericaro.neoql;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -16,11 +19,13 @@ public class Database {
 	private Map<Class, TableData>	typed		= new HashMap<Class, TableData>();
 	ChangeSet						tx			= new ChangeSet(new ChangeSet()); // trick to force a "root" changeset
 	boolean							autocommit	= true;
+
+	private Collection<Singleton>	singletons  = new HashSet<Singleton>();
 	
     
 //	private Map<Property, Singleton>		values	= new HashMap<Property, Singleton>();
 
-	
+	// observable transaction, and also handle transactions for the singletons
 	// TODO handle undo/redo ? (isn't it related to transaction ? yes it is
 	// TODO provide generic JTAble for every table for debug purpose )
 	// TODO add unit tests
@@ -73,8 +78,26 @@ public class Database {
 		return data;
 	}
 	
-	
+	public <T> Singleton<T> createSingleton(Class<T> type){
+		Singleton<T> s = new Singleton<T>(get(type));
+		singletons.add(s);
+		return s;
+	}
 
+	
+	public Collection<Singleton> getSingletons(){
+		return Collections.unmodifiableCollection(singletons);
+	}
+	
+	public <T> Collection<Singleton<T>> getSingletons(Class<T> type){
+		Collection<Singleton<T>> singletons = new HashSet<Singleton<T>>();
+		for(Singleton s: this.singletons)
+			if (s.getType() == type )
+				singletons.add(s);
+		return Collections.unmodifiableCollection(singletons);
+	}
+	
+	
 	public <T> TableData<T> get(Class<T> type){
 		return typed.get(type);
 	}
@@ -95,9 +118,7 @@ public class Database {
 		TableData<T> data = typed.get(type);
 		T row = data.insert(data.newInstance(values) );
 		assert data.insertOperation !=null:"unexpected empty transaction" ;
-		tx.addChange(data.insertOperation);
-		data.insertOperation = null;// clear the transaction locally
-		if (autocommit) commit();
+		precommit();
 		return row;
 		
 	}
@@ -111,23 +132,22 @@ public class Database {
 	// DELETE BEGIN
 	// ##########################################################################
 	
+	public <T> void delete(Singleton<T> value){
+		delete(value.get());
+	}
 	public <T> void delete(T value){
 		TableData<T> data = typed.get(value.getClass());
 		Predicate<T> p = NeoQL.is(value);
 		data.delete(p);
 		assert data.deleteOperation !=null : "unexpected null delete operation";
-		tx.addChange(data.deleteOperation);
-		data.deleteOperation = null;
-		if (autocommit) commit();
+		precommit();
 	}
 	
 	public <T> void delete(Class<T> type, Predicate<T> predicate){
 		TableData<T> data = typed.get(type);
 		data.delete(predicate);
 		assert data.deleteOperation !=null : "unexpected null delete operation";
-		tx.addChange(data.deleteOperation);
-		data.deleteOperation = null;
-		if (autocommit) commit();
+		precommit();
 	}
 	
 	
@@ -137,6 +157,9 @@ public class Database {
 	// ##########################################################################
 	// UPDATE BEGIN
 	// ##########################################################################
+	public <T> T update(Singleton<T> oldValue, ColumnValue<T,?>... values){
+		return update(oldValue.get(), values);
+	}
 	
 	/** Update the given row. It creates automatically an identity predicate
 	 * 
@@ -148,21 +171,12 @@ public class Database {
 		TableData<T> data = typed.get(oldValue.getClass());
 		T n = data.update(oldValue, values);
 		assert data.updateOperation !=null : "unexpected null update operation";
-		commitUpdate();
+		precommit();
 		return n;
 		
 	}
 
-	private void commitUpdate() {
-		List<UpdateChange> updates = new ArrayList<UpdateChange>();
-		for (TableData t: typed.values())
-			if (t.updateOperation !=null ) {
-				updates.add(t.updateOperation) ;
-				t.updateOperation = null ;
-			}
-		tx.addChange(updates.toArray(new Change[updates.size()]));
-		if (autocommit) commit();
-	}
+	
 	
 	/** Update rows matching the given predicate, with the given setters.
 	 * 
@@ -173,7 +187,7 @@ public class Database {
 		TableData<T> data = typed.get(type);
 		data.update(predicate, values);
 		assert data.updateOperation !=null : "unexpected null update operation";
-		commitUpdate();
+		precommit();
 	}
 	
 	
@@ -193,6 +207,18 @@ public class Database {
 			this.typed.remove(((TableData)table).getType());
 		table.drop();
 	}
+	
+	public <T> void drop(Singleton<T> s) {
+		s.drop();
+	}
+	/** drop all singletons for a given type
+	 * 
+	 * @param type
+	 */
+	public <T> void drop(Class<T> type) {
+		for(Singleton<T> s: getSingletons(type) )
+			s.drop();
+	}
 
 	// ##########################################################################
 	// DROP END
@@ -203,6 +229,18 @@ public class Database {
 	// ##########################################################################
 	public <T> void put(Singleton<T> prop, T value) {
 		prop.set(value);
+		precommit();
+	}
+	
+	/** creates and returns a singleton initialized on the value
+	 * 
+	 * @param value
+	 */
+	public <T> Singleton<T> track(T value) {
+		Singleton<T> prop = (Singleton<T>) createSingleton(value.getClass());
+		prop.set(value);
+		precommit();
+		return prop;
 	}
 	
 	public <T> T get(Singleton<T> prop) {
@@ -257,6 +295,31 @@ public class Database {
 	// TRANSACTIONS BEGIN
 	// ##########################################################################
 	
+	/** collect changes from tables and store them in the current changeset
+	 * 
+	 */
+	private void precommit() {
+		
+		for (TableData t: typed.values()) {
+			tx.addChange(t.insertOperation) ;
+			t.insertOperation = null;
+			
+			tx.addChange(t.updateOperation) ;
+			t.updateOperation = null;
+				
+			tx.addChange(t.deleteOperation) ;
+			t.deleteOperation = null;
+		}
+		// also collect changes from singletons
+		for(Singleton s : singletons) {
+			tx.addChange(s.singletonChange);
+			s.singletonChange = null;
+		}
+		
+		
+		if (autocommit) commit();
+	}
+	
 	public ChangeSet commit() {
 		tx.commit();
 		ChangeSet otx = tx;
@@ -269,10 +332,15 @@ public class Database {
 		return otx;
 	}
 	
+	public void stage() {
+		autocommit = false;
+	}
+	public void unstage() {
+		autocommit = true;
+	}
 	
 	public void commit(ChangeSet cs) {
 		assert tx.isEmpty(): "cannot commit a changeset when there are local changes nnot yet applyed";
-		assert cs.getParent() == tx.parent : "cannot rebase a change set";
 		cs.commit();
 		tx = new ChangeSet(cs);
 	}

@@ -16,6 +16,7 @@ public interface Column<T, V> extends Mapper<T, V> {
 
 	public boolean hasForeignKey() ;
 	
+	public ColumnValue<T, V> set(Singleton<V> value);
 	public ColumnValue<T, V> set(V value);
 	
 	public Predicate<T> is(final V value);

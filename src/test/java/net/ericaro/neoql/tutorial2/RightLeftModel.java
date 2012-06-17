@@ -26,6 +26,8 @@ public class RightLeftModel {
 		boolean isIn() {
 			return in;
 		}
+		
+
 		private boolean in = true;
 		@Override
 		public String toString() {
@@ -35,8 +37,8 @@ public class RightLeftModel {
 
 	
 	private Database	database;
-	private ListModel<Student>	ins;
-	private ListModel<Student>	outs;
+	private ListModel	ins;
+	private ListModel   outs;
 
 	public RightLeftModel() {
 		super();
@@ -48,11 +50,11 @@ public class RightLeftModel {
 		outs = NeoQL.listFor(NeoQL.where(students, Student.IN.is(false))	);
 	}
 
-	ListModel<Student> getIns() {
+	ListModel getIns() {
 		return ins;
 	}
 
-	ListModel<Student> getOuts() {
+	ListModel getOuts() {
 		return outs;
 	}
 

@@ -84,13 +84,13 @@ public class RightLeftController extends JFrame{
 	}
 	
 	private void onSelect() {
-		for(Object t: outs.getSelectedValuesList())
+		for(Object t: outs.getSelectedValues())
 			this.model.selectStudent((Student)t);
 		
 	}
 	
 	private void onDeselect() {
-		for(Object t: ins.getSelectedValuesList())
+		for(Object t: ins.getSelectedValues())
 			this.model.deselectStudent((Student)t);
 	}
 	

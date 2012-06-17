@@ -79,10 +79,10 @@ public class TutorialModel {
 	
 	// instance definition
 	Database database;
-	private ListModel studentList;
-	private ListModel teacherList;
-	private ListModel selectedTeacherList;
-	private ListModel selectedStudentList;
+	private TableList<Student> studentList;
+	private TableList<Student> teacherList;
+	private TableList<Student> selectedTeacherList;
+	private TableList<Student> selectedStudentList;
 	private TableData<Teacher> teachers;
 	private TableData<Student> students;
 	
@@ -99,7 +99,7 @@ public class TutorialModel {
 //		public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
 //		public static final TableDef<Teacher> SELECTED_TEACHERS = NeoQL.select(Teacher.TABLE, Teacher.SELECTED.is(true) );
 //		public static final TableDef<Student> SELECTED_STUDENTS = NeoQL.left(  NeoQL.innerJoin(Student.TABLE, SELECTED_TEACHERS, Student.TEACHER.joins() ));
-		studentList = NeoQL.listFor(students);
+		studentList = NeoQL.listFor( students );
 		teacherList = NeoQL.listFor(teachers);
 		selectedTeacherList = NeoQL.listFor(selectedTeachers);
 		selectedStudentList = NeoQL.listFor(selectedStudents);

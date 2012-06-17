@@ -129,7 +129,7 @@ public class NeoQL {
 
 	
 	public static <T> SelectTable<T> where(Table<T> table, Predicate<T> where){
-		return new SelectTable<>(table, where);
+		return new SelectTable<T>(table, where);
 	}
 	public static <S, T> MappedTable<S,T> map(Table<S> table,Mapper<S, T> mapper) {
 		return new MappedTable<S, T>(mapper, table);

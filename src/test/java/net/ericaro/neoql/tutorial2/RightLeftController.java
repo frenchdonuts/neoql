@@ -1,25 +1,25 @@
 package net.ericaro.neoql.tutorial2;
 
-import javax.swing.JFrame;
-import javax.swing.JSplitPane;
 import java.awt.BorderLayout;
-import javax.swing.JScrollPane;
-import javax.swing.JList;
-import javax.swing.JToolBar;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JToolBar;
 
 import net.ericaro.neoql.RandName;
 import net.ericaro.neoql.tutorial2.RightLeftModel.Student;
 
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import javax.swing.JLabel;
-
 public class RightLeftController extends JFrame{
 	
 	RightLeftModel model;
-	private JList<Student> outs;
-	private JList<Student> ins;
+	private JList outs;
+	private JList ins;
 	
 	public RightLeftController() {
 		setTitle("Demo for Right Left");
@@ -61,7 +61,7 @@ public class RightLeftController extends JFrame{
 		JScrollPane scrollPane = new JScrollPane();
 		splitPane.setLeftComponent(scrollPane);
 		
-		ins = new JList<>();
+		ins = new JList();
 		scrollPane.setViewportView(ins);
 		
 		JLabel lblSelected = new JLabel("Selected");
@@ -70,7 +70,7 @@ public class RightLeftController extends JFrame{
 		JScrollPane scrollPane_1 = new JScrollPane();
 		splitPane.setRightComponent(scrollPane_1);
 		
-		outs = new JList<>();
+		outs = new JList();
 		scrollPane_1.setViewportView(outs);
 		
 		JLabel lblUnselected = new JLabel("Unselected");
@@ -84,14 +84,14 @@ public class RightLeftController extends JFrame{
 	}
 	
 	private void onSelect() {
-		for(Student t: outs.getSelectedValuesList())
-			this.model.selectStudent(t);
+		for(Object t: outs.getSelectedValuesList())
+			this.model.selectStudent((Student)t);
 		
 	}
 	
 	private void onDeselect() {
-		for(Student t: ins.getSelectedValuesList())
-			this.model.deselectStudent(t);
+		for(Object t: ins.getSelectedValuesList())
+			this.model.deselectStudent((Student)t);
 	}
 	
 	public void setModel(RightLeftModel model) {

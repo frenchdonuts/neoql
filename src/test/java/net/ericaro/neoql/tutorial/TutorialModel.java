@@ -92,7 +92,7 @@ public class TutorialModel {
 		
 		teachers = database.createTable(Teacher.TABLE);
 		students = database.createTable(Student.TABLE);
-		SelectTable<Teacher> selectedTeachers = NeoQL.select(teachers, Teacher.SELECTED.is(true) );
+		SelectTable<Teacher> selectedTeachers = NeoQL.where(teachers, Teacher.SELECTED.is(true) );
 		Table<Student> selectedStudents = NeoQL.left(  NeoQL.innerJoin(students, selectedTeachers, Student.TEACHER.joins() ));
 		
 //		public static final TableDef<Student> STUDENTS = NeoQL.select(Student.TABLE);

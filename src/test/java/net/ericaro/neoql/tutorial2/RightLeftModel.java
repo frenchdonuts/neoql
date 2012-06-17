@@ -45,7 +45,7 @@ public class RightLeftModel {
 		NeoQL.select(students, Student.IN.is(true));
 		/// creates the relations
 		ins  = NeoQL.listFor(students );
-		outs = NeoQL.listFor(NeoQL.select(students, Student.IN.is(false))	);
+		outs = NeoQL.listFor(NeoQL.where(students, Student.IN.is(false))	);
 	}
 
 	ListModel<Student> getIns() {

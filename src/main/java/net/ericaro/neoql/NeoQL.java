@@ -128,7 +128,7 @@ public class NeoQL {
 	}
 
 	
-	public static <T> SelectTable<T> select(Table<T> table, Predicate<T> where){
+	public static <T> SelectTable<T> where(Table<T> table, Predicate<T> where){
 		return new SelectTable<>(table, where);
 	}
 	public static <S, T> MappedTable<S,T> map(Table<S> table,Mapper<S, T> mapper) {
@@ -165,6 +165,18 @@ public class NeoQL {
 			}
 		};
 	}
+	
+	public static <T> Iterable<T> select(final Table<T> table, final Predicate<T> where) {
+		return new Iterable<T>() {
+			@Override
+			public Iterator<T> iterator() {
+				return new SelectTable.SelectIterator<T>(table.iterator(), where);
+			}
+		};
+		
+		
+	}
+	
 	
 	public static <T, U extends ListModel&Iterable<T>> U listFor(Table<T> table) {
 		return (U) new TableList<T>(table);

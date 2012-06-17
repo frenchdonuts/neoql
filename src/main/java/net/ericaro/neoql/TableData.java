@@ -1,13 +1,22 @@
 package net.ericaro.neoql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+
+import javax.swing.event.EventListenerList;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.undo.AbstractUndoableEdit;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+
 
 
 
@@ -19,15 +28,22 @@ import java.util.Map.Entry;
  */
 public class TableData<T> implements Table<T> {
 
+	// public events
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
+	// internal ones, means between tables through foreign keys only
 	private TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
+	
 	private ColumnDef<T, ?>[] columns;
-	private List<T> rows = new ArrayList<T>();
+	private Set<T> rows = new HashSet<T>();
 	private Class<T> type;
-	//private ClassTableDef<T> table;
 	private Database owner;
+	
 	private TableListener[] internalColumnListeners;
-	private TableListener[] columnListeners;
+
+	// transactions
+	MyDeleteChange	deleteOperation = null; //
+	MyInsertChange	insertOperation = null;
+	MyUpdateChange	updateOperation = null;
 
 	
 
@@ -41,21 +57,17 @@ public class TableData<T> implements Table<T> {
 		System.arraycopy(cols, 0, columns, 0, cols.length);
 		
 		this.internalColumnListeners = new TableListener[this.columns.length];
-		this.columnListeners = new TableListener[this.columns.length];
 		
 
 	}
 
 	
-	
 	@Override
 	public void drop() {
 		uninstall() ;
 		this.rows.clear();
-		internals.fireDrop(this);
-		events.fireDrop(this);
+		fireDrop(this);
 	}
-
 
 	void install() {
 		int i = 0;
@@ -78,14 +90,6 @@ public class TableData<T> implements Table<T> {
 			TableData<V> ftable = owner.get(col.getForeignTable().table);
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(ftable, internalColumnListeners[i]);
-			
-			columnListeners[i] = new AbstractTableListener<V>() {
-				public void updated(V oldRow, V newRow) {
-					fireUpdate();
-				}
-			};
-			owner.addTableListener(ftable, columnListeners[i]);
-			
 		}
 	}
 
@@ -94,9 +98,6 @@ public class TableData<T> implements Table<T> {
 			TableData<V> ftable = owner.get(col.getForeignTable().table);
 			owner.removeInternalTableListener(ftable,
 					internalColumnListeners[i]);
-			owner.removeTableListener(ftable,
-					columnListeners[i]);
-			
 		}
 	}
 
@@ -109,6 +110,7 @@ public class TableData<T> implements Table<T> {
 		events.removeTableListener(listener);
 	}
 
+	
 	void addInternalTableListener(TableListener<T> listener) {
 		internals.addTableListener(listener);
 	}
@@ -128,18 +130,21 @@ public class TableData<T> implements Table<T> {
 
 		@Override
 		public void updated(final V oldValue, final V newValue) {
-			if (oldValue == newValue)
-				return;
+			// the foreign key has been updated
+			if (oldValue == newValue) return; // it's a false change, take a shortcut ( when is that happenning, infact ?)
 			
+			// now we are going to update every row that points to the oldValue
 			Predicate<T> p = NeoQL.is(col, oldValue) ;
 			ColumnValue<T, ?>[] setters = new ColumnValue[] {
 					new ColumnValue<T, V>(col, newValue)
 			};
-			for(T row: rows)
-				if(p.eval(row))
-					update(row, setters);
+			
+			if (updateOperation == null )
+				updateOperation = new MyUpdateChange();
+			updateOperation.update(p, setters);
 		}
 
+		
 		@Override
 		public void deleted(V oldValue) {
 			// fire an exception ( forbidding the deleting if the value is in
@@ -160,7 +165,10 @@ public class TableData<T> implements Table<T> {
 		}
 	}
 	
-	
+
+	// ##########################################################################
+	// GETTER BEGIN
+	// ##########################################################################
 	Database getOwner() {
 		return owner;
 	}
@@ -168,78 +176,78 @@ public class TableData<T> implements Table<T> {
 	public Class<T> getType() {
 		return type;
 	}
+	// ##########################################################################
+	// GETTER END
+	// ##########################################################################
 
+	
+	
+	
 	@Override
 	public Iterator<T> iterator() {
 		return rows.iterator();
 	}
-
-	T append(T row) {
-		rows.add(row);// todo do some check here
-		return row;
+	
+	
+	
+	// ##########################################################################
+	// UPDATE END
+	// ##########################################################################
+	
+	
+	T update(T oldValue, ColumnValue<T, ?>[] setters) {
+		if (updateOperation == null )	
+			updateOperation = new MyUpdateChange();
+		return updateOperation.update(oldValue, setters);
 	}
-
-	Map<T, T> updatedRows = new HashMap<T, T>();
-
-	T update(T row, ColumnValue<T, ?>[] setters) {
-			T clone;
-			if (updatedRows.containsKey(row))
-				clone = row;
-			else {
-				clone = clone(row);
-				updatedRows.put(clone, row);
-			}
-			
-			for (ColumnValue s : setters)
-				s.set(clone);
-
-			int i = rows.indexOf(row);
-			rows.set(i, clone);
-			internals.fireUpdated(row, clone);
-			return clone;
+	void update(Predicate<T> p, ColumnValue<T, ?>[] setters) {
+		if (updateOperation == null )	
+			updateOperation = new MyUpdateChange();
+		updateOperation.update(p, setters);
 	}
 	
-	void update(T row, T clone) {
-		assert !updatedRows.containsKey(row) : "update with an instance should only be called first";
-		updatedRows.put(clone, row);
-		int i = rows.indexOf(row);
-		rows.set(i, clone);
-		internals.fireUpdated(row, clone); 
-	}
+	// ##########################################################################
+	// UPDATE END
+	// ##########################################################################
 	
-	void fireUpdate() {
-		HashSet<Entry<T, T>> temp = new HashSet<Entry<T, T>>(updatedRows.entrySet() );// copy entries
-		updatedRows.clear(); // clear before causing any reintrant calls
-		for (Entry<T, T> e : temp )
-			events.fireUpdated(e.getValue(), e.getKey());
-	}
 	
-
-	private boolean contains(T value) {
-		return rows.contains(value);
-	}
-
+	// ##########################################################################
+	// DELETE BEGIN
+	// ##########################################################################
 	
+	/** delete operation, fill the delete Operation accordingly
+	 * 
+	 * @param where
+	 */
 	void delete(Predicate<? super T> where) {
-		for (ListIterator<T> i = rows.listIterator(); i.hasNext();) {
+		if (deleteOperation == null )
+			deleteOperation = new MyDeleteChange();
+		
+		for (Iterator<T> i = rows.iterator(); i.hasNext();) {
 			T row = i.next();
-			if (where.eval(row)) {
-				i.remove();
-				internals.fireDeleted(row); // eventually I'll had to use the same protocol as for the update operation. But for now, there is no need, internals only fire exeception
-				events.fireDeleted(row);
-			}
+			if (where.eval(row))
+				deleteOperation.delete(row);
 		}
 	}
 	
+	// ##########################################################################
+	// DELETE END
+	// ##########################################################################
 	
+	// ##########################################################################
+	// INSERT BEGIN
+	// ##########################################################################
 
 	T insert(T row) {
-		rows.add(row);
-		internals.fireInserted(row);
-		events.fireInserted(row);
+		if (insertOperation == null)
+			insertOperation = new MyInsertChange();
+		insertOperation.insert(row);
 		return row;
 	}
 
+	// ##########################################################################
+	// INSERT END
+	// ##########################################################################
 	
 	/** creates an instance suitable for this table data, with the given columns set
 	 * 
@@ -279,5 +287,122 @@ public class TableData<T> implements Table<T> {
 		return true;
 	}
 		
+
+	
+	// ##########################################################################
+	// OPERATIONS BEGIN
+	// ##########################################################################
+
+	class MyUpdateChange extends UpdateChange<T>{
+		transient Map<T,T> updatedRows = new HashMap<T,T>(); 
 		
+		public void update(Predicate<T> p, ColumnValue<T, ?>[] setters) {
+			Set<T> updated = new HashSet<T>();// we first compute the rows involved
+			for(T row: rows) // not rows but the virtual new rows
+				if(p.eval(row) && ! updatedRows.containsKey(row))  // match, and it has not changed
+					updated.add(row);
+			for(T row: updatedRows.values()) // also need to update the 'new' ones
+				if(p.eval(row) )  // match, and it has not changed
+					updated.add(row);
+				
+			// now that we have the set of rows involved in the update
+			for (T row : updated)
+				update(row, setters);
+		}
+		
+		public T update(T oldValue, ColumnValue<T, ?>[] setters) {
+
+			T newValue ; 
+			// fix point algorithm, an updated row can trigger internal events that cause it self to change.
+			// so we keep the map of old ->new so that the new one is created once, and edited subsequently
+			if (updatedRows.containsValue(oldValue)) // the the oldvalue is a new value, this means that the value as already been updated
+				newValue = oldValue;
+			else {
+				newValue = TableData.this.clone(oldValue);
+				updatedRows.put(oldValue, newValue);
+			}
+			
+			for (ColumnValue s : setters)
+				s.set(newValue);
+			
+			update(oldValue, newValue);
+			// fire internal events so that other rows might want to keep in touch
+			internals.fireUpdated(oldValue, newValue);
+			return newValue;
+		}
+		
+		@Override
+		public void revert() {
+			for (Pair<T,T> r :updated) {
+				rows.remove(r.getRight()); // remove the new
+				rows.add(r.getLeft()); // add the old
+				events.fireUpdated(r.getRight(),r.getLeft());
+			}
+		}
+		
+		@Override
+		public void commit() {
+			for (Pair<T,T> r :updated) {
+				rows.remove(r.getLeft()); // remove the new
+				rows.add(r.getRight()); // add the old
+				events.fireUpdated(r.getLeft(),r.getRight());
+			}
+		}
+	}
+	
+	
+	class MyInsertChange extends InsertChange<T>{
+			
+			@Override
+			public void revert() {
+				for (T r :inserted) 
+					if (rows.remove(r))// actually remove the items
+						fireDeleted(r);
+			}
+			@Override
+			public void commit() {
+				for (T r :inserted) 
+					if (rows.add(r))// actually add the item back
+						fireInserted(r);
+			}
+			
+		}
+		
+	class MyDeleteChange extends DeleteChange<T>{
+			public void revert() {
+				for (T r :deleted) 
+					if (rows.add(r))// actually remove the items
+						fireInserted(r);
+			}
+			// register deletion
+			
+			public void commit() {
+				for (T r :deleted) 
+					if (rows.remove(r))// actually add the item back
+						fireDeleted(r);
+			}
+		}
+	    
+	    public void fireDeleted(T row) {
+	    	internals.fireDeleted(row);
+			events.fireDeleted(row);
+		}
+
+
+
+		public void fireInserted(T row) {
+			internals.fireInserted(row);
+			events.fireInserted(row);
+		}
+
+		public void fireDrop(Table<T> table) {
+			internals.fireDrop(table);
+			events.fireDrop(table);
+		}
+	    
+		// ##########################################################################
+		// UNDO END
+		// ##########################################################################
+
+	
 }

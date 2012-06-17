@@ -332,10 +332,15 @@ public class Database {
 		return otx;
 	}
 	
+	public void stage() {
+		autocommit = false;
+	}
+	public void unstage() {
+		autocommit = true;
+	}
 	
 	public void commit(ChangeSet cs) {
 		assert tx.isEmpty(): "cannot commit a changeset when there are local changes nnot yet applyed";
-		assert cs.getParent() == tx.parent : "cannot rebase a change set";
 		cs.commit();
 		tx = new ChangeSet(cs);
 	}

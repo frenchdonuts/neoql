@@ -2,12 +2,6 @@ package net.ericaro.neoql;
 
 import java.util.Iterator;
 
-import net.ericaro.neoql.system.Generator;
-import net.ericaro.neoql.system.Predicate;
-import net.ericaro.neoql.system.StopIteration;
-import net.ericaro.neoql.system.Table;
-import net.ericaro.neoql.system.TableListener;
-import net.ericaro.neoql.system.TableListenerSupport;
 
 
 public class SelectTable<T> implements Table<T> {
@@ -54,6 +48,10 @@ public class SelectTable<T> implements Table<T> {
 				}
 				// if we add a "sort" algorithm, I would need to "workout" this a little bit
 			}
+			@Override
+			public void dropped(Table<T> table) {
+				drop();
+			}
 
 		};
 		table.addTableListener(listener);
@@ -64,8 +62,9 @@ public class SelectTable<T> implements Table<T> {
 	}
 
 	@Override
-	public void drop(Database from) {
+	public void drop() {
 		table.removeTableListener(listener);
+		events.fireDrop(this);
 	}
 
 	@Override

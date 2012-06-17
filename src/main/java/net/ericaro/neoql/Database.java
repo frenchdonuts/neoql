@@ -1,45 +1,33 @@
 package net.ericaro.neoql;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
-import net.ericaro.neoql.lang.ClassTableDef;
-import net.ericaro.neoql.lang.ColumnValue;
-import net.ericaro.neoql.lang.CreateProperty;
-import net.ericaro.neoql.lang.CreateTable;
-import net.ericaro.neoql.lang.DeleteFrom;
-import net.ericaro.neoql.lang.DropProperty;
-import net.ericaro.neoql.lang.DropTable;
-import net.ericaro.neoql.lang.GroupBySelect;
-import net.ericaro.neoql.lang.InnerJoin;
-import net.ericaro.neoql.lang.InsertInto;
-import net.ericaro.neoql.lang.MapSelect;
-import net.ericaro.neoql.lang.OrderBySelect;
-import net.ericaro.neoql.lang.Script;
-import net.ericaro.neoql.lang.Select;
-import net.ericaro.neoql.lang.Update;
-import net.ericaro.neoql.system.OrderByTable;
-import net.ericaro.neoql.system.Pair;
-import net.ericaro.neoql.system.Predicate;
-import net.ericaro.neoql.system.Property;
-import net.ericaro.neoql.system.PropertyListener;
-import net.ericaro.neoql.system.Table;
-import net.ericaro.neoql.system.TableDef;
-import net.ericaro.neoql.system.TableListener;
+
 
 public class Database {
+	
+	static Logger LOG = Logger.getLogger(Database.class.getName());
+	
 	// real class -> table mapping
-	private Map<ClassTableDef, TableData>	tables	= new HashMap<ClassTableDef, TableData>();
-	private Map<Property, Singleton>		values	= new HashMap<Property, Singleton>();
+	private Map<Class, TableData>	typed		= new HashMap<Class, TableData>();
+	ChangeSet						tx			= new ChangeSet(new ChangeSet()); // trick to force a "root" changeset
+	boolean							autocommit	= true;
+	
+    
+//	private Map<Property, Singleton>		values	= new HashMap<Property, Singleton>();
 
 	
+	// TODO handle undo/redo ? (isn't it related to transaction ? yes it is
+	// TODO provide generic JTAble for every table for debug purpose )
+	// TODO add unit tests
 	
+	// TODO implement every possible joins (mainly outter join )
+	// TODO find a way to express the definition of a singleton (or improve the existing one)
 	
-	// TODO implement every possible joins
-	// TODO find a way to express the definition of a singleton
-	// for instance THE selected Item, so that it can be observed in the app, and reused
-	// TODO oops, found a bug in the drop stuff. If I create a table to serve another one, I need to drop it too. (for instance select(mapper) creates a normal select, then mapper table, hence the "normal select is never deleted
 	// TODO do some stress test
 	// TODO provide an SQL like toString for table def
 
@@ -51,203 +39,257 @@ public class Database {
 	// except for the basic ones
 
 	// should I add insert into here or not. Should I get the new instance private or not.
-	/**
-	 * Retrieve the primary table associated with a class (if exists)
+	
+	public Database() {
+		super();
+	}
+	
+	public Database(boolean autocommit) {
+		super();
+		this.autocommit = autocommit ;
+	}
+	
+	
+	// ##########################################################################
+	// CREATE BEGIN
+	// ##########################################################################
+	
+	
+	
+	/** creates a basic table in this database
 	 * 
 	 * @param table
 	 * @return
 	 */
-	public <T> TableData<T> tableFor(ClassTableDef<T> table) {
-		return tables.get(table);
+	public <T> TableData<T>  createTable(ClassTableDef<T> table){
+//		assert !tables.containsKey(table):"failed to create a table data that already exists";
+		assert !typed.containsKey(table.getTable()):"failed to create a table data that already exists";
+		
+		LOG.fine("creating table "+ table);
+		TableData<T> data = new TableData<T>(this, table);
+//		this.tables.put(table, data);
+		this.typed.put(table.getTable(), data);
+		data.install();
+		return data;
+	}
+	
+	
+
+	public <T> TableData<T> get(Class<T> type){
+		return typed.get(type);
 	}
 
-	// TODO what the fuck ? retrieving, and creating is the same process ? It shouldn't of course
-	// the doc is correct, not the code: the code says: create and retr
-	/**
-	 * Retrieve a table associated with this table definition
+	
+	// ##########################################################################
+	// CREATE END
+	// ##########################################################################
+	
+	// ##########################################################################
+	// INSERT BEGIN
+	// ##########################################################################
+	
+	public <T> T insert(ColumnValue<T,?>... values){
+		if (values.length == 0) return null;// nothing to do
+		
+		Class<T> type = values[0].column.getTable().getTable() ;
+		TableData<T> data = typed.get(type);
+		T row = data.insert(data.newInstance(values) );
+		assert data.insertOperation !=null:"unexpected empty transaction" ;
+		tx.addChange(data.insertOperation);
+		data.insertOperation = null;// clear the transaction locally
+		if (autocommit) commit();
+		return row;
+		
+	}
+	
+	
+	// ##########################################################################
+	// INSERT END
+	// ##########################################################################
+	
+	// ##########################################################################
+	// DELETE BEGIN
+	// ##########################################################################
+	
+	public <T> void delete(T value){
+		TableData<T> data = typed.get(value.getClass());
+		Predicate<T> p = NeoQL.is(value);
+		data.delete(p);
+		assert data.deleteOperation !=null : "unexpected null delete operation";
+		tx.addChange(data.deleteOperation);
+		data.deleteOperation = null;
+		if (autocommit) commit();
+	}
+	
+	public <T> void delete(Class<T> type, Predicate<T> predicate){
+		TableData<T> data = typed.get(type);
+		data.delete(predicate);
+		assert data.deleteOperation !=null : "unexpected null delete operation";
+		tx.addChange(data.deleteOperation);
+		data.deleteOperation = null;
+		if (autocommit) commit();
+	}
+	
+	
+	// ##########################################################################
+	// DELETE END
+	// ##########################################################################
+	// ##########################################################################
+	// UPDATE BEGIN
+	// ##########################################################################
+	
+	/** Update the given row. It creates automatically an identity predicate
 	 * 
-	 * @param table
-	 * @return
+	 * @param oldValue
+	 * @param values
+	 * @return 
 	 */
-	public <T> Table<T> tableFor(TableDef<T> table) {
-		return table.asTable(this);
+	public <T> T update(T oldValue, ColumnValue<T,?>... values){
+		TableData<T> data = typed.get(oldValue.getClass());
+		T n = data.update(oldValue, values);
+		assert data.updateOperation !=null : "unexpected null update operation";
+		commitUpdate();
+		return n;
+		
 	}
 
-	public <T> void drop(ClassTableDef<T> table) {
-		tableFor(table).uninstall();
-		this.tables.remove(table);
+	private void commitUpdate() {
+		List<UpdateChange> updates = new ArrayList<UpdateChange>();
+		for (TableData t: typed.values())
+			if (t.updateOperation !=null ) {
+				updates.add(t.updateOperation) ;
+				t.updateOperation = null ;
+			}
+		tx.addChange(updates.toArray(new Change[updates.size()]));
+		if (autocommit) commit();
 	}
+	
+	/** Update rows matching the given predicate, with the given setters.
+	 * 
+	 * @param oldValue
+	 * @param values
+	 */
+	public <T> void update(Class<T> type, Predicate<T> predicate, ColumnValue<T,?>... values){
+		TableData<T> data = typed.get(type);
+		data.update(predicate, values);
+		assert data.updateOperation !=null : "unexpected null update operation";
+		commitUpdate();
+	}
+	
+	
+	// ##########################################################################
+	// UPDATE END
+	// ##########################################################################
+
+	
+	
+	// ##########################################################################
+	// DROP BEGIN
+	// ##########################################################################
+	
 
 	public <T> void drop(Table<T> table) {
-		table.drop(this);
-	}
-
-	public <T> TableList<T> listFor(TableDef<T> table) {
-		return new TableList<T>(tableFor(table));
-	}
-
-	public <T> Iterator<T> iterator(final TableDef<T> table) {
-		return table.iterator(this);// reverse visitor pattern
-	}
-
-	public <T> Iterable<T> select(final TableDef<T> table) {
-		return new Iterable<T>() {
-
-			@Override
-			public Iterator<T> iterator() {
-				return Database.this.iterator(table);
-			}
-
-		};
-	}
-
-	public <T> T get(Property<T> prop) {
-		return getSingleton(prop).get();
-	}
-
-	// execute a script
-
-	public void execute(Script script) {
-		script.executeOn(this);
+		if (table instanceof TableData)
+			this.typed.remove(((TableData)table).getType());
+		table.drop();
 	}
 
 	// ##########################################################################
-	// ACCESS TABLES OBJECT END
+	// DROP END
 	// ##########################################################################
+	
+	// ##########################################################################
+	// SINGLETON EDIT BEGIN
+	// ##########################################################################
+	public <T> void put(Singleton<T> prop, T value) {
+		prop.set(value);
+	}
+	
+	public <T> T get(Singleton<T> prop) {
+		return prop.get();
+	}
+	
+	// ##########################################################################
+	// SINGLETON EDIT END
+	// ##########################################################################
+	
+	
+	
+	
 
 	// ##########################################################################
 	// EVENTS BEGIN
 	// ##########################################################################
 
-	public <T> void addTableListener(ClassTableDef<T> table, TableListener<T> listener) {
-		tableFor(table).addTableListener(listener);
+	public <T> void addTableListener(Table<T> table, TableListener<T> listener) {
+		table.addTableListener(listener);
 	}
 
-	public <T> void removeTableListener(ClassTableDef<T> table, TableListener<T> listener) {
-		tableFor(table).removeTableListener(listener);
+	public <T> void removeTableListener(Table<T> table, TableListener<T> listener) {
+		table.removeTableListener(listener);
 	}
 
-	<T> void addInternalTableListener(ClassTableDef<T> table, TableListener<T> listener) {
-		tableFor(table).addInternalTableListener(listener);
+	<T> void addInternalTableListener(TableData<T> table, TableListener<T> listener) {
+		table.addInternalTableListener(listener);
 	}
 
-	<T> void removeInternalTableListener(ClassTableDef<T> table, TableListener<T> listener) {
-		tableFor(table).removeInternalTableListener(listener);
+	<T> void removeInternalTableListener(TableData<T> table, TableListener<T> listener) {
+		table.removeInternalTableListener(listener);
 	}
 
-	public <T> void addPropertyListener(Property<T> prop, PropertyListener<T> l) {
-		getSingleton(prop).addPropertyListener(l);
+	public <T> void addPropertyListener(Singleton<T> prop, PropertyListener<T> l) {
+		prop.addPropertyListener(l);
 	}
 
-	public <T> void removePropertyListener(Property<T> prop, PropertyListener<T> l) {
-		getSingleton(prop).removePropertyListener(l);
+	public <T> void removePropertyListener(Singleton<T> prop, PropertyListener<T> l) {
+		prop.removePropertyListener(l);
 	}
+
+	
 
 	// ##########################################################################
 	// EVENTS END
 	// ##########################################################################
 
+
+	
 	// ##########################################################################
-	// EXECUTE SCRIPT VISITOR PATTERN BEGIN
+	// TRANSACTIONS BEGIN
 	// ##########################################################################
-
-	public <T> void execute(CreateTable<T> createTable) {
-
-		ClassTableDef<T> table = createTable.getTableDef();
-		TableData<T> data = new TableData<T>(this, table);
-		this.tables.put(table, data);
-		data.install();
+	
+	public ChangeSet commit() {
+		tx.commit();
+		ChangeSet otx = tx;
+		tx = new ChangeSet(otx);
+		return otx;
 	}
-
-	public <T> void execute(DropTable<T> dropTable) {
-
-		ClassTableDef<T> table = dropTable.getTable();
-		drop(tableFor(table));
+	public ChangeSet revert() {
+		ChangeSet otx = tx;
+		tx = new ChangeSet(otx.getParent() );
+		return otx;
 	}
-
-	public <T> void execute(DeleteFrom<T> deleteFrom) {
-		TableData<T> data = tableFor(deleteFrom.getTable());
-		data.delete(deleteFrom.getWhere());
+	
+	
+	public void commit(ChangeSet cs) {
+		assert tx.isEmpty(): "cannot commit a changeset when there are local changes nnot yet applyed";
+		assert cs.getParent() == tx.parent : "cannot rebase a change set";
+		cs.commit();
+		tx = new ChangeSet(cs);
 	}
-
-	// remove all execute from database, and move them to a 'statement visitor interface, let this databse have a statement visitor inner class instead'
-	public <T> T execute(InsertInto<T> insertInto, T row) {
-		TableData<T> data = tableFor(insertInto.getTable());
-		
-		return data.insert(row);
-
+	public ChangeSet revert(ChangeSet cs) {
+		assert tx.isEmpty(): "cannot revert a changeset when there are local changes nnot yet applied";
+		assert tx.getParent() == cs : "cannot rebase change set";
+		cs.revert();
+		ChangeSet otx = tx;
+		tx = new ChangeSet(cs.getParent()); // fork here
+		return otx;
 	}
-
-	public <T> void execute(Update<T> update) {
-		TableData<T> data = tableFor(update.getTable());
-		ColumnValue<T, ?>[] setters = update.getColumnValuePairs();
-		Predicate<? super T> where = update.getWhere();
-		for (T row : data)
-			if (where.eval(row)) {
-				data.update(row, setters);
-			}
-		data.fireUpdate();
-	}
-
-	public <T> void execute(CreateProperty<T> createProperty) {
-		Singleton<T> ton = new Singleton<T>(tableFor(createProperty.getTable()));
-		values.put(createProperty.getProperty(), ton);
-	}
-
-	public <T> void execute(DropProperty<T> prop) {
-		Singleton<T> removed = values.remove(prop.getProperty());
-		removed.dropTable();
-	}
-
-	public <T> void put(Property<T> prop, T value) {
-		getSingleton(prop).set(value);
-	}
-
+	
+	
+	
 	// ##########################################################################
-	// EXECUTE SCRIPT VISITOR PATTERN END
+	// TRANSACTIONS END
 	// ##########################################################################
 
-	// ##########################################################################
-	// VISITOR CALL BACK FOR TABLE CREATION BEGIN
-	// ##########################################################################
-
-	public <T> Table<T> table(ClassTableDef<T> table) {
-		return tableFor(table);
-	}
-
-	public <T> Table<T> table(Select<T> select) {
-		return new SelectTable<T>(tableFor(select.getTable()), select.getWhere());
-	}
-
-	public <S, T> Table<T> table(MapSelect<S, T> select) {
-		return new MappedTable<S, T>(select.getMapper(), tableFor(select.getTable()));
-	}
-
-	public <S, T> Table<T> table(GroupBySelect<S, T> select) {
-		return new GroupByTable<S, T>(select.getGroupBy(), tableFor(select.getTable()));
-	}
-
-	public <T, V extends Comparable<? super V>> Table<T> table(OrderBySelect<T, V> select) {
-		return new OrderByTable<T, V>(tableFor(select.getTable()), select.getOrderBy(), select.isAscendent());
-	}
-
-	public <L, R> Table<Pair<L, R>> table(InnerJoin<L, R> innerjoin) {
-		Table<L> left = innerjoin.getLeftTable().asTable(this);
-		Table<R> right = innerjoin.getRightTable().asTable(this);
-		return new InnerJoinTable<L, R>(left, right, innerjoin.getOn());
-	}
-
-	// ##########################################################################
-	// VISITOR CALL BACK FOR TABLE CREATION END
-	// ##########################################################################
-
-	// what is the source for a singleton ? for now the "latest" of a table
-	// a table with a unique id
-	// interesting... make it a table ?
-
-	<T> Singleton<T> getSingleton(Property<T> prop) {
-		Singleton<T> ton = values.get(prop);
-		return ton;
-	}
 
 }

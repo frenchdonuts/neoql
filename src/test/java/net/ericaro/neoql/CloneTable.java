@@ -1,35 +1,20 @@
 package net.ericaro.neoql;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
-import javax.swing.AbstractListModel;
-import javax.swing.ListModel;
-
-
-
-// TODO find a way to "free" this list from the database (kind of close)
-/**
- * A Table List is the Swing ListModel version of the Table !
+/** A table cloner. Used to compare expected outcomes. 
  * 
  * @author eric
- * 
+ *
  * @param <T>
  */
-public class TableList<T> extends AbstractListModel implements ListModel, Iterable<T> {
+public class CloneTable<T> extends ArrayList<T>{
 
-	List<T> content = new ArrayList<T>();
-	private Table<T> table;
+	
+	ArrayList<T> content = new ArrayList<T>();
 	private TableListener<T>	listener;
 
-	public TableList(Table<T> table) {
-		super();
-		this.table = table;
-		for (T t : table)
-			addImpl(t);
-		// first fill the filtered table
-		// then add events to keep in touch with list content
+	public CloneTable(Table<T> table) {
 		listener = new TableListener<T>() {
 			public void inserted(T row) {
 				addImpl(row);
@@ -53,7 +38,6 @@ public class TableList<T> extends AbstractListModel implements ListModel, Iterab
 			public void dropped(Table<T> table) {
 				int size = content.size();
 				content.clear();
-				fireIntervalRemoved(this, 0, size);
 				table.removeTableListener(listener);
 			}
 			
@@ -62,44 +46,35 @@ public class TableList<T> extends AbstractListModel implements ListModel, Iterab
 		};
 		table.addTableListener(listener);
 	}
-
-	@Override
-	public int getSize() {
-		return content.size();
-	}
-
-	@Override
-	public T getElementAt(int index) {
-		return content.get(index);
-	}
-
+	
+	
 	private T setImpl(int index, T element) {
 		T old = content.set(index, element);
-		super.fireContentsChanged(this, index, index);
 		return old;
 	}
 
 	private void addImpl(T element) {
-		addImpl(getSize(), element);
+		addImpl(content.size(), element);
 	}
 
 	private void addImpl(int index, T element) {
 		content.add(index, element);
-		super.fireIntervalAdded(this, index, index);
 	}
 
 	private T removeImpl(int index) {
 		T old = content.remove(index);
-		super.fireIntervalRemoved(this, index, index);
 		return old;
 	}
-
-	@Override
-	public Iterator<T> iterator() {
-		return content.iterator();
+	
+	public boolean areEquals() {
+		if (content.size() != size() ) return false;
+		
+		for (int i=0;i < size();i++)
+			if (! content.get(i).equals(get(i) )) 
+					return false;
+		return true;
+		
 	}
-	
-	
 	
 	
 }

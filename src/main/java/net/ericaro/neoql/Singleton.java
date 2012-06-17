@@ -1,8 +1,6 @@
 package net.ericaro.neoql;
 
-import net.ericaro.neoql.system.PropertyListener;
-import net.ericaro.neoql.system.PropertyListenerSupport;
-import net.ericaro.neoql.system.TableListener;
+
 
 
 
@@ -33,11 +31,22 @@ public class Singleton<T> {
 
 			@Override
 			public void inserted(T newRow) {}
+			
+			@Override
+			public void dropped(Table<T> table) {
+				drop();
+			}
 
 		};
 		source.addTableListener(listener);
 	}
+	
+	public void drop() {
+		this.source.removeTableListener(listener);
+		set(null); // also nullify the value
+	}
 
+	
 	void set(T newValue) {
 		T old = value;
 		value = newValue;

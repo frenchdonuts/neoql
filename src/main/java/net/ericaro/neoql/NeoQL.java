@@ -178,7 +178,7 @@ public class NeoQL {
 	}
 	
 	
-	public static <T, U extends ListModel&Iterable<T>> U listFor(Table<T> table) {
+	public static <T, U extends ListModel> U listFor(Table<T> table) {
 		return (U) new TableList<T>(table);
 	}
 

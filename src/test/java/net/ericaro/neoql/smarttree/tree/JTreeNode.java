@@ -9,11 +9,12 @@ import javax.swing.tree.TreeCellRenderer;
 
 public class JTreeNode extends JTree{
 
-	NodeModel model;
+	NodeModel nodeModel;
 	
 	
 	public JTreeNode() {
 		super();
+		setNodeModel(new NodeModel());
 //		setCellRenderer(new TreeCellRenderer() {
 //			@Override
 //			public Component getTreeCellRendererComponent(JTree tree, Object node, boolean selected, boolean hasFocus, boolean arg4, int arg5, boolean arg6) {
@@ -28,14 +29,21 @@ public class JTreeNode extends JTree{
 
 
 	public NodeModel getNodeModel() {
-		return model;
+		return nodeModel;
 	}
 
 
 	public void setNodeModel(NodeModel model) {
-		this.model = model;
-		this.setModel(model.model);
+		this.nodeModel = model;
+		this.setModel(model.treeModel);
 	}
+
+
+	public void addNode(JNode node) {
+		nodeModel.addNode(node);
+	}
+	
+	
 	
 	
 

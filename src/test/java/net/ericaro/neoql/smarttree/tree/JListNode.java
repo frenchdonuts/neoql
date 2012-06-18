@@ -1,13 +1,12 @@
 package net.ericaro.neoql.smarttree.tree;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
+
+import net.ericaro.neoql.Singleton;
 
 public abstract class JListNode<M,I> extends JNode<M>{
 	
@@ -42,7 +41,7 @@ public abstract class JListNode<M,I> extends JNode<M>{
 		super();
 	}
 
-	public JListNode(M item) {
+	public JListNode(Singleton<M> item) {
 		super(item);
 	}
 
@@ -63,10 +62,10 @@ public abstract class JListNode<M,I> extends JNode<M>{
 	
 	protected void whenRemoved(int i, I item) {
 		TreeNode mnode = node.getChildAt(i); // the ith was removed
-		nodeModel.model.removeNodeFromParent((MutableTreeNode) mnode);
+		nodeModel.removeNodeFromParent((MutableTreeNode) mnode);
 	}
 	
 	protected void whenUpdated(int i, I item) {
-		nodeModel.model.nodeChanged(node.getChildAt(i) );
+		nodeModel.nodeChanged(node.getChildAt(i) );
 	}
 }

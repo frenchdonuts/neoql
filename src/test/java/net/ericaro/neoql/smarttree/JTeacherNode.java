@@ -9,28 +9,19 @@ import net.ericaro.neoql.smarttree.tree.JNode;
 
 public class JTeacherNode extends JListNode<Teacher,Student> {
 
-	private Singleton<Teacher>	teacher;
 	private TreeTesterModel	tutorialModel;
 
 	public JTeacherNode(TreeTesterModel model, Teacher teacher) {
 		super();
-		//this.teacher = model.database.track(teacher);
+		Singleton<Teacher> t = model.database.track(teacher) ;
 		this.tutorialModel = model;
-//		this.teacher.addPropertyListener(new PropertyListener<TreeTesterModel.Teacher>() {
-//			public void updated(Teacher oldValue, Teacher newValue) {
-//				setModel(newValue);
-//			}
-//		});
-		setModel(teacher);
-		setList( model.getStudentsOf(teacher) );
+		setModel(t);
+		setList( model.getStudentsOf(t) );
 	}
 	
 	@Override
 	protected JNode create(int i, Student item) {
 		return new JStudentNode(tutorialModel, item);
 	}
-
-	
-	
 	
 }

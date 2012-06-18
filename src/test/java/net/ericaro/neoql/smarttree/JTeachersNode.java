@@ -16,7 +16,6 @@ public class JTeachersNode extends JListNode<TreeTesterModel, Teacher> {
 		super();
 		this.tutorialModel = tutorialModel;
 		setList(tutorialModel.getTeachers());
-		setText("teachers");
 	}
 
 	@Override

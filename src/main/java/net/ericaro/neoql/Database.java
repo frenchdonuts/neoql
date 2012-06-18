@@ -338,9 +338,9 @@ public class Database {
 			s.singletonChange = null;
 		}
 		
-		tx.commit();
 		ChangeSet otx = tx;
 		tx = new ChangeSet(otx);
+		otx.commit();
 		return otx;
 	}
 	public ChangeSet revert() {

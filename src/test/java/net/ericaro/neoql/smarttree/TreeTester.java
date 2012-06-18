@@ -4,36 +4,49 @@
 
 package net.ericaro.neoql.smarttree;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreePath;
 
 import net.ericaro.neoql.RandName;
+import net.ericaro.neoql.smarttree.TreeTesterModel.Student;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
+import net.ericaro.neoql.smarttree.tree.JNode;
 import net.ericaro.neoql.smarttree.tree.JTreeNode;
 import net.ericaro.neoql.smarttree.tree.NodeModel;
-import org.jdesktop.beansbinding.*;
-import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 
 /**
  * @author User #1
  */
 public class TreeTester extends JPanel {
 	private TreeTesterModel	model;
-	private NodeModel	nodeModel;
 	
 	public TreeTester() {
 		initComponents();
 		model = new TreeTesterModel();
-		nodeModel = new NodeModel();
-		treeNode1.setNodeModel(nodeModel);
-		treeNode1.getSelectionModel().add
-		
 		availableStudents.setModel(model.getAvailableStudents());
-		nodeModel.addNode(new JTeachersNode(model));
-		nodeModel.addNode(new JStudentsNode(model));
+		treeNode1.addNode(new JTeachersNode(model));
+		treeNode1.addNode(new JStudentsNode(model));
 	}
 	
 	private void onAddStudent(){
@@ -46,19 +59,25 @@ public class TreeTester extends JPanel {
 	}
 
 	private void onTreeSelectionChanged() {
-		Object selection = treeNode1.getLeadSelectionPath().getLastPathComponent();
-		System.out.println(selection);
 	}
+
+	protected void onLink() {
+		JNode node=(JNode) ( (DefaultMutableTreeNode) treeNode1.getLastSelectedPathComponent()).getUserObject();
+		Object selection = node.getModel();
+		if (selection instanceof Teacher)
+			onLink((Teacher) selection, availableStudents.getSelectedValuesList());
+
+	}
+
 	
 
+	
+private void onLink(Teacher teacher, List<Student> selectedValuesList) {
+	for(Student student : selectedValuesList)
+		model.link(student, teacher);		
+	}
 
-	
-//	protected void onLink() {
-//		Teacher teacher = (Teacher) allTeachers.getSelectedValue();
-//		for(Object student : allStudents.getSelectedValues() )
-//			model.link((Student) student, teacher);
-//	}
-	
+
 public static void main(String[] args) {
 	SwingUtilities.invokeLater(new Runnable() {
 		public void run() {
@@ -76,6 +95,8 @@ public static void main(String[] args) {
 		toolBar1 = new JToolBar();
 		button1 = new JButton();
 		button2 = new JButton();
+		button3 = new JButton();
+		
 		scrollPane1 = new JScrollPane();
 		treeNode1 = new JTreeNode();
 		label1 = new JLabel();
@@ -118,6 +139,16 @@ public static void main(String[] args) {
 						}
 					});
 					toolBar1.add(button2);
+					
+					//---- button3 ----
+					button3.setText("Link");
+					button3.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							onLink();
+						}
+					});
+					toolBar1.add(button3);
 				}
 				this.add(toolBar1, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0,
 					GridBagConstraints.CENTER, GridBagConstraints.BOTH,
@@ -128,7 +159,7 @@ public static void main(String[] args) {
 
 					//---- treeNode1 ----
 					treeNode1.setShowsRootHandles(true);
-					treeNode1.setRootVisible(false);
+//					treeNode1.setRootVisible(false);
 					treeNode1.addTreeSelectionListener(new TreeSelectionListener() {
 						@Override
 						public void valueChanged(TreeSelectionEvent e) {
@@ -167,10 +198,11 @@ public static void main(String[] args) {
 	private JToolBar toolBar1;
 	private JButton button1;
 	private JButton button2;
+	private JButton button3;
 	private JScrollPane scrollPane1;
 	private JTreeNode treeNode1;
 	private JLabel label1;
 	private JScrollPane scrollPane2;
-	private JList availableStudents;
+	private JList<Student> availableStudents;
 	// JFormDesigner - End of variables declaration  //GEN-END:variables
 }

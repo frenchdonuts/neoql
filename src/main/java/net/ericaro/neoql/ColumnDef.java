@@ -75,24 +75,39 @@ class ColumnDef<T, V> implements Column<T, V> {
 		return foreignTable != null;
 	}
 
+	
+	public Predicate<T> is(final Singleton<V> value) {
+		return new Predicate<T>() {
+				public boolean eval(T t) {
+					V that = ColumnDef.this.get(t);
+					V v = value.get();
+					if (v == null)
+						return that == null; // null is always false
+					else
+						return v.equals(that);
+				}
+				public String toString() {
+					return ColumnDef.this.attr.getName() + " = " + value;
+				}
 
+			};
+	}
+
+	
 	public Predicate<T> is(final V value) {
 		return new Predicate<T>() {
+				public boolean eval(T t) {
+					V that = ColumnDef.this.get(t);
+					if (value == null)
+						return that == null; // null is always false
+					else
+						return value.equals(that);
+				}
+				public String toString() {
+					return ColumnDef.this.attr.getName() + " = " + value;
+				}
 
-			@Override
-			public boolean eval(T t) {
-				V that = ColumnDef.this.get(t);
-				if (value == null)
-					return that == null; // null is always false
-				else
-					return value.equals(that);
-			}
-			
-			public String toString(){
-				return ColumnDef.this.attr.getName()+" = "+value ;
-			}
-
-		};
+			};
 	}
 
 	/**

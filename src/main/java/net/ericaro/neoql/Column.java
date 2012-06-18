@@ -18,6 +18,8 @@ public interface Column<T, V> extends Mapper<T, V> {
 	ColumnValue<T, V> set(Singleton<V> value);
 	ColumnValue<T, V> set(V value);
 	
+
+	Predicate<T> is(final Singleton<V> value);
 	Predicate<T> is(final V value);
 	
 	/** if this columns has a foreign key, returns a predicate that is true if the pair left joins.

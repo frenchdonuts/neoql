@@ -8,6 +8,7 @@ import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.SelectTable;
+import net.ericaro.neoql.Singleton;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableData;
 import net.ericaro.neoql.TableList;
@@ -91,7 +92,7 @@ public class TreeTesterModel {
 		
 //		SelectTable<Teacher> selectedTeachers = NeoQL.where(teachers, Teacher.SELECTED.is(true) );
 //		Table<Student> selectedStudents = NeoQL.left(  NeoQL.innerJoin(students, selectedTeachers, Student.TEACHER.joins() ));
-		Table<Student> availableStudents = NeoQL.where(students, Student.TEACHER.is(null)) ;
+		Table<Student> availableStudents = NeoQL.where(students, Student.TEACHER.is((Teacher)null)) ;
 		
 //		public static final TableDef<Student> STUDENTS = NeoQL.select(Student.TABLE);
 //		public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
@@ -175,7 +176,7 @@ public class TreeTesterModel {
 		
 	}
 
-	public ListModel getStudentsOf(Teacher teacher) {
+	public ListModel getStudentsOf(Singleton<Teacher> teacher) {
 		return NeoQL.listFor(NeoQL.where(database.get(Student.class) , Student.TEACHER.is(teacher) ));
 	}
 	

@@ -1,7 +1,15 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.eventsupport;
 
 import javax.swing.event.EventListenerList;
 
+import net.ericaro.neoql.Table;
+
+/** Provide an event support for TableListener
+ * 
+ * @author eric
+ *
+ * @param <T>
+ */
 public class TableListenerSupport<T> {
 
 	EventListenerList listeners = new EventListenerList();

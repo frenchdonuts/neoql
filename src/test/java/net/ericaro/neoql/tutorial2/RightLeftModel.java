@@ -2,22 +2,18 @@ package net.ericaro.neoql.tutorial2;
 
 import javax.swing.ListModel;
 
-import net.ericaro.neoql.ClassTableDef;
 import net.ericaro.neoql.Column;
-import net.ericaro.neoql.ColumnValue;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.TableData;
-import net.ericaro.neoql.TableDef;
 
 public class RightLeftModel {
 
 	
 	public static class Student{
 		
-		public static ClassTableDef<Student> TABLE = NeoQL.table(Student.class);
-		public static Column<Student, String> NAME = TABLE.addColumn("name");
-		public static Column<Student, Boolean> IN = TABLE.addColumn("in");
+		public static Column<Student, String> NAME = NeoQL.column(Student.class, "name");
+		public static Column<Student, Boolean> IN = NeoQL.column(Student.class, "in");
 		
 		private String name;
 		String getName() {
@@ -43,7 +39,7 @@ public class RightLeftModel {
 	public RightLeftModel() {
 		super();
 		database = new Database();
-		TableData<Student> students = database.createTable(Student.TABLE);
+		TableData<Student> students = database.createTable(Student.NAME, Student.IN);
 		NeoQL.select(students, Student.IN.is(true));
 		/// creates the relations
 		ins  = NeoQL.listFor(students );

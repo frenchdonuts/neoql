@@ -11,6 +11,8 @@ import java.util.Iterator;
  */
 abstract class Generator<T> implements Iterator<T>{
 
+	public static class StopIteration extends Exception {}
+	
 	private T next = null;
 	private RuntimeException	exception = null; // exception throw a step before
 	private boolean	hasNext = true;

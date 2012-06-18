@@ -1,6 +1,8 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.eventsupport;
 
 import java.util.EventListener;
+
+import net.ericaro.neoql.Table;
 
 public interface TableListener<T> extends EventListener{
 

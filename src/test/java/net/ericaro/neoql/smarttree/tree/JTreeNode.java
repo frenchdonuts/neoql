@@ -1,0 +1,46 @@
+package net.ericaro.neoql.smarttree.tree;
+
+import java.awt.Component;
+
+import javax.swing.JLabel;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeCellRenderer;
+
+public class JTreeNode extends JTree{
+
+	NodeModel model;
+	
+	
+	public JTreeNode() {
+		super();
+//		setCellRenderer(new TreeCellRenderer() {
+//			@Override
+//			public Component getTreeCellRendererComponent(JTree tree, Object node, boolean selected, boolean hasFocus, boolean arg4, int arg5, boolean arg6) {
+//				Object userObject = ( (DefaultMutableTreeNode)node).getUserObject();
+//				if (JNode.class.isAssignableFrom(userObject.getClass() ))
+//					return (JNode) userObject;
+//				else return new JLabel("fake");
+//				
+//			}
+//		});
+	}
+
+
+	public NodeModel getNodeModel() {
+		return model;
+	}
+
+
+	public void setNodeModel(NodeModel model) {
+		this.model = model;
+		this.setModel(model.model);
+	}
+	
+	
+
+	
+	
+	
+	
+}

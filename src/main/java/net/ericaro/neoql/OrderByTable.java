@@ -6,6 +6,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import net.ericaro.neoql.eventsupport.TableListener;
+import net.ericaro.neoql.eventsupport.TableListenerSupport;
+
 
 
 public class OrderByTable<T,V extends Comparable<? super V> > implements Table<T> {

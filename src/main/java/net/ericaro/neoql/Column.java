@@ -8,18 +8,18 @@ public interface Column<T, V> extends Mapper<T, V> {
 	 * @param src
 	 * @return
 	 */
-	public abstract V get(T src);
+	V get(T src);
 	
-	public String getName();
+	String getName();
 	
-	public ClassTableDef<V> getForeignTable() ;
-
-	public boolean hasForeignKey() ;
+	Class<V> getForeignTable() ;
+	boolean hasForeignKey() ;
 	
-	public ColumnValue<T, V> set(Singleton<V> value);
-	public ColumnValue<T, V> set(V value);
+	ColumnValue<T, V> set(Singleton<V> value);
+	ColumnValue<T, V> set(V value);
 	
-	public Predicate<T> is(final V value);
+	Predicate<T> is(final V value);
+	
 	/** if this columns has a foreign key, returns a predicate that is true if the pair left joins.
 	  * for instance
 	  * for a Pair<Student,Teacher> p, and this column is "Student.teacher" then
@@ -28,5 +28,7 @@ public interface Column<T, V> extends Mapper<T, V> {
 	  * 
 	  * @return
 	  */
-	 public Predicate<Pair<T,V>> joins();
+	 Predicate<Pair<T,V>> joins();
+
+	Class<T> getTable();
 }

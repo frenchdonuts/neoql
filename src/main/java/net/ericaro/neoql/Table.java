@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.eventsupport.TableListener;
+
 
 
 public interface Table<T> extends Iterable<T> {
@@ -11,4 +13,5 @@ public interface Table<T> extends Iterable<T> {
 	 * 
 	 */
 	public void drop();
+	
 }

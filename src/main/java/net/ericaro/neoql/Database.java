@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import net.ericaro.neoql.changeset.ChangeSet;
+import net.ericaro.neoql.eventsupport.TableListener;
+
 
 
 public class Database {
@@ -66,17 +69,29 @@ public class Database {
 	 * @param table
 	 * @return
 	 */
-	public <T> TableData<T>  createTable(ClassTableDef<T> table){
+	public <T> TableData<T>  createTable(Column<T,?>... columns){
 //		assert !tables.containsKey(table):"failed to create a table data that already exists";
-		assert !typed.containsKey(table.getTable()):"failed to create a table data that already exists";
+		assert columns.length>0 : "cannot create a table with no columns";
+		Class<T> table = columns[0].getTable();
+		
+		assert !typed.containsKey(table):"failed to create a table data that already exists";
+		assert allTypes(table, columns) : "cannot create columns that do not have the same type";
+			
 		
 		LOG.fine("creating table "+ table);
-		TableData<T> data = new TableData<T>(this, table);
+		TableData<T> data = new TableData<T>(this, table, columns);
 //		this.tables.put(table, data);
-		this.typed.put(table.getTable(), data);
+		this.typed.put(table, data);
 		data.install();
 		return data;
 	}
+	
+	private static <T> boolean allTypes(Class<T> type, Column... columns) {
+		for(Column c: columns)
+			if (c.getTable() != type) return false;
+		return true;
+	}
+		
 	
 	public <T> Singleton<T> createSingleton(Class<T> type){
 		Singleton<T> s = new Singleton<T>(get(type));
@@ -114,7 +129,7 @@ public class Database {
 	public <T> T insert(ColumnValue<T,?>... values){
 		if (values.length == 0) return null;// nothing to do
 		
-		Class<T> type = values[0].column.getTable().getTable() ;
+		Class<T> type = values[0].column.getTable() ;
 		TableData<T> data = typed.get(type);
 		T row = data.insert(data.newInstance(values) );
 		assert data.insertOperation !=null:"unexpected empty transaction" ;
@@ -299,14 +314,21 @@ public class Database {
 	 * 
 	 */
 	private void precommit() {
+		if (autocommit) commit();
 		
+		
+		
+	}
+	
+	public ChangeSet commit() {
+		// collect all "changes" in the tables
 		for (TableData t: typed.values()) {
 			tx.addChange(t.insertOperation) ;
 			t.insertOperation = null;
 			
 			tx.addChange(t.updateOperation) ;
 			t.updateOperation = null;
-				
+			
 			tx.addChange(t.deleteOperation) ;
 			t.deleteOperation = null;
 		}
@@ -316,11 +338,6 @@ public class Database {
 			s.singletonChange = null;
 		}
 		
-		
-		if (autocommit) commit();
-	}
-	
-	public ChangeSet commit() {
 		tx.commit();
 		ChangeSet otx = tx;
 		tx = new ChangeSet(otx);

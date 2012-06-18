@@ -4,24 +4,27 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.eventsupport.TableListener;
+import net.ericaro.neoql.eventsupport.TableListenerSupport;
+
 
 
 /**
  * Mapped By provides a way to turn a table of S into a table of T using a
- * map(S)-> T interface
+ * mapper : map(S)-> T interface
  * 
  */
 public class MappedTable<S, T> implements Table<T> {
 
 	private Table<S> table;
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
-	private Mapping<S, T> mapping;
+	private MapMapping<S, T> mapping;
 	private TableListener<S> listener;
 
 	MappedTable(Mapper<S,T> mapper, Table<S> table) {
 		super();
 		this.table = table;
-		this.mapping = new MapMapper<S, T>(mapper);
+		this.mapping = new MapMapping<S, T>(mapper);
 		for (S s : table)
 			events.fireInserted(mapping.push(s)); // cause events to be fire just like if the items where appended
 
@@ -34,11 +37,11 @@ public class MappedTable<S, T> implements Table<T> {
 			}
 
 			public void deleted(S row) {
-				events.fireDeleted(mapping.pop(row));
+				events.fireDeleted(mapping.get(row));
 			}
 
 			public void updated(S old, S row) {
-				events.fireUpdated(mapping.pop(old), mapping.push(row));
+				events.fireUpdated(mapping.get(old), mapping.push(row));
 			}
 			@Override
 			public void dropped(Table<S> table) {
@@ -69,7 +72,7 @@ public class MappedTable<S, T> implements Table<T> {
 
 			@Override
 			public T next() {
-				return mapping.peek(i.next());
+				return mapping.get(i.next());
 			}
 
 			@Override

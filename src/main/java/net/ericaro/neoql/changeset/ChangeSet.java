@@ -1,16 +1,20 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.changeset;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-/** A transaction is a list of operations
+
+/** A set of changes. They can be applied or reverted on the given database.
+ * 
+ * It keeps a weak reference to its parent, so that if you don't store every changeset, they will be
+ * forget.
  * 
  * @author eric
  *
  */
-public class ChangeSet {
+public class ChangeSet implements Change{
 
 	List<Change> operations = new ArrayList<Change>();
 	Reference<ChangeSet> parent ;
@@ -30,6 +34,11 @@ public class ChangeSet {
 	}
 
 
+	/** return the parent's changeset if available. A change set only keep a weak reference to its parent.
+	 * This means that, you can rely on this method if you keep references for all change set somewhere.
+	 * 
+	 * @return
+	 */
 	public ChangeSet getParent() {
 		return parent.get();
 	}
@@ -46,14 +55,14 @@ public class ChangeSet {
 	/** Apply stored operations
 	 * 
 	 */
-	void commit() {
+	public void commit() {
 		for(Change o: operations)
 			o.commit() ;
 	}
 	/** revert stored operations
 	 * 
 	 */
-	void revert() {
+	public void revert() {
 		for(int i=operations.size();i>0;i--)
 			operations.get(i-1).revert() ;
 	}

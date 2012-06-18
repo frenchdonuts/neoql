@@ -1,14 +1,13 @@
 package net.ericaro.neoql;
 
-import javax.swing.undo.UndoManager;
+import net.ericaro.neoql.changeset.ChangeSet;
 
 import org.junit.Test;
 
 public class TableDataTest {
 
 	public static class Student {
-		public static final ClassTableDef<Student> TABLE = NeoQL.table(Student.class);
-		public static final Column<Student, String> NAME = TABLE.addColumn("name");
+		public static final Column<Student, String> NAME = NeoQL.column(Student.class, "name");
 		String name;
 		@Override
 		public String toString() {
@@ -19,14 +18,13 @@ public class TableDataTest {
 	}
 	
 	public static class Killer{
-		public static final ClassTableDef<Killer> TABLE = NeoQL.table(Killer.class);
-		public static final Column<Killer, String> NAME = TABLE.addColumn("name");
-		public static final Column<Killer, Killer> TARGET= TABLE.addColumn("target", TABLE);
+		public static final Column<Killer, String> NAME = NeoQL.column(Killer.class, "name");
+		public static final Column<Killer, Killer> TARGET= NeoQL.column(Killer.class, "target", Killer.class);
 		String name;
 		Killer target;
 		@Override
 		public String toString() {
-			return "Killer [name=" + name + ", target=" + target.name + "]";
+			return "Killer [name=" + name + ", target=" + (target!=null?target.name:"null" )+ "]";
 		}
 		
 		
@@ -35,7 +33,7 @@ public class TableDataTest {
 	
 	@Test public void testCrud() {
 		Database db = new Database();
-		TableData<Student> students = db.createTable(Student.TABLE);
+		TableData<Student> students = db.createTable(Student.NAME);
 		CloneTable<Student> clone = new CloneTable<Student>(students);
 		Student s1 = db.insert(Student.NAME.set("toto") );
 		clone.add(s1);
@@ -59,7 +57,7 @@ public class TableDataTest {
 	
 	@Test public void testUndo() {
 		Database db = new Database(false);
-		TableData<Student> students = db.createTable(Student.TABLE);
+		TableData<Student> students = db.createTable(Student.NAME);
 		CloneTable<Student> clone = new CloneTable<Student>(students);
 		
 		Student s1 = db.insert(Student.NAME.set("toto") );
@@ -103,9 +101,41 @@ public class TableDataTest {
 		
 	}
 	
+	@Test public void testTransaction() {
+		Database db = new Database(false);
+		TableData<Killer> killers = db.createTable(Killer.NAME, Killer.TARGET);
+		Killer a = db.insert(Killer.NAME.set("a"));
+		Killer b = db.insert(Killer.NAME.set("b"), Killer.TARGET.set(a));
+		
+		Singleton<Killer> ta = db.track(a);
+		Singleton<Killer> tb = db.track(b);
+		
+		assert tb.get() == null : "b values should not be available until the commit";
+		assert ta.get() == null : "a values should not be available until the commit";
+		// unfortunately entities are already connected
+		assert b.target == a : "wrong target ref"; // by magic it has the right target (I've just set it)
+		
+		a= db.update(a, Killer.NAME.set("a'")); // when a is updated the target of b is not changed, until next commit 
+		
+		assert b.target != a : "wrong target ref";
+		
+		
+		db.commit();
+		
+		assert tb.get() != null : "b values should be available by now";
+		assert ta.get() != null : "a values should be available by now";
+		
+		System.out.println("tb = "+ tb.get());
+		System.out.println(" b = "+ b       );
+		System.out.println("b.target is "+tb.get().target);
+		assert tb.get().target == ta.get() : "wrong target ref";
+		
+		
+	}
+	
 	@Test public void testSelfRef() {
 		Database db = new Database();
-		TableData<Killer> killers = db.createTable(Killer.TABLE);
+		TableData<Killer> killers = db.createTable(Killer.NAME, Killer.TARGET);
 		
 		Singleton<Killer> a = db.track( db.insert(Killer.NAME.set("a")) );
 		

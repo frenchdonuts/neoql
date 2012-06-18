@@ -11,18 +11,18 @@ package net.ericaro.neoql;
 class ColumnDef<T, V> implements Column<T, V> {
 
 	// the foreign class definition, null if there is no foreign class definition
-	private ClassTableDef<V>	foreignTable;
+	private Class<V>	foreignTable;
 	Attribute<T, V>				attr;
-	private ClassTableDef<T>	table;
+	private Class<T>	table;
 
-	public ColumnDef(ClassTableDef<T> table,  Attribute<T, V> attr, ClassTableDef<V> foreignTable) {
+	public ColumnDef(Class<T> table,  Attribute<T, V> attr, Class<V> foreignTable) {
 		super();
 		this.table = table;
 		this.attr = attr;
 		this.foreignTable = foreignTable;
 	}
 
-	public ColumnDef(ClassTableDef<T> table, Attribute<T, V> attr) {
+	public ColumnDef(Class<T> table, Attribute<T, V> attr) {
 		this(table, attr, null);
 	}
 	
@@ -35,7 +35,7 @@ class ColumnDef<T, V> implements Column<T, V> {
 		return new ColumnValue<T, V>( this, value);
 	}
 
-	public ClassTableDef<T> getTable(){ return table;}
+	public Class<T> getTable(){ return table;}
  	/**
 	 * Copies every columns values from src into target.
 	 * new ColumnValue<T, V>((ColumnDef<T, V>) col, value);
@@ -67,7 +67,7 @@ class ColumnDef<T, V> implements Column<T, V> {
 		return attr.getName();
 	}
 
-	public ClassTableDef<V> getForeignTable() {
+	public Class<V> getForeignTable() {
 		return foreignTable;
 	}
 
@@ -81,9 +81,11 @@ class ColumnDef<T, V> implements Column<T, V> {
 
 			@Override
 			public boolean eval(T t) {
+				V that = ColumnDef.this.get(t);
 				if (value == null)
-					return false; // null is always false
-				return value.equals(ColumnDef.this.get(t));
+					return that == null; // null is always false
+				else
+					return value.equals(that);
 			}
 			
 			public String toString(){
@@ -115,7 +117,7 @@ class ColumnDef<T, V> implements Column<T, V> {
 
 		};
 	}
-
+	
 	private Class<V> getType() {
 		return attr.getType();
 	}

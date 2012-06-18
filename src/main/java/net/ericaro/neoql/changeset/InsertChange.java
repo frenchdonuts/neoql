@@ -1,7 +1,8 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.changeset;
 
 import java.util.HashSet;
 import java.util.Set;
+
 
 public abstract class InsertChange<T> implements Change {
 	Class<T> table;

@@ -7,9 +7,10 @@ import java.util.List;
 import javax.swing.AbstractListModel;
 import javax.swing.ListModel;
 
+import net.ericaro.neoql.eventsupport.TableListener;
 
 
-// TODO find a way to "free" this list from the database (kind of close)
+
 /**
  * A Table List is the Swing ListModel version of the Table !
  * 

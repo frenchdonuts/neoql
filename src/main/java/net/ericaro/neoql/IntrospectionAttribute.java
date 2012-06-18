@@ -3,7 +3,13 @@ package net.ericaro.neoql;
 import java.lang.reflect.Field;
 
 
-
+/** Implementation of attribute that uses introspection to get/set the attribute.
+ * 
+ * @author eric
+ *
+ * @param <T>
+ * @param <V>
+ */
 public class IntrospectionAttribute<T, V> implements Attribute<T, V> {
 
 	Field field;

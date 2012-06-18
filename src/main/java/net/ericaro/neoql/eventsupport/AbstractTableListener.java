@@ -1,4 +1,6 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.eventsupport;
+
+import net.ericaro.neoql.Table;
 
 
 /** dev/null listener for TableListener. Make it simpler to override a single method
@@ -7,7 +9,7 @@ package net.ericaro.neoql;
  *
  * @param <T>
  */
-abstract class AbstractTableListener<T> implements TableListener<T> {
+public abstract class AbstractTableListener<T> implements TableListener<T> {
 
 	@Override
 	public void updated(T oldRow, T newRow) {}

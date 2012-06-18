@@ -1,7 +1,8 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.changeset;
+
 
 public abstract class SingletonChange<T> implements Change {
-	T oldValue, newValue;
+	protected T oldValue, newValue;
 	
 	public void set(T oldValue, T newValue) {
 		this.oldValue = oldValue;

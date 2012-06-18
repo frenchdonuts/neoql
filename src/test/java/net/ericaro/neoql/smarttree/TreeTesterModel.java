@@ -1,4 +1,4 @@
-package net.ericaro.neoql.tutorial;
+package net.ericaro.neoql.smarttree;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableData;
 import net.ericaro.neoql.TableList;
 
-public class TutorialModel {
+public class TreeTesterModel {
 	
 	public static class Teacher {
 		
@@ -80,16 +80,18 @@ public class TutorialModel {
 	private TableList<Student> selectedStudentList;
 	private TableData<Teacher> teachers;
 	private TableData<Student> students;
+	private ListModel	availableStudentList;
 	
-	public TutorialModel() {
+	public TreeTesterModel() {
 		super();
 		this.database = new Database();
 		
 		teachers = database.createTable(Teacher.NAME, Teacher.SELECTED);
 		students = database.createTable(Student.NAME, Student.TEACHER );
 		
-		SelectTable<Teacher> selectedTeachers = NeoQL.where(teachers, Teacher.SELECTED.is(true) );
-		Table<Student> selectedStudents = NeoQL.left(  NeoQL.innerJoin(students, selectedTeachers, Student.TEACHER.joins() ));
+//		SelectTable<Teacher> selectedTeachers = NeoQL.where(teachers, Teacher.SELECTED.is(true) );
+//		Table<Student> selectedStudents = NeoQL.left(  NeoQL.innerJoin(students, selectedTeachers, Student.TEACHER.joins() ));
+		Table<Student> availableStudents = NeoQL.where(students, Student.TEACHER.is(null)) ;
 		
 //		public static final TableDef<Student> STUDENTS = NeoQL.select(Student.TABLE);
 //		public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
@@ -97,8 +99,9 @@ public class TutorialModel {
 //		public static final TableDef<Student> SELECTED_STUDENTS = NeoQL.left(  NeoQL.innerJoin(Student.TABLE, SELECTED_TEACHERS, Student.TEACHER.joins() ));
 		studentList = NeoQL.listFor( students );
 		teacherList = NeoQL.listFor(teachers);
-		selectedTeacherList = NeoQL.listFor(selectedTeachers);
-		selectedStudentList = NeoQL.listFor(selectedStudents);
+//		selectedTeacherList = NeoQL.listFor(selectedTeachers);
+//		selectedStudentList = NeoQL.listFor(selectedStudents);
+		availableStudentList = NeoQL.listFor(availableStudents);
 	}
 	
 	// operations
@@ -110,17 +113,18 @@ public class TutorialModel {
 	 */
 	public void addStudent(final String name) {
 		database.insert(Student.NAME.set(name));
-//		database.execute(new Script() {{
-//			insertInto(Student.TABLE).set(Student.NAME, name);
-//		}});
+	}
+	public void addStudent(final String name, Teacher teacher) {
+		database.insert(Student.NAME.set(name), Student.TEACHER.set(teacher));
 	}
 	
 	/** add a teacher in the database
 	 * 
 	 * @param name
+	 * @return 
 	 */
-	public void addTeacher(final String name) {
-		database.insert(Teacher.NAME.set(name) );
+	public Teacher addTeacher(final String name) {
+		return database.insert(Teacher.NAME.set(name) );
 //			database.execute(new Script() {{
 //				insertInto(Teacher.TABLE).set(Teacher.NAME, name);
 //			}});
@@ -146,6 +150,9 @@ public class TutorialModel {
 	public ListModel getStudents() {
 		return studentList;
 	}
+	public ListModel getAvailableStudents() {
+		return availableStudentList;
+	}
 	public ListModel getTeachers() {
 		return teacherList;
 	}
@@ -166,6 +173,10 @@ public class TutorialModel {
 			database.unstage() ;
 		}
 		
+	}
+
+	public ListModel getStudentsOf(Teacher teacher) {
+		return NeoQL.listFor(NeoQL.where(database.get(Student.class) , Student.TEACHER.is(teacher) ));
 	}
 	
 	

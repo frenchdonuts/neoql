@@ -2,6 +2,8 @@ package net.ericaro.neoql;
 
 import java.util.ArrayList;
 
+import net.ericaro.neoql.eventsupport.TableListener;
+
 /** A table cloner. Used to compare expected outcomes. 
  * 
  * @author eric

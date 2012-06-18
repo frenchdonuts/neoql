@@ -1,5 +1,8 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.changeset.SingletonChange;
+import net.ericaro.neoql.eventsupport.TableListener;
+
 
 
 

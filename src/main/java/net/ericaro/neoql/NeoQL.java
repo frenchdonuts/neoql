@@ -33,12 +33,6 @@ public class NeoQL {
 												public boolean eval(Object t) { return false; }
 											};
     
-	/** creates a table definition
-	 * 
-	 * @param type
-	 * @return
-	 */
-	public static final <T> ClassTableDef<T> table(Class<T> type){return new ClassTableDef<T>(type);}
 											
 	public static <T, V> Predicate<T> is(final Column<T, V> col, final V value) {
 		return new Predicate<T>() {
@@ -127,6 +121,43 @@ public class NeoQL {
 		};
 	}
 
+	
+
+	/**
+	 * add a column by introspecting the fields.
+	 * 
+	 * @param name
+	 *            the field name
+	 * @return
+	 */
+	public static <T,V> Column<T, V> column(Class<T> type, String name) {
+		return column(type, name, null);
+	}
+	
+	/**
+	 * add a Column by introspecting the fields
+	 * 
+	 * @param name
+	 * @param foreignKey
+	 * @return
+	 */
+	public static <T,V> Column<T, V> column(Class<T> type, String name, Class<V> foreignKey) {
+		IntrospectionAttribute<T, V> attr = new IntrospectionAttribute<T, V>(type, name);
+		return column(type, attr, foreignKey);
+	}
+
+	
+		
+	/**
+	 * Add a column by using the attribute accessor
+	 * 
+	 * @param attr
+	 * @param foreignKey
+	 * @return
+	 */
+	public static <T,V> Column<T, V> column(Class<T> type, Attribute<T, V> attr, Class<V> foreignKey) {
+		return new ColumnDef<T, V>(type, attr, foreignKey);
+	}
 	
 	public static <T> SelectTable<T> where(Table<T> table, Predicate<T> where){
 		return new SelectTable<T>(table, where);

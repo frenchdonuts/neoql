@@ -4,6 +4,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.eventsupport.TableListener;
+import net.ericaro.neoql.eventsupport.TableListenerSupport;
+
 
 
 /** A table that group all equivalent values from a column.

@@ -1,21 +1,17 @@
 package net.ericaro.neoql;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.swing.event.EventListenerList;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
-import javax.swing.undo.AbstractUndoableEdit;
-import javax.swing.undo.CannotRedoException;
-import javax.swing.undo.CannotUndoException;
+import net.ericaro.neoql.changeset.DeleteChange;
+import net.ericaro.neoql.changeset.InsertChange;
+import net.ericaro.neoql.changeset.UpdateChange;
+import net.ericaro.neoql.eventsupport.AbstractTableListener;
+import net.ericaro.neoql.eventsupport.TableListener;
+import net.ericaro.neoql.eventsupport.TableListenerSupport;
 
 
 
@@ -47,18 +43,14 @@ public class TableData<T> implements Table<T> {
 
 	
 
-	TableData(Database owner, ClassTableDef<T> table) {
+	TableData(Database owner, Class<T> table, Column[] cols) {
 		this.owner = owner;
-		this.type = table.getTable();
+		this.type = table;
 		
 		// copy columns
-		ColumnDef[] cols = table.columns;
 		this.columns = new ColumnDef[cols.length];
 		System.arraycopy(cols, 0, columns, 0, cols.length);
-		
 		this.internalColumnListeners = new TableListener[this.columns.length];
-		
-
 	}
 
 	
@@ -87,7 +79,7 @@ public class TableData<T> implements Table<T> {
 
 	private <V> void installColumn(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			TableData<V> ftable = owner.get(col.getForeignTable().table);
+			TableData<V> ftable = owner.get(col.getForeignTable());
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(ftable, internalColumnListeners[i]);
 		}
@@ -95,7 +87,7 @@ public class TableData<T> implements Table<T> {
 
 	private <V> void unInstallColumn(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			TableData<V> ftable = owner.get(col.getForeignTable().table);
+			TableData<V> ftable = owner.get(col.getForeignTable());
 			owner.removeInternalTableListener(ftable,
 					internalColumnListeners[i]);
 		}
@@ -225,8 +217,10 @@ public class TableData<T> implements Table<T> {
 		
 		for (Iterator<T> i = rows.iterator(); i.hasNext();) {
 			T row = i.next();
-			if (where.eval(row))
+			if (where.eval(row)) {
 				deleteOperation.delete(row);
+				internals.fireDeleted(row);
+			}
 		}
 	}
 	
@@ -242,6 +236,7 @@ public class TableData<T> implements Table<T> {
 		if (insertOperation == null)
 			insertOperation = new MyInsertChange();
 		insertOperation.insert(row);
+		internals.fireInserted(row);
 		return row;
 	}
 
@@ -282,7 +277,7 @@ public class TableData<T> implements Table<T> {
 		if (values.length == 0)
 			return true;
 		for (ColumnValue cv : values)
-			if (! type.equals(cv.column.getTable().getTable()))
+			if (! type.equals(cv.column.getTable()))
 				return false;
 		return true;
 	}
@@ -301,10 +296,19 @@ public class TableData<T> implements Table<T> {
 			for(T row: rows) // not rows but the virtual new rows
 				if(p.eval(row) && ! updatedRows.containsKey(row))  // match, and it has not changed
 					updated.add(row);
+			
+			// now update the update transaction
 			for(T row: updatedRows.values()) // also need to update the 'new' ones
 				if(p.eval(row) )  // match, and it has not changed
 					updated.add(row);
+			
+			// I also need to update the insert transaction
+//			for(T row : insertOperation.inserted )
+//				if(p.eval(row) )  // match, and it has not changed
+//					updated.add(row);
+			// the problem is that those row are nowhere, and the next method won't handle them properly
 				
+			
 			// now that we have the set of rows involved in the update
 			for (T row : updated)
 				update(row, setters);
@@ -313,8 +317,12 @@ public class TableData<T> implements Table<T> {
 		public T update(T oldValue, ColumnValue<T, ?>[] setters) {
 
 			T newValue ; 
+			
 			// fix point algorithm, an updated row can trigger internal events that cause it self to change.
 			// so we keep the map of old ->new so that the new one is created once, and edited subsequently
+			
+			//it won't scale up if we have an already huge transition.
+			
 			if (updatedRows.containsValue(oldValue)) // the the oldvalue is a new value, this means that the value as already been updated
 				newValue = oldValue;
 			else {
@@ -384,19 +392,19 @@ public class TableData<T> implements Table<T> {
 		}
 	    
 	    public void fireDeleted(T row) {
-	    	internals.fireDeleted(row);
+	    	//internals.fireDeleted(row);
 			events.fireDeleted(row);
 		}
 
 
 
 		public void fireInserted(T row) {
-			internals.fireInserted(row);
+			//internals.fireInserted(row);
 			events.fireInserted(row);
 		}
 
 		public void fireDrop(Table<T> table) {
-			internals.fireDrop(table);
+			//internals.fireDrop(table);
 			events.fireDrop(table);
 		}
 	    

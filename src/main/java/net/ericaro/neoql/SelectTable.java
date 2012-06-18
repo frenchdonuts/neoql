@@ -2,6 +2,9 @@ package net.ericaro.neoql;
 
 import java.util.Iterator;
 
+import net.ericaro.neoql.eventsupport.TableListener;
+import net.ericaro.neoql.eventsupport.TableListenerSupport;
+
 
 
 public class SelectTable<T> implements Table<T> {

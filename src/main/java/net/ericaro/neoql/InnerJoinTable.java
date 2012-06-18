@@ -5,6 +5,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import net.ericaro.neoql.eventsupport.TableListener;
+import net.ericaro.neoql.eventsupport.TableListenerSupport;
+
 
 
 

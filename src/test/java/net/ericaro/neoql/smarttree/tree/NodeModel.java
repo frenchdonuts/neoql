@@ -10,7 +10,8 @@ public class NodeModel<M> extends JNode<M>{
 	
 	public NodeModel() {
 		super();
-		treeModel = new DefaultTreeModel(node);
+		//node.setAllowsChildren(true);
+		treeModel = new DefaultTreeModel(node, true);
 	}
 
 	void insertNodeInto(JNode parent, JNode node, int i) {

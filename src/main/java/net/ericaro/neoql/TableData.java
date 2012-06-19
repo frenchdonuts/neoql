@@ -1,5 +1,6 @@
 package net.ericaro.neoql;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,7 +38,7 @@ public class TableData<T> implements Table<T> {
 	private TableListener[] internalColumnListeners;
 
 	// transactions
-	MyDeleteChange	deleteOperation = null; //
+	MyDeleteChange	deleteOperation = null; 
 	MyInsertChange	insertOperation = null;
 	MyUpdateChange	updateOperation = null;
 
@@ -64,20 +65,20 @@ public class TableData<T> implements Table<T> {
 	void install() {
 		int i = 0;
 		for (Column<T, ?> col : columns)
-			installColumn(i++, col);
+			connectForeignKey(i++, col);
 	}
 
 	void uninstall() {
 		int i = 0;
 		for (Column<T, ?> col : columns)
-			unInstallColumn(i++, col);
+			disconnectForeignKey(i++, col);
 		if (internals.getListenerCount() > 0)
 			throw new NeoQLException("Cannot drop table " + type
 					+ ". Constraint violation(s)" + internals);
 		
 	}
 
-	private <V> void installColumn(int i, Column<T, V> col) {
+	private <V> void connectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
 			TableData<V> ftable = owner.get(col.getForeignTable());
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
@@ -85,7 +86,7 @@ public class TableData<T> implements Table<T> {
 		}
 	}
 
-	private <V> void unInstallColumn(int i, Column<T, V> col) {
+	private <V> void disconnectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
 			TableData<V> ftable = owner.get(col.getForeignTable());
 			owner.removeInternalTableListener(ftable,
@@ -126,14 +127,12 @@ public class TableData<T> implements Table<T> {
 			if (oldValue == newValue) return; // it's a false change, take a shortcut ( when is that happenning, infact ?)
 			
 			// now we are going to update every row that points to the oldValue
-			Predicate<T> p = NeoQL.is(col, oldValue) ;
+			//(kind of execute update where vol is oldValue)
+			Predicate<T> p = col.is(oldValue) ;
 			ColumnValue<T, ?>[] setters = new ColumnValue[] {
 					new ColumnValue<T, V>(col, newValue)
 			};
-			
-			if (updateOperation == null )
-				updateOperation = new MyUpdateChange();
-			updateOperation.update(p, setters);
+			getUpdateOperation().update(p, setters);
 		}
 
 		
@@ -141,7 +140,7 @@ public class TableData<T> implements Table<T> {
 		public void deleted(V oldValue) {
 			// fire an exception ( forbidding the deleting if the value is in
 			// use ?
-			Predicate<T> inUse = NeoQL.is(col, oldValue);
+			Predicate<T> inUse =col.is(oldValue);
 			for (T t : NeoQL.select(TableData.this) )
 				if (inUse.eval(t))
 					throw new NeoQLException("Foreign Key violation" + col);
@@ -188,14 +187,10 @@ public class TableData<T> implements Table<T> {
 	
 	
 	T update(T oldValue, ColumnValue<T, ?>[] setters) {
-		if (updateOperation == null )	
-			updateOperation = new MyUpdateChange();
-		return updateOperation.update(oldValue, setters);
+		return getUpdateOperation().update(oldValue, setters);
 	}
 	void update(Predicate<T> p, ColumnValue<T, ?>[] setters) {
-		if (updateOperation == null )	
-			updateOperation = new MyUpdateChange();
-		updateOperation.update(p, setters);
+		getUpdateOperation().update(p, setters);
 	}
 	
 	// ##########################################################################
@@ -212,13 +207,10 @@ public class TableData<T> implements Table<T> {
 	 * @param where
 	 */
 	void delete(Predicate<? super T> where) {
-		if (deleteOperation == null )
-			deleteOperation = new MyDeleteChange();
-		
 		for (Iterator<T> i = rows.iterator(); i.hasNext();) {
 			T row = i.next();
 			if (where.eval(row)) {
-				deleteOperation.delete(row);
+				getDeleteOperation().delete(row);
 				internals.fireDeleted(row);
 			}
 		}
@@ -282,35 +274,61 @@ public class TableData<T> implements Table<T> {
 		return true;
 	}
 		
-
+	/** include transaction
+	 * 
+	 * @return
+	 */
+	Iterable<T> newRowsWhere(Predicate<T> p){
+		
+		Set<T> updated = new HashSet<T>();
+		
+		for(T row: rows) // not rows but the virtual new rows
+			if(
+				p.eval(row) // matches the predicate 
+				&& ! getUpdateOperation().containsOld(row) // but it has not changed
+				&& ! getDeleteOperation().contains(row)
+				)
+				updated.add(row); // old plain value
+		// now handle updated
+		for(T row: getUpdateOperation().newValues()) // also need to update the 'new' ones
+			if(p.eval(row) )  // match, and it has not changed
+				updated.add(row);
+		// note that updated should not contains deleted (the operation should have been checked before
+		
+		// and finally inserted
+		for (T row: getInsertOperation().values())
+			if(p.eval(row) )  // the new ones matches
+				updated.add(row);
+		
+		return Collections.unmodifiableCollection(updated);
+	}
 	
 	// ##########################################################################
 	// OPERATIONS BEGIN
 	// ##########################################################################
 
+	MyInsertChange getInsertOperation(){
+		if (insertOperation == null )	
+			insertOperation = new MyInsertChange();
+		return insertOperation ;
+	}
+	
+	MyDeleteChange getDeleteOperation(){
+		if (deleteOperation == null )	
+			deleteOperation = new MyDeleteChange();
+		return deleteOperation ;
+	}
+	
+	MyUpdateChange getUpdateOperation(){
+		if (updateOperation == null )	
+			updateOperation = new MyUpdateChange();
+		return updateOperation ;
+	}
 	class MyUpdateChange extends UpdateChange<T>{
-		transient Map<T,T> updatedRows = new HashMap<T,T>(); 
 		
 		public void update(Predicate<T> p, ColumnValue<T, ?>[] setters) {
-			Set<T> updated = new HashSet<T>();// we first compute the rows involved
-			for(T row: rows) // not rows but the virtual new rows
-				if(p.eval(row) && ! updatedRows.containsKey(row))  // match, and it has not changed
-					updated.add(row);
-			
-			// now update the update transaction
-			for(T row: updatedRows.values()) // also need to update the 'new' ones
-				if(p.eval(row) )  // match, and it has not changed
-					updated.add(row);
-			
-			// I also need to update the insert transaction
-//			for(T row : insertOperation.inserted )
-//				if(p.eval(row) )  // match, and it has not changed
-//					updated.add(row);
-			// the problem is that those row are nowhere, and the next method won't handle them properly
-				
-			
 			// now that we have the set of rows involved in the update
-			for (T row : updated)
+			for (T row : newRowsWhere(p))
 				update(row, setters);
 		}
 		
@@ -323,12 +341,10 @@ public class TableData<T> implements Table<T> {
 			
 			//it won't scale up if we have an already huge transition.
 			
-			if (updatedRows.containsValue(oldValue)) // the the oldvalue is a new value, this means that the value as already been updated
+			if (containsNew(oldValue)) // the the oldvalue is a new value, this means that the value as already been updated
 				newValue = oldValue;
-			else {
+			else
 				newValue = TableData.this.clone(oldValue);
-				updatedRows.put(oldValue, newValue);
-			}
 			
 			for (ColumnValue s : setters)
 				s.set(newValue);
@@ -341,19 +357,23 @@ public class TableData<T> implements Table<T> {
 		
 		@Override
 		public void revert() {
-			for (Pair<T,T> r :updated) {
-				rows.remove(r.getRight()); // remove the new
-				rows.add(r.getLeft()); // add the old
-				events.fireUpdated(r.getRight(),r.getLeft());
+			for (Map.Entry<T,T> r :updatedRows.entrySet()) {
+				T left = r.getKey();
+				T right = r.getValue() ;
+				rows.remove(right); // remove the new
+				rows.add(left); // add the old
+				events.fireUpdated(right, left);
 			}
 		}
 		
 		@Override
 		public void commit() {
-			for (Pair<T,T> r :updated) {
-				rows.remove(r.getLeft()); // remove the new
-				rows.add(r.getRight()); // add the old
-				events.fireUpdated(r.getLeft(),r.getRight());
+			for (Map.Entry<T,T> r :updatedRows.entrySet()) {
+				T left = r.getKey();
+				T right = r.getValue() ;
+				rows.remove(left); // remove the new
+				rows.add(right); // add the old
+				events.fireUpdated(left,right);
 			}
 		}
 	}
@@ -377,6 +397,19 @@ public class TableData<T> implements Table<T> {
 		}
 		
 	class MyDeleteChange extends DeleteChange<T>{
+		
+		
+			@Override
+		public void delete(T row) {
+			// check if I need to remove the row from inserted AND updated
+				if (getInsertOperation().contains(row))
+					getInsertOperation().remove(row);
+				if (getUpdateOperation().containsOld(row) || getUpdateOperation().containsNew(row) )
+					getUpdateOperation().remove(row);
+				
+				super.delete(row);
+		}
+
 			public void revert() {
 				for (T r :deleted) 
 					if (rows.add(r))// actually remove the items

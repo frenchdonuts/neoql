@@ -1,5 +1,6 @@
 package net.ericaro.neoql.changeset;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,4 +14,13 @@ public abstract class InsertChange<T> implements Change {
 		inserted.add(row);
 	}
 	
+	public boolean contains(T row) {
+		return inserted.contains(row);
+	}
+	
+	public boolean remove(T row) {
+		return inserted.remove(row);
+	}
+	
+	public Iterable<T> values(){ return Collections.unmodifiableCollection(inserted);}
 }

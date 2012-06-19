@@ -321,6 +321,12 @@ public class Database {
 	}
 	
 	public ChangeSet commit() {
+		// also collect changes from singletons
+		for(Singleton s : singletons) {
+			tx.addChange(s.singletonChange);
+			s.singletonChange = null;
+		}
+		
 		// collect all "changes" in the tables
 		for (TableData t: typed.values()) {
 			tx.addChange(t.insertOperation) ;
@@ -331,11 +337,6 @@ public class Database {
 			
 			tx.addChange(t.deleteOperation) ;
 			t.deleteOperation = null;
-		}
-		// also collect changes from singletons
-		for(Singleton s : singletons) {
-			tx.addChange(s.singletonChange);
-			s.singletonChange = null;
 		}
 		
 		ChangeSet otx = tx;

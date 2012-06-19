@@ -61,22 +61,39 @@ public class TreeTester extends JPanel {
 	private void onTreeSelectionChanged() {
 	}
 
+	
+	private void onRename() {
+		JNode node=(JNode) ( (DefaultMutableTreeNode) treeNode1.getLastSelectedPathComponent()).getUserObject();
+		Object selection = node.getModel();
+		if (selection instanceof Teacher)
+			model.rename((Teacher) selection, RandName.next());
+		if (selection instanceof Student)
+			model.rename((Student) selection, RandName.next());
+		
+		
+	}
 	protected void onLink() {
 		JNode node=(JNode) ( (DefaultMutableTreeNode) treeNode1.getLastSelectedPathComponent()).getUserObject();
 		Object selection = node.getModel();
 		if (selection instanceof Teacher)
-			onLink((Teacher) selection, availableStudents.getSelectedValuesList());
-
+			onLink((Teacher) selection, asStudents( availableStudents.getSelectedValues() ) );
 	}
-
+	
+	private Student[] asStudents(Object[] selection) {
+		Student[] s = new Student[selection.length];
+		System.arraycopy(selection, 0, s, 0, selection.length);
+		return s;
+	}
+	
 	
 
 	
-private void onLink(Teacher teacher, List<Student> selectedValuesList) {
+
+	
+private void onLink(Teacher teacher, Student[] selectedValuesList) {
 	for(Student student : selectedValuesList)
 		model.link(student, teacher);		
 	}
-
 
 public static void main(String[] args) {
 	SwingUtilities.invokeLater(new Runnable() {
@@ -85,6 +102,7 @@ public static void main(String[] args) {
 		}
 	});
 }
+
 
 	
 	private void initComponents() {
@@ -96,7 +114,7 @@ public static void main(String[] args) {
 		button1 = new JButton();
 		button2 = new JButton();
 		button3 = new JButton();
-		
+		button4 = new JButton();
 		scrollPane1 = new JScrollPane();
 		treeNode1 = new JTreeNode();
 		label1 = new JLabel();
@@ -139,9 +157,9 @@ public static void main(String[] args) {
 						}
 					});
 					toolBar1.add(button2);
-					
+
 					//---- button3 ----
-					button3.setText("Link");
+					button3.setText("link");
 					button3.addActionListener(new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
@@ -149,6 +167,16 @@ public static void main(String[] args) {
 						}
 					});
 					toolBar1.add(button3);
+
+					//---- button4 ----
+					button4.setText("Rename");
+					button4.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							onRename();
+						}
+					});
+					toolBar1.add(button4);
 				}
 				this.add(toolBar1, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0,
 					GridBagConstraints.CENTER, GridBagConstraints.BOTH,
@@ -159,7 +187,7 @@ public static void main(String[] args) {
 
 					//---- treeNode1 ----
 					treeNode1.setShowsRootHandles(true);
-//					treeNode1.setRootVisible(false);
+					treeNode1.setRootVisible(false);
 					treeNode1.addTreeSelectionListener(new TreeSelectionListener() {
 						@Override
 						public void valueChanged(TreeSelectionEvent e) {
@@ -199,10 +227,11 @@ public static void main(String[] args) {
 	private JButton button1;
 	private JButton button2;
 	private JButton button3;
+	private JButton button4;
 	private JScrollPane scrollPane1;
 	private JTreeNode treeNode1;
 	private JLabel label1;
 	private JScrollPane scrollPane2;
-	private JList<Student> availableStudents;
+	private JList availableStudents;
 	// JFormDesigner - End of variables declaration  //GEN-END:variables
 }

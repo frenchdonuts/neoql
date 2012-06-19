@@ -12,6 +12,7 @@ import net.ericaro.neoql.Singleton;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableData;
 import net.ericaro.neoql.TableList;
+import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
 
 public class TreeTesterModel {
 	
@@ -178,6 +179,13 @@ public class TreeTesterModel {
 
 	public ListModel getStudentsOf(Singleton<Teacher> teacher) {
 		return NeoQL.listFor(NeoQL.where(database.get(Student.class) , Student.TEACHER.is(teacher) ));
+	}
+
+	public void rename(Teacher selection, String next) {
+		database.update(selection, Teacher.NAME.set(next));
+	}
+	public void rename(Student selection, String next) {
+		database.update(selection, Student.NAME.set(next));
 	}
 	
 	

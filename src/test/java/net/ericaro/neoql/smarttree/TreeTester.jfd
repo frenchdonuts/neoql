@@ -94,6 +94,46 @@
             </void>
            </object>
           </void>
+          <void method="add">
+           <object class="com.jformdesigner.model.FormComponent">
+            <string>javax.swing.JButton</string>
+            <void method="setProperty">
+             <string>text</string>
+             <string>link</string>
+            </void>
+            <void property="name">
+             <string>button3</string>
+            </void>
+            <void method="addEvent">
+             <object class="com.jformdesigner.model.FormEvent">
+              <string>java.awt.event.ActionListener</string>
+              <string>actionPerformed</string>
+              <string>onLink</string>
+              <boolean>false</boolean>
+             </object>
+            </void>
+           </object>
+          </void>
+          <void method="add">
+           <object class="com.jformdesigner.model.FormComponent">
+            <string>javax.swing.JButton</string>
+            <void method="setProperty">
+             <string>text</string>
+             <string>Rename</string>
+            </void>
+            <void property="name">
+             <string>button4</string>
+            </void>
+            <void method="addEvent">
+             <object class="com.jformdesigner.model.FormEvent">
+              <string>java.awt.event.ActionListener</string>
+              <string>actionPerformed</string>
+              <string>onRename</string>
+              <boolean>false</boolean>
+             </object>
+            </void>
+           </object>
+          </void>
          </object>
          <object class="com.jformdesigner.model.FormLayoutConstraints">
           <class>com.jformdesigner.runtime.GridBagConstraintsEx</class>

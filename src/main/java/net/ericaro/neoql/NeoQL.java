@@ -33,19 +33,6 @@ public class NeoQL {
 												public boolean eval(Object t) { return false; }
 											};
     
-											
-	public static <T, V> Predicate<T> is(final Column<T, V> col, final V value) {
-		return new Predicate<T>() {
-
-			@Override
-			public boolean eval(T t) {
-				if (value == null)
-					return false; // null is always false
-				return value.equals(col.get(t));
-			}
-
-		};
-	}
 	/**
 	 * return the identity predicate for this type.
 	 * 
@@ -54,7 +41,6 @@ public class NeoQL {
 	 */
 	public static <T> Predicate<T> is(final T value) {
 		return new Predicate<T>() {
-
 			@Override
 			public boolean eval(T t) {
 				if (value == null)
@@ -64,7 +50,12 @@ public class NeoQL {
 		};
 	}
 
-	
+	/** return true if the column value is in the set of values
+	 * 
+	 * @param col
+	 * @param value
+	 * @return
+	 */
 	public static <T, V> Predicate<T> in(final Column<T, V> col, V... value) {
 		final Set<V> values = new HashSet<V>(Arrays.asList(value));
 		return new Predicate<T>() {
@@ -75,6 +66,12 @@ public class NeoQL {
 		};
 	}
 
+	/** returns a predicate that is <code>left AND right</code>
+	 * 
+	 * @param left
+	 * @param right
+	 * @return
+	 */
 	public static <T> Predicate<T> and(final Predicate<T> left, final Predicate<? super T> right) {
 		return new Predicate<T>() {
 			@Override
@@ -84,6 +81,12 @@ public class NeoQL {
 		};
 	}
 
+	/** returns a predicate that is true iif all predicate are true (generalization of and)
+	 * 
+	 * @param left
+	 * @param right
+	 * @return
+	 */
 	public static <T> Predicate<T> all(final Predicate<T> left, final Predicate<? super T>... right) {
 		return new Predicate<T>() {
 			@Override
@@ -98,6 +101,12 @@ public class NeoQL {
 		};
 	}
 
+	/** return a predicate that returns true iif one at least of the predicate is true.
+	 * 
+	 * @param left
+	 * @param right
+	 * @return
+	 */
 	public static <T> Predicate<T> any(final Predicate<T> left, final Predicate<? super T>... right) {
 		return new Predicate<T>() {
 			@Override
@@ -112,6 +121,12 @@ public class NeoQL {
 		};
 	}
 
+	/** returns a predicate that returns true if one of left or right returns true.
+	 * 
+	 * @param left
+	 * @param right
+	 * @return
+	 */
 	public static <T> Predicate<T> or(final Predicate<T> left, final Predicate<? super T> right) {
 		return new Predicate<T>() {
 			@Override
@@ -123,8 +138,7 @@ public class NeoQL {
 
 	
 
-	/**
-	 * add a column by introspecting the fields.
+	/** Creates a column by using introspection to access the field.
 	 * 
 	 * @param name
 	 *            the field name
@@ -135,7 +149,7 @@ public class NeoQL {
 	}
 	
 	/**
-	 * add a Column by introspecting the fields
+	 * creates a columns by using introspection to access the field, and defines a foreign key
 	 * 
 	 * @param name
 	 * @param foreignKey
@@ -159,35 +173,82 @@ public class NeoQL {
 		return new ColumnDef<T, V>(type, attr, foreignKey);
 	}
 	
+	/** creates a Select Table from another table and a predicate.
+	 * 
+	 * @param table
+	 * @param where
+	 * @return
+	 */
 	public static <T> SelectTable<T> where(Table<T> table, Predicate<T> where){
 		return new SelectTable<T>(table, where);
 	}
+	/** creates a table using a transformation from the source table.
+	 * Turns a table of S into a table of T provided that you give a Mapper<S,T> implementation. 
+	 * 
+	 * @param table
+	 * @param mapper
+	 * @return
+	 */
 	public static <S, T> MappedTable<S,T> map(Table<S> table,Mapper<S, T> mapper) {
 		return new MappedTable<S, T>(mapper, table);
 	}
 	
+	/** returns  table with a single colum of type T, so that T is a column of table<S> and t values are unique.
+	 * 
+	 * @param table
+	 * @param groupBy
+	 * @return
+	 */
 	public static <S, T> Table<T> groupBy(Table<S> table, Column<S, T> groupBy) {
 		return new GroupByTable<S, T>(groupBy, table);
 	}
 	
+	/** return a table ordered by a column
+	 * 
+	 * @param table
+	 * @param orderBy
+	 * @param ascendent
+	 * @return
+	 */
 	public static <T, V extends Comparable<? super V>> Table<T> orderyBy(Table<T> table, Column<T, V> orderBy, boolean ascendent) {
 		return new OrderByTable<T, V>(table,orderBy, ascendent);
 	}
-	
+	/** creates an inner join table.
+	 * 
+	 * @param leftTable
+	 * @param rightTable
+	 * @param on
+	 * @return
+	 */
 	public static <L, R> Table<Pair<L, R>> innerJoin(Table<L> leftTable, Table<R> rightTable, Predicate<? super Pair<L, R>> on) {
 		return new InnerJoinTable<L, R>(leftTable, rightTable,  on );
 	}
-
+	
+	/** split and inner join table into it's left counter part (usefull if you really need inner join to operation filter, or order)
+	 * 
+	 * @param table
+	 * @return
+	 */
 	public static <L,R> Table<L> left(Table<Pair<L,R>> table) {
 		Mapper<Pair<L,R>, L> map= Pair.left() ;
 		return map(table, map);
 	}
 	
+	/** same as left but for the right counterpart of the inner join.
+	 * 
+	 * @param table
+	 * @return
+	 */
 	public static <L,R> Table<R> right(Table<Pair<L,R>> table) {
 		Mapper<Pair<L,R>, R> map= Pair.right() ;
 		return map(table, map);
 	}
 	
+	/** returns a simple iterator over a table. 
+	 * 
+	 * @param table
+	 * @return
+	 */
 	public static <T> Iterable<T> select(final Table<T> table) {
 		return new Iterable<T>() {
 			@Override
@@ -197,6 +258,12 @@ public class NeoQL {
 		};
 	}
 	
+	/** returns a simple iterator over a table, filtered by predicate == True
+	 * 
+	 * @param table
+	 * @param where
+	 * @return
+	 */
 	public static <T> Iterable<T> select(final Table<T> table, final Predicate<T> where) {
 		return new Iterable<T>() {
 			@Override
@@ -208,7 +275,11 @@ public class NeoQL {
 		
 	}
 	
-	
+	/** generates a java swing ListModel based on a table.
+	 * 
+	 * @param table
+	 * @return
+	 */
 	public static <T, U extends ListModel> U listFor(Table<T> table) {
 		return (U) new TableList<T>(table);
 	}

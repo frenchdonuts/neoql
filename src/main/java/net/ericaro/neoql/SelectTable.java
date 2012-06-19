@@ -1,6 +1,8 @@
 package net.ericaro.neoql;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TableListenerSupport;
@@ -14,6 +16,7 @@ public class SelectTable<T> implements Table<T> {
 
 	private Predicate<? super T>	where;
 	private TableListener<T>		listener;
+	Set<T>							values	= new HashSet<T>();
 
 	SelectTable(Table<T> table, Predicate<? super T> where) {
 		super();
@@ -29,27 +32,44 @@ public class SelectTable<T> implements Table<T> {
 
 			public void inserted(T row) {
 				if (where(row))
-					events.fireInserted(row);
+					whenInserted(row);
+			}
+
+			private void whenInserted(T row) {
+				values.add(row);
+				events.fireInserted(row);
 			}
 
 			public void deleted(T row) {
 				if (where(row))
-					events.fireDeleted(row);
+					whenDeleted(row);
+			}
+
+			private void whenDeleted(T row) {
+				values.remove(row);
+				events.fireDeleted(row);
 			}
 
 			public void updated(T old, T row) {
-				boolean was = where(old);
+				boolean was = values.contains(old);
 				boolean willbe = where(row);
 				if (was && willbe) {
 					// it was before, it will be after too, I need to update the content
-					events.fireUpdated(old, row);
+					
+					whenUpdated(old, row);
 				} else {
 					if (was)
-						events.fireDeleted(old);
+						whenDeleted(old);
 					if (willbe)
-						events.fireInserted(row); // act like if the new row was added
+						whenInserted(row);
 				}
 				// if we add a "sort" algorithm, I would need to "workout" this a little bit
+			}
+
+			private void whenUpdated(T old, T row) {
+				values.remove(old);
+				values.add(row);
+				events.fireUpdated(old, row);
 			}
 			@Override
 			public void dropped(Table<T> table) {

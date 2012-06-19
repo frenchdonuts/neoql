@@ -39,6 +39,7 @@ public abstract class JListNode<M,I> extends JNode<M>{
 	
 	public JListNode() {
 		super();
+		node.setAllowsChildren(true);
 	}
 
 	public JListNode(Singleton<M> item) {

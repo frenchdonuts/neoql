@@ -22,12 +22,15 @@ public class JNode<M> {
 	
 	public JNode(Singleton<M> item) {
 		this();
+		node.setAllowsChildren(false);
 		setModel(item);
+		
 	}
 	
 	public JNode() {
 		super();
 		this.node = new DefaultMutableTreeNode() {
+			
 			public String toString() {
 				return JNode.this.toString();
 			}

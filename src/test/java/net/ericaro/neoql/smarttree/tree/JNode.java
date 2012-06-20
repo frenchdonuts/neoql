@@ -48,7 +48,7 @@ public class JNode<M> {
 			model.addPropertyListener(propertyListener);
 	}
 	
-	public M getModel() {return model.get();}
+	public M getModel() {return model==null?null:model.get();}
 
 	DefaultMutableTreeNode getNode() {return node;}
 	

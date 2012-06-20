@@ -16,8 +16,8 @@ public class TutorialModel {
 	
 	public static class Teacher {
 		
-		public static final Column<Teacher, String> NAME = NeoQL.column(Teacher.class, "name");
-		public static final Column<Teacher, Boolean> SELECTED   = NeoQL.column(Teacher.class, "selected");
+		public static final Column<Teacher, String> NAME = NeoQL.column(Teacher.class, "name", String.class, false);
+		public static final Column<Teacher, Boolean> SELECTED   = NeoQL.column(Teacher.class, "selected", Boolean.class, false);
 		
 		private String name;
 		private boolean selected = false;
@@ -43,8 +43,8 @@ public class TutorialModel {
 
 	public static class Student {
 
-		public static final Column<Student, String> NAME 		= NeoQL.column(Student.class, "name");
-		public static final Column<Student, Teacher> TEACHER    = NeoQL.column(Student.class, "teacher", Teacher.class);
+		public static final Column<Student, String> NAME 		= NeoQL.column(Student.class, "name", String.class, false);
+		public static final Column<Student, Teacher> TEACHER    = NeoQL.column(Student.class, "teacher", Teacher.class, true);
 		
 		private String name;
 		private Teacher teacher;

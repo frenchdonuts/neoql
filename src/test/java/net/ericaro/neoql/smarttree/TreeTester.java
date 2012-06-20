@@ -11,6 +11,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -19,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
@@ -41,6 +44,7 @@ import net.ericaro.neoql.smarttree.tree.NodeModel;
  */
 public class TreeTester extends JPanel {
 	private TreeTesterModel	model;
+	JTextField textfield1 ;
 	
 	public TreeTester() {
 		initComponents();
@@ -50,7 +54,10 @@ public class TreeTester extends JPanel {
 				System.out.println(oldValue+ "->"+ newValue);
 			}
 		});
+		
 		availableStudents.setModel(model.getAvailableStudents());
+		model.getEditingTeacherName().addPropertyListener( new PropertyListener<String>() {
+			public void updated(String oldValue, String newValue) { whenTeacherNameChanged();	}});
 		treeNode1.addNode(new JTeachersNode(model));
 		treeNode1.addNode(new JStudentsNode(model));
 	}
@@ -58,6 +65,17 @@ public class TreeTester extends JPanel {
 	private void onAddStudent(){
 		System.out.println("adding student");
 		model.addStudent(RandName.next());
+	}
+	
+	public void onValidateName() { // callback to validate the text field
+		String value = textfield1.getText() ;
+		whenTeacherNameChanged(); // act like if the name add changed (i.e reset the correct name)
+		model.renameEditingTeacher(value);
+		
+	}
+	
+	public void whenTeacherNameChanged() {
+		textfield1.setText( model.getEditingTeacherName().get() );
 	}
 	
 	protected void onAddTeacher() {
@@ -126,6 +144,7 @@ public static void main(String[] args) {
 		button2 = new JButton();
 		button3 = new JButton();
 		button4 = new JButton();
+		textfield1 = new JTextField();
 		scrollPane1 = new JScrollPane();
 		treeNode1 = new JTreeNode();
 		label1 = new JLabel();
@@ -178,7 +197,19 @@ public static void main(String[] args) {
 						}
 					});
 					toolBar1.add(button3);
-
+					
+					textfield1.addFocusListener(new FocusAdapter() {
+						public void focusLost(FocusEvent e) {
+							onValidateName() ;
+						}});
+					textfield1.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							onValidateName();
+						}
+					});
+					toolBar1.add(textfield1);
+					
 					//---- button4 ----
 					button4.setText("Rename");
 					button4.addActionListener(new ActionListener() {

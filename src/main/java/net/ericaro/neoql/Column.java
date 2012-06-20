@@ -1,6 +1,12 @@
 package net.ericaro.neoql;
 
-
+/**
+ * 
+ * @author eric
+ *
+ * @param <T> Table
+ * @param <V> Value
+ */
 public interface Column<T, V> extends Mapper<T, V> {
 
 	/** returns the value of for this column, and src row.
@@ -16,8 +22,7 @@ public interface Column<T, V> extends Mapper<T, V> {
 	 */
 	String getName();
 	
-	/** returns the class that defines the foreign associated with this column.
-	 * returns null if there is no foreign key.
+	/** returns the class that defines the type associated with this column.
 	 * 
 	 * @return
 	 */

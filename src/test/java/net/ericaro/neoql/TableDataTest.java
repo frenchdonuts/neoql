@@ -7,7 +7,7 @@ import org.junit.Test;
 public class TableDataTest {
 
 	public static class Student {
-		public static final Column<Student, String> NAME = NeoQL.column(Student.class, "name");
+		public static final Column<Student, String> NAME = NeoQL.column(Student.class, "name", String.class, false);
 		String name;
 		@Override
 		public String toString() {
@@ -18,8 +18,8 @@ public class TableDataTest {
 	}
 	
 	public static class Killer{
-		public static final Column<Killer, String> NAME = NeoQL.column(Killer.class, "name");
-		public static final Column<Killer, Killer> TARGET= NeoQL.column(Killer.class, "target", Killer.class);
+		public static final Column<Killer, String> NAME = NeoQL.column(Killer.class, "name", String.class, false);
+		public static final Column<Killer, Killer> TARGET= NeoQL.column(Killer.class, "target", Killer.class, true);
 		String name;
 		Killer target;
 		@Override

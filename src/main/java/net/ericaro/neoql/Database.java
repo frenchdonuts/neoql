@@ -23,13 +23,11 @@ public class Database {
 	ChangeSet						tx			= new ChangeSet(new ChangeSet()); // trick to force a "root" changeset
 	boolean							autocommit	= true;
 
-	private Collection<Singleton>	singletons  = new HashSet<Singleton>();
+	private Collection<TableSingleton>	singletons  = new HashSet<TableSingleton>();
 	
     
 //	private Map<Property, Singleton>		values	= new HashMap<Property, Singleton>();
 
-	// observable transaction, and also handle transactions for the singletons
-	// TODO handle undo/redo ? (isn't it related to transaction ? yes it is
 	// TODO provide generic JTAble for every table for debug purpose )
 	// TODO add unit tests
 	
@@ -93,15 +91,15 @@ public class Database {
 	}
 		
 	
-	public <T> Singleton<T> createSingleton(Class<T> type){
-		Singleton<T> s = new Singleton<T>(get(type));
+	public <T> TableSingleton<T> createSingleton(Class<T> type){
+		TableSingleton<T> s = new TableSingleton<T>(get(type));
 		singletons.add(s);
 		return s;
 	}
 
 	
 	public Collection<Singleton> getSingletons(){
-		return Collections.unmodifiableCollection(singletons);
+		return Collections.unmodifiableCollection((Collection) singletons);
 	}
 	
 	public <T> Collection<Singleton<T>> getSingletons(Class<T> type){
@@ -243,22 +241,43 @@ public class Database {
 	// SINGLETON EDIT BEGIN
 	// ##########################################################################
 	public <T> void put(Singleton<T> prop, T value) {
+		if (prop instanceof TableSingleton) {
+			TableSingleton t = (TableSingleton) prop;
+			put(t, value);
+		}
+		else if (prop instanceof ColumnSingleton) {
+			ColumnSingleton t = (ColumnSingleton) prop;
+			put(t, value);
+		}
+		else throw new IllegalArgumentException("Cannot assign a value to a Singleton that is not either a Table or a Column one");
+	}
+	
+	public <T> void put(TableSingleton<T> prop, T value) {
 		prop.set(value);
 		precommit();
 	}
-	
-	/** creates and returns a singleton initialized on the value
+	public <V,T> void put(ColumnSingleton<V,T> prop, T value) {
+		if (
+				(value == null && prop.get() == null)
+				|| 
+				(value!=null && value.equals( prop.get() ) )
+			)
+			return; // nothing to do, it's the exact same value that is set
+		update(prop.getRow(), prop.getColumn().set(value) );
+		precommit();
+	}
+	/** creates and returns a table singleton initialized on the value
 	 * 
 	 * @param value
 	 */
 	public <T> Singleton<T> track(T value) {
-		TableSingleton<T> prop =  createSingleton(value.getClass());
+		TableSingleton<T> prop =  createSingleton((Class<T>) value.getClass());
 		prop.set(value);
 		precommit();
 		return prop;
 	}
 	
-	public <T,V> Singleton<T> track(Singleton<V> row, Column<V,T> column) {
+	public <T,V> Singleton<V> track(Singleton<T> row, Column<T,V> column) {
 		return new ColumnSingleton<T,V>(row, column);
 	}
 	
@@ -327,7 +346,7 @@ public class Database {
 	
 	public ChangeSet commit() {
 		// also collect changes from singletons
-		for(Singleton s : singletons) {
+		for(TableSingleton s : singletons) {
 			tx.addChange(s.singletonChange);
 			s.singletonChange = null;
 		}

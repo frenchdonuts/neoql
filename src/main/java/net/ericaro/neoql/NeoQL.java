@@ -138,26 +138,16 @@ public class NeoQL {
 
 	
 
-	/** Creates a column by using introspection to access the field.
-	 * 
-	 * @param name
-	 *            the field name
-	 * @return
-	 */
-	public static <T,V> Column<T, V> column(Class<T> type, String name) {
-		return column(type, name, null);
-	}
-	
 	/**
 	 * creates a columns by using introspection to access the field, and defines a foreign key
 	 * 
 	 * @param name
-	 * @param foreignKey
+	 * @param columnType
 	 * @return
 	 */
-	public static <T,V> Column<T, V> column(Class<T> type, String name, Class<V> foreignKey) {
+	public static <T,V> Column<T, V> column(Class<T> type, String name, Class<V> columnType, boolean hasForeignKey) {
 		IntrospectionAttribute<T, V> attr = new IntrospectionAttribute<T, V>(type, name);
-		return column(type, attr, foreignKey);
+		return column(type, attr, columnType, hasForeignKey);
 	}
 
 	
@@ -166,11 +156,11 @@ public class NeoQL {
 	 * Add a column by using the attribute accessor
 	 * 
 	 * @param attr
-	 * @param foreignKey
+	 * @param columnType
 	 * @return
 	 */
-	public static <T,V> Column<T, V> column(Class<T> type, Attribute<T, V> attr, Class<V> foreignKey) {
-		return new ColumnDef<T, V>(type, attr, foreignKey);
+	public static <T,V> Column<T, V> column(Class<T> type, Attribute<T, V> attr, Class<V> columnType, boolean hasForeignKey) {
+		return new ColumnDef<T, V>(type, attr, columnType,hasForeignKey);
 	}
 	
 	/** creates a Select Table from another table and a predicate.

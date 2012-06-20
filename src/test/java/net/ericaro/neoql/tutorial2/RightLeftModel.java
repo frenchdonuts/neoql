@@ -12,8 +12,8 @@ public class RightLeftModel {
 	
 	public static class Student{
 		
-		public static Column<Student, String> NAME = NeoQL.column(Student.class, "name");
-		public static Column<Student, Boolean> IN = NeoQL.column(Student.class, "in");
+		public static Column<Student, String> NAME = NeoQL.column(Student.class, "name", String.class, false);
+		public static Column<Student, Boolean> IN = NeoQL.column(Student.class, "in", Boolean.class, false);
 		
 		private String name;
 		String getName() {

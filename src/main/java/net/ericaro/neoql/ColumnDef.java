@@ -14,17 +14,16 @@ class ColumnDef<T, V> implements Column<T, V> {
 	private Class<V>	foreignTable;
 	Attribute<T, V>				attr;
 	private Class<T>	table;
+	private final boolean hasForeignKey;
 
-	public ColumnDef(Class<T> table,  Attribute<T, V> attr, Class<V> foreignTable) {
+	public ColumnDef(Class<T> table,  Attribute<T, V> attr, Class<V> foreignTable, boolean hasForeignKey) {
 		super();
 		this.table = table;
 		this.attr = attr;
 		this.foreignTable = foreignTable;
+		this.hasForeignKey = hasForeignKey;
 	}
 
-	public ColumnDef(Class<T> table, Attribute<T, V> attr) {
-		this(table, attr, null);
-	}
 	
 	@Override
 	public ColumnValue<T, V> set(Singleton<V> value) {
@@ -72,7 +71,7 @@ class ColumnDef<T, V> implements Column<T, V> {
 	}
 
 	public boolean hasForeignKey() {
-		return foreignTable != null;
+		return hasForeignKey;
 	}
 
 	

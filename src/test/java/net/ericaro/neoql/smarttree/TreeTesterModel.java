@@ -12,14 +12,15 @@ import net.ericaro.neoql.Singleton;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableData;
 import net.ericaro.neoql.TableList;
+import net.ericaro.neoql.TableSingleton;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
 
 public class TreeTesterModel {
 	
 	public static class Teacher {
 		
-		public static final Column<Teacher, String> NAME = NeoQL.column(Teacher.class, "name");
-		public static final Column<Teacher, Boolean> SELECTED   = NeoQL.column(Teacher.class, "selected");
+		public static final Column<Teacher, String> NAME = NeoQL.column(Teacher.class, "name", String.class, false);
+		public static final Column<Teacher, Boolean> SELECTED   = NeoQL.column(Teacher.class, "selected", Boolean.class, false);
 		
 		private String name;
 		private boolean selected = false;
@@ -45,8 +46,8 @@ public class TreeTesterModel {
 
 	public static class Student {
 
-		public static final Column<Student, String> NAME 		= NeoQL.column(Student.class, "name");
-		public static final Column<Student, Teacher> TEACHER    = NeoQL.column(Student.class, "teacher", Teacher.class);
+		public static final Column<Student, String> NAME 		= NeoQL.column(Student.class, "name", String.class, false);
+		public static final Column<Student, Teacher> TEACHER    = NeoQL.column(Student.class, "teacher", Teacher.class, true);
 		
 		private String name;
 		private Teacher teacher;
@@ -83,7 +84,8 @@ public class TreeTesterModel {
 	private TableData<Teacher> teachers;
 	private TableData<Student> students;
 	private ListModel	availableStudentList;
-	private Singleton<Teacher>	editingTeacher;
+	private TableSingleton<Teacher>	editingTeacher;
+	private Singleton<String> editingTeacherName;
 	
 	public TreeTesterModel() {
 		super();
@@ -106,11 +108,16 @@ public class TreeTesterModel {
 //		selectedStudentList = NeoQL.listFor(selectedStudents);
 		availableStudentList = NeoQL.listFor(availableStudents);
 		editingTeacher = database.createSingleton(Teacher.class);
+		editingTeacherName = database.track(editingTeacher, Teacher.NAME); 
 	}
 	
 	// operations
 	// this could be in another class if needed
 	
+	public Singleton<String> getEditingTeacherName() {
+		return editingTeacherName;
+	}
+
 	/** add a student in the database
 	 * 
 	 * @param name
@@ -179,11 +186,17 @@ public class TreeTesterModel {
 	}
 
 	public void select(Teacher selection) {
+		System.out.println("selecting "+ selection);
 		database.put(editingTeacher, selection);
 	}
 
 	public Singleton<Teacher> getEditingTeacher() {
 		return editingTeacher;
 	}
+
+	public void renameEditingTeacher(String value) {
+		database.put(editingTeacherName, value);
+	}
+	
 	
 }

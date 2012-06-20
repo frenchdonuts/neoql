@@ -252,7 +252,7 @@ public class Database {
 	 * @param value
 	 */
 	public <T> Singleton<T> track(T value) {
-		Singleton<T> prop = (Singleton<T>) createSingleton(value.getClass());
+		TableSingleton<T> prop =  createSingleton(value.getClass());
 		prop.set(value);
 		precommit();
 		return prop;

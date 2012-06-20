@@ -83,6 +83,7 @@ public class TreeTesterModel {
 	private TableData<Teacher> teachers;
 	private TableData<Student> students;
 	private ListModel	availableStudentList;
+	private Singleton<Teacher>	editingTeacher;
 	
 	public TreeTesterModel() {
 		super();
@@ -104,6 +105,7 @@ public class TreeTesterModel {
 //		selectedTeacherList = NeoQL.listFor(selectedTeachers);
 //		selectedStudentList = NeoQL.listFor(selectedStudents);
 		availableStudentList = NeoQL.listFor(availableStudents);
+		editingTeacher = database.createSingleton(Teacher.class);
 	}
 	
 	// operations
@@ -165,18 +167,6 @@ public class TreeTesterModel {
 		return selectedStudentList;
 	}
 
-	public void select(List<Teacher> selected) {
-		try {
-			database.stage(); // use transaction mode to avoid concurrent modification
-			for(Teacher t: teachers())
-				selectTeacher(t, selected.contains(t) );
-			database.commit();
-		} finally {
-			database.unstage() ;
-		}
-		
-	}
-
 	public ListModel getStudentsOf(Singleton<Teacher> teacher) {
 		return NeoQL.listFor(NeoQL.where(database.get(Student.class) , Student.TEACHER.is(teacher) ));
 	}
@@ -187,10 +177,13 @@ public class TreeTesterModel {
 	public void rename(Student selection, String next) {
 		database.update(selection, Student.NAME.set(next));
 	}
-	
-	
-	
-	
-	
+
+	public void select(Teacher selection) {
+		database.put(editingTeacher, selection);
+	}
+
+	public Singleton<Teacher> getEditingTeacher() {
+		return editingTeacher;
+	}
 	
 }

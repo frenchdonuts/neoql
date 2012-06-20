@@ -258,6 +258,11 @@ public class Database {
 		return prop;
 	}
 	
+	public <T,V> Singleton<T> track(Singleton<V> row, Column<V,T> column) {
+		return new ColumnSingleton<T,V>(row, column);
+	}
+	
+	
 	public <T> T get(Singleton<T> prop) {
 		return prop.get();
 	}

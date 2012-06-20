@@ -28,6 +28,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import net.ericaro.neoql.PropertyListener;
 import net.ericaro.neoql.RandName;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Student;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
@@ -44,6 +45,11 @@ public class TreeTester extends JPanel {
 	public TreeTester() {
 		initComponents();
 		model = new TreeTesterModel();
+		model.getEditingTeacher().addPropertyListener(new PropertyListener<TreeTesterModel.Teacher>() {
+			public void updated(Teacher oldValue, Teacher newValue) {
+				System.out.println(oldValue+ "->"+ newValue);
+			}
+		});
 		availableStudents.setModel(model.getAvailableStudents());
 		treeNode1.addNode(new JTeachersNode(model));
 		treeNode1.addNode(new JStudentsNode(model));
@@ -59,6 +65,11 @@ public class TreeTester extends JPanel {
 	}
 
 	private void onTreeSelectionChanged() {
+		JNode node=(JNode) ( (DefaultMutableTreeNode) treeNode1.getLastSelectedPathComponent()).getUserObject();
+		Object selection = node.getModel();
+		if (selection instanceof Teacher)
+			model.select((Teacher) selection);
+		
 	}
 
 	

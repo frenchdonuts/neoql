@@ -10,7 +10,8 @@ import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.SelectTable;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableData;
-import net.ericaro.neoql.TableList;
+import net.ericaro.neoql.swing.SwingQL;
+import net.ericaro.neoql.swing.TableList;
 
 public class TutorialModel {
 	
@@ -95,10 +96,10 @@ public class TutorialModel {
 //		public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
 //		public static final TableDef<Teacher> SELECTED_TEACHERS = NeoQL.select(Teacher.TABLE, Teacher.SELECTED.is(true) );
 //		public static final TableDef<Student> SELECTED_STUDENTS = NeoQL.left(  NeoQL.innerJoin(Student.TABLE, SELECTED_TEACHERS, Student.TEACHER.joins() ));
-		studentList = NeoQL.listFor( students );
-		teacherList = NeoQL.listFor(teachers);
-		selectedTeacherList = NeoQL.listFor(selectedTeachers);
-		selectedStudentList = NeoQL.listFor(selectedStudents);
+		studentList = SwingQL.listFor( students );
+		teacherList = SwingQL.listFor(teachers);
+		selectedTeacherList = SwingQL.listFor(selectedTeachers);
+		selectedStudentList = SwingQL.listFor(selectedStudents);
 	}
 	
 	// operations

@@ -1,4 +1,4 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.swing;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.AbstractListModel;
 import javax.swing.ListModel;
 
+import net.ericaro.neoql.Table;
 import net.ericaro.neoql.eventsupport.TableListener;
 
 

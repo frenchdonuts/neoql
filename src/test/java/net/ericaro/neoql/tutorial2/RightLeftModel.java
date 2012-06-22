@@ -6,6 +6,7 @@ import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.TableData;
+import net.ericaro.neoql.swing.SwingQL;
 
 public class RightLeftModel {
 
@@ -42,8 +43,8 @@ public class RightLeftModel {
 		TableData<Student> students = database.createTable(Student.NAME, Student.IN);
 		NeoQL.select(students, Student.IN.is(true));
 		/// creates the relations
-		ins  = NeoQL.listFor(students );
-		outs = NeoQL.listFor(NeoQL.where(students, Student.IN.is(false))	);
+		ins  = SwingQL.listFor(students );
+		outs = SwingQL.listFor(NeoQL.where(students, Student.IN.is(false))	);
 	}
 
 	ListModel getIns() {

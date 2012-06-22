@@ -33,6 +33,7 @@ public class ColumnValue<T, V> {
 	 * @param row
 	 */
 	void set(T row) {
-		column.set(row, value);
+		if (value != column.get(row) )
+			column.set(row, value);
 	}
 }

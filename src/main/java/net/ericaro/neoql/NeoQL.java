@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.swing.ListModel;
+
 
 
 
@@ -22,14 +22,14 @@ public class NeoQL {
 	/** Simple 'true' predicate (always returns true)
 	 * 
 	 */
-	public static Predicate<Object>	True	= new Predicate<Object>() {
+	public static Predicate<?>	True	= new Predicate<Object>() {
 												public boolean eval(Object t) {	return true; }
 											};
 											
 	/** Simple 'false' predicate (always returns false)
 	 * 
 	 */
-	public static Predicate<Object>	False	= new Predicate<Object>() {
+	public static Predicate<?>	False	= new Predicate<Object>() {
 												public boolean eval(Object t) { return false; }
 											};
     
@@ -261,17 +261,6 @@ public class NeoQL {
 				return new SelectTable.SelectIterator<T>(table.iterator(), where);
 			}
 		};
-		
-		
-	}
-	
-	/** generates a java swing ListModel based on a table.
-	 * 
-	 * @param table
-	 * @return
-	 */
-	public static <T, U extends ListModel> U listFor(Table<T> table) {
-		return (U) new TableList<T>(table);
 	}
 
 }

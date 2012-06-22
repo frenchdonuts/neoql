@@ -11,9 +11,10 @@ import net.ericaro.neoql.SelectTable;
 import net.ericaro.neoql.Singleton;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableData;
-import net.ericaro.neoql.TableList;
 import net.ericaro.neoql.TableSingleton;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
+import net.ericaro.neoql.swing.SwingQL;
+import net.ericaro.neoql.swing.TableList;
 
 public class TreeTesterModel {
 	
@@ -102,11 +103,11 @@ public class TreeTesterModel {
 //		public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
 //		public static final TableDef<Teacher> SELECTED_TEACHERS = NeoQL.select(Teacher.TABLE, Teacher.SELECTED.is(true) );
 //		public static final TableDef<Student> SELECTED_STUDENTS = NeoQL.left(  NeoQL.innerJoin(Student.TABLE, SELECTED_TEACHERS, Student.TEACHER.joins() ));
-		studentList = NeoQL.listFor( students );
-		teacherList = NeoQL.listFor(teachers);
+		studentList = SwingQL.listFor( students );
+		teacherList = SwingQL.listFor(teachers);
 //		selectedTeacherList = NeoQL.listFor(selectedTeachers);
 //		selectedStudentList = NeoQL.listFor(selectedStudents);
-		availableStudentList = NeoQL.listFor(availableStudents);
+		availableStudentList = SwingQL.listFor(availableStudents);
 		editingTeacher = database.createSingleton(Teacher.class);
 		editingTeacherName = database.track(editingTeacher, Teacher.NAME); 
 	}
@@ -175,7 +176,7 @@ public class TreeTesterModel {
 	}
 
 	public ListModel getStudentsOf(Singleton<Teacher> teacher) {
-		return NeoQL.listFor(NeoQL.where(database.get(Student.class) , Student.TEACHER.is(teacher) ));
+		return SwingQL.listFor(NeoQL.where(database.get(Student.class) , Student.TEACHER.is(teacher) ));
 	}
 
 	public void rename(Teacher selection, String next) {

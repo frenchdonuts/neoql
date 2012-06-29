@@ -32,8 +32,8 @@ public class ColumnValue<T, V> {
 	 /** set the value to the given row. Kept package because this is a backdoor to edit uneditable objects. 
 	 * @param row
 	 */
-	void set(T row) {
-		if (value != column.get(row) )
-			column.set(row, value);
+	boolean set(T row) {
+		return column.set(row, value);
 	}
+	
 }

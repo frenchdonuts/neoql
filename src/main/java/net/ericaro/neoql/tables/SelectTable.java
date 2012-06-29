@@ -1,9 +1,11 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.tables;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.Predicate;
+import net.ericaro.neoql.Table;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TableListenerSupport;
 
@@ -18,7 +20,7 @@ public class SelectTable<T> implements Table<T> {
 	private TableListener<T>		listener;
 	Set<T>							values	= new HashSet<T>();
 
-	SelectTable(Table<T> table, Predicate<? super T> where) {
+	public SelectTable(Table<T> table, Predicate<? super T> where) {
 		super();
 		this.table = table;
 		this.where = where;

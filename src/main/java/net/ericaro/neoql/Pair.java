@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.tables.Mapper;
+
 public class Pair<L,R> {
 
 	L left;

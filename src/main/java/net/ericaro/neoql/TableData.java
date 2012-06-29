@@ -346,12 +346,15 @@ public class TableData<T> implements Table<T> {
 			else
 				newValue = TableData.this.clone(oldValue);
 			
+			boolean changed = false;
 			for (ColumnValue s : setters)
-				s.set(newValue);
+				changed |= s.set(newValue);
 			
-			update(oldValue, newValue);
-			// fire internal events so that other rows might want to keep in touch
-			internals.fireUpdated(oldValue, newValue);
+			if (changed) {
+				update(oldValue, newValue);
+				// fire internal events so that other rows might want to keep in touch
+				internals.fireUpdated(oldValue, newValue);
+			}
 			return newValue;
 		}
 		

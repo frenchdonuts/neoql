@@ -1,4 +1,4 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.tables;
 
 import java.util.Iterator;
 

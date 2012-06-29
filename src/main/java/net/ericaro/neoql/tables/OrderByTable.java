@@ -1,4 +1,4 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.tables;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import net.ericaro.neoql.Column;
+import net.ericaro.neoql.Table;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TableListenerSupport;
 

@@ -5,6 +5,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.tables.GroupByTable;
+import net.ericaro.neoql.tables.InnerJoinTable;
+import net.ericaro.neoql.tables.MappedTable;
+import net.ericaro.neoql.tables.Mapper;
+import net.ericaro.neoql.tables.OrderByTable;
+import net.ericaro.neoql.tables.SelectTable;
+
 
 
 
@@ -150,6 +157,17 @@ public class NeoQL {
 		return column(type, attr, columnType, hasForeignKey);
 	}
 
+	/** creates a column by using introspection and does not define any foreign key
+	 * 
+	 * @param type
+	 * @param name
+	 * @param columnType
+	 * @return
+	 */
+	public static <T,V> Column<T, V> column(Class<T> type, String name, Class<V> columnType) {
+		IntrospectionAttribute<T, V> attr = new IntrospectionAttribute<T, V>(type, name);
+		return column(type, attr, columnType, false);
+	}
 	
 		
 	/**
@@ -263,4 +281,12 @@ public class NeoQL {
 		};
 	}
 
+	
+	public static <T> boolean eq(T a, T b) {
+			if (a == null)
+				return b == null; // null is always false
+			else
+				return a.equals(b);
+			
+	}
 }

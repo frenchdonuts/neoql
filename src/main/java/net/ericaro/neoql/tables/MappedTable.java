@@ -1,9 +1,10 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.tables;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.Table;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TableListenerSupport;
 
@@ -21,7 +22,7 @@ public class MappedTable<S, T> implements Table<T> {
 	private MapMapping<S, T> mapping;
 	private TableListener<S> listener;
 
-	MappedTable(Mapper<S,T> mapper, Table<S> table) {
+	public MappedTable(Mapper<S,T> mapper, Table<S> table) {
 		super();
 		this.table = table;
 		this.mapping = new MapMapping<S, T>(mapper);

@@ -41,7 +41,9 @@ public class ListController extends JFrame {
 	}
 
 	private void onRemove() {
-		model.removeStuff((Stuff) list1.getSelectedValue());
+		Object selectedValue = list1.getSelectedValue();
+		if (selectedValue != null)
+			model.removeStuff((Stuff) selectedValue);
 	}
 
 	public static void main(String[] args) {

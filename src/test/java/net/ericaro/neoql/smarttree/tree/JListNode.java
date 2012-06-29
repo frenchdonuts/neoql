@@ -45,6 +45,10 @@ public abstract class JListNode<M,I> extends JNode<M>{
 	public JListNode(Singleton<M> item) {
 		super(item);
 	}
+	public JListNode(Singleton<M> model, ListModel items) {
+		this(model);
+		setList(items);
+	}
 
 	public void setList(ListModel list) {
 		if (this.children != null)

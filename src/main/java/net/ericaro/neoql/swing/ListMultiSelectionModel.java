@@ -10,14 +10,12 @@ import javax.swing.event.ListSelectionListener;
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 
-public class ListMultiSelectionModel<T> extends DefaultListSelectionModel{
+public class ListMultiSelectionModel<T> extends DefaultListSelectionModel {
 
-	
-	
-	private Database	database;
+	private Database			database;
 	private Column<T, Boolean>	selected;
-	private TableList<T>	data;
-	private boolean	on;
+	private TableList<T>		data;
+	private boolean				on;
 
 	public ListMultiSelectionModel(Database database, TableList<T> data, Column<T, Boolean> selected) {
 		super();
@@ -31,15 +29,15 @@ public class ListMultiSelectionModel<T> extends DefaultListSelectionModel{
 			}
 		});
 		data.addListDataListener(new ListDataListener() {
-			
+
 			@Override
 			public void intervalRemoved(ListDataEvent e) {}
-			
+
 			@Override
 			public void intervalAdded(ListDataEvent e) {
 				addSelectionInterval(e.getIndex0(), e.getIndex1());
 			}
-			
+
 			@Override
 			public void contentsChanged(ListDataEvent e) {
 				whenChanged(e.getIndex0(), e.getIndex1());
@@ -49,24 +47,23 @@ public class ListMultiSelectionModel<T> extends DefaultListSelectionModel{
 	}
 
 	void onChanged(int first, int last) {
-		on= true;
-		for(int i = first; i<=last; i++) 
-			database.update(data.getElementAt(i), selected.set(isSelectedIndex(i) ));
+		on = true;
+		for (int i = first; i < Math.min(last + 1, data.getSize()); i++)
+			database.update(data.getElementAt(i), selected.set(isSelectedIndex(i)));
 		on = false;
 	}
-	
-	
+
 	void whenChanged(int first, int last) {
 		// if on ignore this change, I'm the source of it, but in case
 		if (!on)
-			for(int i = first; i<=last; i++) {
-				boolean isSelected = selected.get( data.getElementAt(i) );
-				if (isSelectedIndex(i) != isSelected ) {
-					if (isSelected) 
+			for (int i = first; i <= last; i++) {
+				boolean isSelected = selected.get(data.getElementAt(i));
+				if (isSelectedIndex(i) != isSelected) {
+					if (isSelected)
 						addSelectionInterval(i, i);// this should not start a fixed point
 					else
 						removeSelectionInterval(i, i);// this should not start a fixed point
 				}
-		}
+			}
 	}
 }

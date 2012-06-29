@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.tables.Mapper;
+
 /**
  * 
  * @author eric

@@ -1,10 +1,13 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.tables;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import net.ericaro.neoql.Pair;
+import net.ericaro.neoql.Predicate;
+import net.ericaro.neoql.Table;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TableListenerSupport;
 
@@ -22,7 +25,7 @@ public class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 	private TableListener<R> rightListener;
 	private TableListener<L> leftListener;
 
-	InnerJoinTable(Table<L> left, Table<R> right,
+	public InnerJoinTable(Table<L> left, Table<R> right,
 			Predicate<? super Pair<L, R>> on) {
 		super();
 		this.left = left;

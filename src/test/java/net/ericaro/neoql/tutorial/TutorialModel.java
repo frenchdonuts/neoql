@@ -7,11 +7,11 @@ import javax.swing.ListModel;
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
-import net.ericaro.neoql.SelectTable;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.TableData;
 import net.ericaro.neoql.swing.SwingQL;
 import net.ericaro.neoql.swing.TableList;
+import net.ericaro.neoql.tables.SelectTable;
 
 public class TutorialModel {
 	

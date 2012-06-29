@@ -51,8 +51,11 @@ class ColumnDef<T, V> implements Column<T, V> {
 	public V get(T src) {
 		return attr.get(src);
 	}
-	void set(T src, V value) {
+	boolean set(T src, V value) {
+		if (NeoQL.eq(value , get(src)) )
+			return false;
 		attr.set(src, value);
+		return true;
 	}
 
 	@Override
@@ -80,15 +83,11 @@ class ColumnDef<T, V> implements Column<T, V> {
 				public boolean eval(T t) {
 					V that = ColumnDef.this.get(t);
 					V v = value.get();
-					if (v == null)
-						return that == null; // null is always false
-					else
-						return v.equals(that);
+					return NeoQL.eq(v, that);
 				}
 				public String toString() {
 					return ColumnDef.this.attr.getName() + " = " + value;
 				}
-
 			};
 	}
 

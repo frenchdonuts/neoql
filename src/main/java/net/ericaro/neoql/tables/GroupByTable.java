@@ -1,9 +1,11 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.tables;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.Column;
+import net.ericaro.neoql.Table;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TableListenerSupport;
 
@@ -41,7 +43,7 @@ public class GroupByTable<S, T> implements Table<T> {
 	private TableListener<S>		listener;
 	private Set<T>					equivalents	= new HashSet<T>();
 
-	GroupByTable(Column<S, T> groupBy, Table<S> table) {
+	public GroupByTable(Column<S, T> groupBy, Table<S> table) {
 		super();
 		this.table = table;
 		this.groupByColumn = groupBy;

@@ -22,7 +22,7 @@ public interface Column<T, V>{
 	 * 
 	 * @return
 	 */
-	Class<V> getForeignTable() ;
+	Class<V> getType() ;
 	
 	/** Convenient method to test if there is a foreign key associated with this column
 	 * 

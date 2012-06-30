@@ -12,7 +12,6 @@ import net.ericaro.neoql.tables.Pair;
  */
 class MyColumn<T, V> implements Column<T, V> {
 
-	private Class<V>	foreignTable; // column's type, it can also be the foreign table
 	Attribute<T, V>				attr;
 	private Class<T>	table;
 	private final boolean hasForeignKey;
@@ -21,7 +20,6 @@ class MyColumn<T, V> implements Column<T, V> {
 		super();
 		this.table = table;
 		this.attr = attr;
-		this.foreignTable = foreignTable;
 		this.hasForeignKey = hasForeignKey;
 	}
 
@@ -63,8 +61,8 @@ class MyColumn<T, V> implements Column<T, V> {
 		return get(source);
 	}
 
-	public Class<V> getForeignTable() {
-		return foreignTable;
+	public Class<V> getType() {
+		return attr.getType();
 	}
 
 	public boolean hasForeignKey() {
@@ -101,15 +99,10 @@ class MyColumn<T, V> implements Column<T, V> {
 
 			};
 	}
-
-
 	
-	private Class<V> getType() {
-		return attr.getType();
-	}
 	@Override
 	public String toString() {
-		return attr+" "+getType().getSimpleName()+(foreignTable==null?"":" FOREIGN KEY REFERENCES "+foreignTable.getName());
+		return attr+" "+getType().getSimpleName()+(hasForeignKey?"":" FOREIGN KEY REFERENCES "+getType().getName());
 	}
 
 

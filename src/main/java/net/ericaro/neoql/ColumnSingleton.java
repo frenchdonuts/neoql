@@ -35,7 +35,7 @@ public class ColumnSingleton<T,V> implements Singleton<V> {
 	}
 
 	public Class<V> getType() {
-		return col.getForeignTable();
+		return col.getType();
 	}
 
 	public void removePropertyListener(PropertyListener<V> l) {support.removePropertyListener(l);}

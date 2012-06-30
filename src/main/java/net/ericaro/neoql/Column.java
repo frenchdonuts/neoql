@@ -9,15 +9,6 @@ package net.ericaro.neoql;
  * @param <V> Value
  */
 public interface Column<T, V>{
-
-
-	/** maps a T into an V
-	 * 
-	 * @param source
-	 * @return
-	 */
-	public V map(T source);
-
 	
 	/** returns the value of for this column, and src row.
 	 * 

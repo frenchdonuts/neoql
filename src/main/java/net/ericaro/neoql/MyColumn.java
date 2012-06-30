@@ -59,7 +59,6 @@ class MyColumn<T, V> implements Column<T, V> {
 		return true;
 	}
 
-	@Override
 	public V map(T source) {
 		return get(source);
 	}

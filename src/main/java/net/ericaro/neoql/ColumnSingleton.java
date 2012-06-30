@@ -1,9 +1,11 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
+
 public class ColumnSingleton<T,V> implements Singleton<V> {
 
 	private Column<T,V>	col;
-	PropertyListenerSupport<V>	support	= new PropertyListenerSupport<V>();
+	private PropertyListenerSupport<V>	support	= new PropertyListenerSupport<V>();
 	private Singleton<T> row;
 	private PropertyListener<T> listener;
 	

@@ -23,14 +23,14 @@ import net.ericaro.neoql.eventsupport.TableListenerSupport;
  * @author eric
  * 
  */
-public class TableData<T> implements Table<T> {
+public class ContentTable<T> implements Table<T> {
 
 	// public events
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
 	// internal ones, means between tables through foreign keys only
 	private TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
 	
-	private ColumnDef<T, ?>[] columns;
+	private MyColumn<T, ?>[] columns;
 	private Set<T> rows = new HashSet<T>();
 	private Class<T> type;
 	private Database owner;
@@ -44,12 +44,12 @@ public class TableData<T> implements Table<T> {
 
 	
 
-	TableData(Database owner, Class<T> table, Column[] cols) {
+	ContentTable(Database owner, Class<T> table, Column[] cols) {
 		this.owner = owner;
 		this.type = table;
 		
 		// copy columns
-		this.columns = new ColumnDef[cols.length];
+		this.columns = new MyColumn[cols.length];
 		System.arraycopy(cols, 0, columns, 0, cols.length);
 		this.internalColumnListeners = new TableListener[this.columns.length];
 	}
@@ -80,7 +80,7 @@ public class TableData<T> implements Table<T> {
 
 	private <V> void connectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			TableData<V> ftable = owner.get(col.getForeignTable());
+			ContentTable<V> ftable = owner.get(col.getForeignTable());
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(ftable, internalColumnListeners[i]);
 		}
@@ -88,7 +88,7 @@ public class TableData<T> implements Table<T> {
 
 	private <V> void disconnectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			TableData<V> ftable = owner.get(col.getForeignTable());
+			ContentTable<V> ftable = owner.get(col.getForeignTable());
 			owner.removeInternalTableListener(ftable,
 					internalColumnListeners[i]);
 		}
@@ -141,7 +141,7 @@ public class TableData<T> implements Table<T> {
 			// fire an exception ( forbidding the deleting if the value is in
 			// use ?
 			Predicate<T> inUse =col.is(oldValue);
-			for (T t : NeoQL.select(TableData.this) )
+			for (T t : NeoQL.select(ContentTable.this) )
 				if (inUse.eval(t))
 					throw new NeoQLException("Foreign Key violation" + col);
 		}
@@ -259,7 +259,7 @@ public class TableData<T> implements Table<T> {
 
 	public T clone(T row) {
 		T clone = newInstance();
-		for (ColumnDef<T, ?> c : columns )
+		for (MyColumn<T, ?> c : columns )
 			c.copy(row, clone);
 		return clone;
 	}	
@@ -344,7 +344,7 @@ public class TableData<T> implements Table<T> {
 			if (containsNew(oldValue)) // the the oldvalue is a new value, this means that the value as already been updated
 				newValue = oldValue;
 			else
-				newValue = TableData.this.clone(oldValue);
+				newValue = ContentTable.this.clone(oldValue);
 			
 			boolean changed = false;
 			for (ColumnValue s : setters)

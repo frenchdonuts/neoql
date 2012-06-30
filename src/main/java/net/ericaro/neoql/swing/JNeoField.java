@@ -10,8 +10,8 @@ import javax.swing.JComponent;
 import javax.swing.JTextField;
 
 import net.ericaro.neoql.PropertyListener;
-import net.ericaro.neoql.PropertyListenerSupport;
 import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 
 /**
  * Uses a Singleton as a model. It strictly observe the singleton, and display its value.

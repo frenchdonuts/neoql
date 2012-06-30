@@ -19,11 +19,11 @@ public class Database {
 	static Logger LOG = Logger.getLogger(Database.class.getName());
 	
 	// real class -> table mapping
-	private Map<Class, TableData>	typed		= new HashMap<Class, TableData>();
+	private Map<Class, ContentTable>	typed		= new HashMap<Class, ContentTable>();
 	ChangeSet						tx			= new ChangeSet(new ChangeSet()); // trick to force a "root" changeset
 	boolean							autocommit	= true;
 
-	private Collection<TableSingleton>	singletons  = new HashSet<TableSingleton>();
+	private Collection<RowSingleton>	singletons  = new HashSet<RowSingleton>();
 	
     
 //	private Map<Property, Singleton>		values	= new HashMap<Property, Singleton>();
@@ -67,7 +67,7 @@ public class Database {
 	 * @param table
 	 * @return
 	 */
-	public <T> TableData<T>  createTable(Column<T,?>... columns){
+	public <T> ContentTable<T>  createTable(Column<T,?>... columns){
 //		assert !tables.containsKey(table):"failed to create a table data that already exists";
 		assert columns.length>0 : "cannot create a table with no columns";
 		Class<T> table = columns[0].getTable();
@@ -77,7 +77,7 @@ public class Database {
 			
 		
 		LOG.fine("creating table "+ table);
-		TableData<T> data = new TableData<T>(this, table, columns);
+		ContentTable<T> data = new ContentTable<T>(this, table, columns);
 //		this.tables.put(table, data);
 		this.typed.put(table, data);
 		data.install();
@@ -91,8 +91,8 @@ public class Database {
 	}
 		
 	
-	public <T> TableSingleton<T> createSingleton(Class<T> type){
-		TableSingleton<T> s = new TableSingleton<T>(get(type));
+	public <T> RowSingleton<T> createSingleton(Class<T> type){
+		RowSingleton<T> s = new RowSingleton<T>(get(type));
 		singletons.add(s);
 		return s;
 	}
@@ -111,7 +111,7 @@ public class Database {
 	}
 	
 	
-	public <T> TableData<T> get(Class<T> type){
+	public <T> ContentTable<T> get(Class<T> type){
 		return typed.get(type);
 	}
 
@@ -128,7 +128,7 @@ public class Database {
 		if (values.length == 0) return null;// nothing to do
 		
 		Class<T> type = values[0].column.getTable() ;
-		TableData<T> data = typed.get(type);
+		ContentTable<T> data = typed.get(type);
 		T row = data.insert(data.newInstance(values) );
 		assert data.insertOperation !=null:"unexpected empty transaction" ;
 		precommit();
@@ -149,7 +149,7 @@ public class Database {
 		delete(value.get());
 	}
 	public <T> void delete(T value){
-		TableData<T> data = typed.get(value.getClass());
+		ContentTable<T> data = typed.get(value.getClass());
 		Predicate<T> p = NeoQL.is(value);
 		data.delete(p);
 		assert data.deleteOperation !=null : "unexpected null delete operation";
@@ -157,7 +157,7 @@ public class Database {
 	}
 	
 	public <T> void delete(Class<T> type, Predicate<T> predicate){
-		TableData<T> data = typed.get(type);
+		ContentTable<T> data = typed.get(type);
 		data.delete(predicate);
 		assert data.deleteOperation !=null : "unexpected null delete operation";
 		precommit();
@@ -181,7 +181,7 @@ public class Database {
 	 * @return 
 	 */
 	public <T> T update(T oldValue, ColumnValue<T,?>... values){
-		TableData<T> data = typed.get(oldValue.getClass());
+		ContentTable<T> data = typed.get(oldValue.getClass());
 		T n = data.update(oldValue, values);
 		assert data.updateOperation !=null : "unexpected null update operation";
 		precommit();
@@ -197,7 +197,7 @@ public class Database {
 	 * @param values
 	 */
 	public <T> void update(Class<T> type, Predicate<T> predicate, ColumnValue<T,?>... values){
-		TableData<T> data = typed.get(type);
+		ContentTable<T> data = typed.get(type);
 		data.update(predicate, values);
 		assert data.updateOperation !=null : "unexpected null update operation";
 		precommit();
@@ -216,8 +216,8 @@ public class Database {
 	
 
 	public <T> void drop(Table<T> table) {
-		if (table instanceof TableData)
-			this.typed.remove(((TableData)table).getType());
+		if (table instanceof ContentTable)
+			this.typed.remove(((ContentTable)table).getType());
 		table.drop();
 	}
 	
@@ -241,8 +241,8 @@ public class Database {
 	// SINGLETON EDIT BEGIN
 	// ##########################################################################
 	public <T> void put(Singleton<T> prop, T value) {
-		if (prop instanceof TableSingleton) {
-			TableSingleton t = (TableSingleton) prop;
+		if (prop instanceof RowSingleton) {
+			RowSingleton t = (RowSingleton) prop;
 			put(t, value);
 		}
 		else if (prop instanceof ColumnSingleton) {
@@ -252,7 +252,7 @@ public class Database {
 		else throw new IllegalArgumentException("Cannot assign a value to a Singleton that is not either a Table or a Column one");
 	}
 	
-	public <T> void put(TableSingleton<T> prop, T value) {
+	public <T> void put(RowSingleton<T> prop, T value) {
 		prop.set(value);
 		precommit();
 	}
@@ -271,7 +271,7 @@ public class Database {
 	 * @param value
 	 */
 	public <T> Singleton<T> track(T value) {
-		TableSingleton<T> prop =  createSingleton((Class<T>) value.getClass());
+		RowSingleton<T> prop =  createSingleton((Class<T>) value.getClass());
 		prop.set(value);
 		precommit();
 		return prop;
@@ -306,11 +306,11 @@ public class Database {
 		table.removeTableListener(listener);
 	}
 
-	<T> void addInternalTableListener(TableData<T> table, TableListener<T> listener) {
+	<T> void addInternalTableListener(ContentTable<T> table, TableListener<T> listener) {
 		table.addInternalTableListener(listener);
 	}
 
-	<T> void removeInternalTableListener(TableData<T> table, TableListener<T> listener) {
+	<T> void removeInternalTableListener(ContentTable<T> table, TableListener<T> listener) {
 		table.removeInternalTableListener(listener);
 	}
 
@@ -346,13 +346,13 @@ public class Database {
 	
 	public ChangeSet commit() {
 		// also collect changes from singletons
-		for(TableSingleton s : singletons) {
+		for(RowSingleton s : singletons) {
 			tx.addChange(s.singletonChange);
 			s.singletonChange = null;
 		}
 		
 		// collect all "changes" in the tables
-		for (TableData t: typed.values()) {
+		for (ContentTable t: typed.values()) {
 			tx.addChange(t.insertOperation) ;
 			t.insertOperation = null;
 			

@@ -8,7 +8,7 @@ import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Table;
-import net.ericaro.neoql.TableData;
+import net.ericaro.neoql.ContentTable;
 import net.ericaro.neoql.swing.SwingQL;
 import net.ericaro.neoql.swing.TableList;
 import net.ericaro.neoql.tables.SelectTable;
@@ -79,8 +79,8 @@ public class TutorialModel {
 	private TableList<Student> teacherList;
 	private TableList<Student> selectedTeacherList;
 	private TableList<Student> selectedStudentList;
-	private TableData<Teacher> teachers;
-	private TableData<Student> students;
+	private ContentTable<Teacher> teachers;
+	private ContentTable<Student> students;
 	
 	public TutorialModel() {
 		super();

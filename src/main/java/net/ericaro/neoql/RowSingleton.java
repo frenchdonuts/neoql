@@ -1,21 +1,22 @@
 package net.ericaro.neoql;
 
 import net.ericaro.neoql.changeset.SingletonChange;
+import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 import net.ericaro.neoql.eventsupport.TableListener;
 
 
 
 
 
-public class TableSingleton<T> implements Singleton<T>{
+public class RowSingleton<T> implements Singleton<T>{
 
 	PropertyListenerSupport<T>	support	= new PropertyListenerSupport<T>();
 	T							value;
-	private TableData<T>		source;
+	private ContentTable<T>		source;
 	private TableListener<T>	listener;
 	SingletonChange<T> 			singletonChange = null;
 
-	TableSingleton(TableData<T> source) {
+	RowSingleton(ContentTable<T> source) {
 		super();
 		this.source = source;
 		this.listener = new TableListener<T>() {

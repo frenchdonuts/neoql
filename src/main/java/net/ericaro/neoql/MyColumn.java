@@ -8,15 +8,14 @@ package net.ericaro.neoql;
  * @param <T>
  * @param <V>
  */
-class ColumnDef<T, V> implements Column<T, V> {
+class MyColumn<T, V> implements Column<T, V> {
 
-	// the foreign class definition, null if there is no foreign class definition
-	private Class<V>	foreignTable;
+	private Class<V>	foreignTable; // column's type, it can also be the foreign table
 	Attribute<T, V>				attr;
 	private Class<T>	table;
 	private final boolean hasForeignKey;
 
-	public ColumnDef(Class<T> table,  Attribute<T, V> attr, Class<V> foreignTable, boolean hasForeignKey) {
+	public MyColumn(Class<T> table,  Attribute<T, V> attr, Class<V> foreignTable, boolean hasForeignKey) {
 		super();
 		this.table = table;
 		this.attr = attr;
@@ -81,12 +80,12 @@ class ColumnDef<T, V> implements Column<T, V> {
 	public Predicate<T> is(final Singleton<V> value) {
 		return new Predicate<T>() {
 				public boolean eval(T t) {
-					V that = ColumnDef.this.get(t);
+					V that = MyColumn.this.get(t);
 					V v = value.get();
 					return NeoQL.eq(v, that);
 				}
 				public String toString() {
-					return ColumnDef.this.attr.getName() + " = " + value;
+					return MyColumn.this.attr.getName() + " = " + value;
 				}
 			};
 	}
@@ -95,14 +94,14 @@ class ColumnDef<T, V> implements Column<T, V> {
 	public Predicate<T> is(final V value) {
 		return new Predicate<T>() {
 				public boolean eval(T t) {
-					V that = ColumnDef.this.get(t);
+					V that = MyColumn.this.get(t);
 					if (value == null)
 						return that == null; // null is always false
 					else
 						return value.equals(that);
 				}
 				public String toString() {
-					return ColumnDef.this.attr.getName() + " = " + value;
+					return MyColumn.this.attr.getName() + " = " + value;
 				}
 
 			};
@@ -125,7 +124,7 @@ class ColumnDef<T, V> implements Column<T, V> {
 				return get(t.getLeft()) == t.getRight();
 			}
 			public String toString(){
-				return ColumnDef.this.attr.getName()+".id = that.id";
+				return MyColumn.this.attr.getName()+".id = that.id";
 			}
 
 		};

@@ -7,7 +7,7 @@ import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.TableData;
+import net.ericaro.neoql.ContentTable;
 import net.ericaro.neoql.swing.ListMultiSelectionModel;
 import net.ericaro.neoql.swing.SwingQL;
 import net.ericaro.neoql.swing.TableList;
@@ -18,7 +18,7 @@ public class StuffListModel {
 	private Column<Stuff, String>	stuffName;
 	private Column<Stuff, Integer>	stuffId;
 	private Column<Stuff, Boolean>	stuffSelected;
-	private TableData<Stuff>	stuffTable;
+	private ContentTable<Stuff>	stuffTable;
 	private TableList<Stuff>	listModel;
 	private int	count;
 	private ListMultiSelectionModel<Stuff> listSelectionModel;

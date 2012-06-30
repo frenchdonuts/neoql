@@ -6,8 +6,8 @@ package net.ericaro.neoql;
  * 
  * @author eric
  *
- * @param <T>
- * @param <V>
+ * @param <T> table type
+ * @param <V> column value
  */
 public interface Attribute<T,V> {
 

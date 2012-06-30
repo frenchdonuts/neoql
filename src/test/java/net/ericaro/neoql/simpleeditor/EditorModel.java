@@ -6,7 +6,7 @@ import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Singleton;
-import net.ericaro.neoql.TableData;
+import net.ericaro.neoql.ContentTable;
 import net.ericaro.neoql.swing.SwingQL;
 import net.ericaro.neoql.tables.MergedTable;
 import net.ericaro.neoql.tables.SelectTable;
@@ -19,8 +19,8 @@ public class EditorModel {
 	private Column<Editable, Directory>	editableParent;
 	private Column<Directory, String>	dirName;
 	private Column<Directory, Directory>	dirParent;
-	private TableData<Directory>	dirTable;
-	private TableData<Editable>	editableTable;
+	private ContentTable<Directory>	dirTable;
+	private ContentTable<Editable>	editableTable;
 	private Column<Editable, Boolean>	editableEditing;
 	private ListModel	editingList;
 	

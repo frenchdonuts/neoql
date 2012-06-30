@@ -9,8 +9,8 @@ import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Singleton;
 import net.ericaro.neoql.Table;
-import net.ericaro.neoql.TableData;
-import net.ericaro.neoql.TableSingleton;
+import net.ericaro.neoql.ContentTable;
+import net.ericaro.neoql.RowSingleton;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
 import net.ericaro.neoql.swing.SwingQL;
 import net.ericaro.neoql.swing.TableList;
@@ -82,10 +82,10 @@ public class TreeTesterModel {
 	private TableList<Student> teacherList;
 	private TableList<Student> selectedTeacherList;
 	private TableList<Student> selectedStudentList;
-	private TableData<Teacher> teachers;
-	private TableData<Student> students;
+	private ContentTable<Teacher> teachers;
+	private ContentTable<Student> students;
 	private ListModel	availableStudentList;
-	private TableSingleton<Teacher>	editingTeacher;
+	private RowSingleton<Teacher>	editingTeacher;
 	private Singleton<String> editingTeacherName;
 	
 	public TreeTesterModel() {

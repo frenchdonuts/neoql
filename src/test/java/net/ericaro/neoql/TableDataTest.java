@@ -33,7 +33,7 @@ public class TableDataTest {
 	
 	@Test public void testCrud() {
 		Database db = new Database();
-		TableData<Student> students = db.createTable(Student.NAME);
+		ContentTable<Student> students = db.createTable(Student.NAME);
 		CloneTable<Student> clone = new CloneTable<Student>(students);
 		Student s1 = db.insert(Student.NAME.set("toto") );
 		clone.add(s1);
@@ -57,7 +57,7 @@ public class TableDataTest {
 	
 	@Test public void testUndo() {
 		Database db = new Database(false);
-		TableData<Student> students = db.createTable(Student.NAME);
+		ContentTable<Student> students = db.createTable(Student.NAME);
 		CloneTable<Student> clone = new CloneTable<Student>(students);
 		
 		Student s1 = db.insert(Student.NAME.set("toto") );
@@ -103,7 +103,7 @@ public class TableDataTest {
 	
 	@Test public void testTransaction() {
 		Database db = new Database(false);
-		TableData<Killer> killers = db.createTable(Killer.NAME, Killer.TARGET);
+		ContentTable<Killer> killers = db.createTable(Killer.NAME, Killer.TARGET);
 		Killer a = db.insert(Killer.NAME.set("a"));
 		Killer b = db.insert(Killer.NAME.set("b"), Killer.TARGET.set(a));
 		
@@ -135,7 +135,7 @@ public class TableDataTest {
 	
 	@Test public void testSelfRef() {
 		Database db = new Database();
-		TableData<Killer> killers = db.createTable(Killer.NAME, Killer.TARGET);
+		ContentTable<Killer> killers = db.createTable(Killer.NAME, Killer.TARGET);
 		
 		Singleton<Killer> a = db.track( db.insert(Killer.NAME.set("a")) );
 		

@@ -12,12 +12,12 @@ package net.ericaro.neoql;
  */
 public class ColumnValue<T, V> {
 
-	ColumnDef<T, V> column;
+	MyColumn<T, V> column;
 	V value;
 
 	public ColumnValue(Column<T, V> column, V value) {
 		super();
-		this.column = (ColumnDef<T, V>) column;
+		this.column = (MyColumn<T, V>) column;
 		this.value = value;
 	}
 

@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import net.ericaro.neoql.Pair;
 import net.ericaro.neoql.Predicate;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.eventsupport.TableListener;

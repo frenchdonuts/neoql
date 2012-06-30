@@ -1,6 +1,7 @@
 package net.ericaro.neoql;
 
 import net.ericaro.neoql.tables.Mapper;
+import net.ericaro.neoql.tables.Pair;
 
 /**
  * 

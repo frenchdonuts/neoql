@@ -10,6 +10,7 @@ import net.ericaro.neoql.tables.InnerJoinTable;
 import net.ericaro.neoql.tables.MappedTable;
 import net.ericaro.neoql.tables.Mapper;
 import net.ericaro.neoql.tables.OrderByTable;
+import net.ericaro.neoql.tables.Pair;
 import net.ericaro.neoql.tables.SelectTable;
 
 

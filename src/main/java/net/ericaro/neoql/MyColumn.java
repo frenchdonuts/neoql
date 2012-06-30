@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.tables.Pair;
+
 
 /**
  * The column implementation. Separated from the interface to avoid references to it in the client's model.

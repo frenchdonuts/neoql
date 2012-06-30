@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.ericaro.neoql.Pair;
+import net.ericaro.neoql.tables.Pair;
 
 /** Change for table Data update
  * 

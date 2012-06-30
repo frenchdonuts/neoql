@@ -18,11 +18,6 @@ public interface Column<T, V> extends Mapper<T, V> {
 	 */
 	V get(T src);
 	
-	/** Return the column name.
-	 * 
-	 * @return
-	 */
-	String getName();
 	
 	/** returns the class that defines the type associated with this column.
 	 * 

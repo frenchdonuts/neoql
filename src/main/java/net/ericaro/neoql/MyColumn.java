@@ -61,12 +61,6 @@ class MyColumn<T, V> implements Column<T, V> {
 	public V map(T source) {
 		return get(source);
 	}
-	
-
-	@Override
-	public String getName() {
-		return attr.getName();
-	}
 
 	public Class<V> getForeignTable() {
 		return foreignTable;
@@ -85,7 +79,7 @@ class MyColumn<T, V> implements Column<T, V> {
 					return NeoQL.eq(v, that);
 				}
 				public String toString() {
-					return MyColumn.this.attr.getName() + " = " + value;
+					return MyColumn.this.attr + " = " + value;
 				}
 			};
 	}
@@ -101,7 +95,7 @@ class MyColumn<T, V> implements Column<T, V> {
 						return value.equals(that);
 				}
 				public String toString() {
-					return MyColumn.this.attr.getName() + " = " + value;
+					return MyColumn.this.attr + " = " + value;
 				}
 
 			};
@@ -124,7 +118,7 @@ class MyColumn<T, V> implements Column<T, V> {
 				return get(t.getLeft()) == t.getRight();
 			}
 			public String toString(){
-				return MyColumn.this.attr.getName()+".id = that.id";
+				return MyColumn.this.attr+".id = that.id";
 			}
 
 		};
@@ -135,7 +129,7 @@ class MyColumn<T, V> implements Column<T, V> {
 	}
 	@Override
 	public String toString() {
-		return getName()+" "+getType().getSimpleName()+(foreignTable==null?"":" FOREIGN KEY REFERENCES "+foreignTable.getName());
+		return attr+" "+getType().getSimpleName()+(foreignTable==null?"":" FOREIGN KEY REFERENCES "+foreignTable.getName());
 	}
 
 

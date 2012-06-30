@@ -2,6 +2,13 @@ package net.ericaro.neoql;
 
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 
+/** A singleton that tracks a single column value from a row singleton
+ * 
+ * @author eric
+ *
+ * @param <T>
+ * @param <V>
+ */
 public class ColumnSingleton<T,V> implements Singleton<V> {
 
 	private Column<T,V>	col;

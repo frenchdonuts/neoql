@@ -12,7 +12,6 @@ package net.ericaro.neoql;
 public interface Attribute<T,V> {
 
 	
-	public String getName();
 	public Class<V> getType();
 	/** return the attribute's value for object
 	 * 

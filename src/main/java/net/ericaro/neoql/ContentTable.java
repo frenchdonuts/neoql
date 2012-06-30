@@ -129,8 +129,8 @@ public class ContentTable<T> implements Table<T> {
 			// now we are going to update every row that points to the oldValue
 			//(kind of execute update where vol is oldValue)
 			Predicate<T> p = col.is(oldValue) ;
-			ColumnValue<T, ?>[] setters = new ColumnValue[] {
-					new ColumnValue<T, V>(col, newValue)
+			ColumnSetter<T, ?>[] setters = new ColumnSetter[] {
+					new ColumnSetter<T, V>(col, newValue)
 			};
 			getUpdateOperation().update(p, setters);
 		}
@@ -186,10 +186,10 @@ public class ContentTable<T> implements Table<T> {
 	// ##########################################################################
 	
 	
-	T update(T oldValue, ColumnValue<T, ?>[] setters) {
+	T update(T oldValue, ColumnSetter<T, ?>[] setters) {
 		return getUpdateOperation().update(oldValue, setters);
 	}
-	void update(Predicate<T> p, ColumnValue<T, ?>[] setters) {
+	void update(Predicate<T> p, ColumnSetter<T, ?>[] setters) {
 		getUpdateOperation().update(p, setters);
 	}
 	
@@ -242,12 +242,12 @@ public class ContentTable<T> implements Table<T> {
 	 * @param values
 	 * @return
 	 */
-	T newInstance(ColumnValue<T,?>... values) {
+	T newInstance(ColumnSetter<T,?>... values) {
 		
 		try {
 			T row  = type.newInstance();
 			assert allSameType(values): "cannot use columns values from another type";
-			for (ColumnValue s : values)
+			for (ColumnSetter s : values)
 				s.set(row);
 			// TODO handle default values (like ids etc, so I need to 'update' the object a little bit and return it
 
@@ -265,10 +265,10 @@ public class ContentTable<T> implements Table<T> {
 	}	
 
 	// helper method to asser that all columnvalue have the same class definition
-	private boolean allSameType(ColumnValue<T, ?>... values) {
+	private boolean allSameType(ColumnSetter<T, ?>... values) {
 		if (values.length == 0)
 			return true;
-		for (ColumnValue cv : values)
+		for (ColumnSetter cv : values)
 			if (! type.equals(cv.column.getTable()))
 				return false;
 		return true;
@@ -326,13 +326,13 @@ public class ContentTable<T> implements Table<T> {
 	}
 	class MyUpdateChange extends UpdateChange<T>{
 		
-		public void update(Predicate<T> p, ColumnValue<T, ?>[] setters) {
+		public void update(Predicate<T> p, ColumnSetter<T, ?>[] setters) {
 			// now that we have the set of rows involved in the update
 			for (T row : newRowsWhere(p))
 				update(row, setters);
 		}
 		
-		public T update(T oldValue, ColumnValue<T, ?>[] setters) {
+		public T update(T oldValue, ColumnSetter<T, ?>[] setters) {
 
 			T newValue ; 
 			
@@ -347,7 +347,7 @@ public class ContentTable<T> implements Table<T> {
 				newValue = ContentTable.this.clone(oldValue);
 			
 			boolean changed = false;
-			for (ColumnValue s : setters)
+			for (ColumnSetter s : setters)
 				changed |= s.set(newValue);
 			
 			if (changed) {

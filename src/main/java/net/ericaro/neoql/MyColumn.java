@@ -25,12 +25,12 @@ class MyColumn<T, V> implements Column<T, V> {
 
 	
 	@Override
-	public ColumnValue<T, V> set(Singleton<V> value) {
+	public ColumnSetter<T, V> set(Singleton<V> value) {
 		return set(value.get());
 	}
 	@Override
-	public ColumnValue<T, V> set(V value) {
-		return new ColumnValue<T, V>( this, value);
+	public ColumnSetter<T, V> set(V value) {
+		return new ColumnSetter<T, V>( this, value);
 	}
 
 	public Class<T> getTable(){ return table;}

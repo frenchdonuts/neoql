@@ -10,12 +10,12 @@ package net.ericaro.neoql;
  * @param <T>
  * @param <V>
  */
-public class ColumnValue<T, V> {
+public class ColumnSetter<T, V> {
 
 	MyColumn<T, V> column;
 	V value;
 
-	public ColumnValue(Column<T, V> column, V value) {
+	public ColumnSetter(Column<T, V> column, V value) {
 		super();
 		this.column = (MyColumn<T, V>) column;
 		this.value = value;

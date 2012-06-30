@@ -35,7 +35,7 @@ public interface Column<T, V> extends Mapper<T, V> {
 	 * @param value
 	 * @return
 	 */
-	ColumnValue<T, V> set(Singleton<V> value);
+	ColumnSetter<T, V> set(Singleton<V> value);
 	
 	 /** Returns a (Column,Value) pair with this column, and <code>value</code> as value.
 	  * A ColumnValue is used to update, or insert a row in a table.
@@ -43,7 +43,7 @@ public interface Column<T, V> extends Mapper<T, V> {
 	  * @param value
 	  * @return
 	  */
-	ColumnValue<T, V> set(V value);
+	ColumnSetter<T, V> set(V value);
 	
 
 	

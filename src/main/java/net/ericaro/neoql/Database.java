@@ -124,7 +124,7 @@ public class Database {
 	// INSERT BEGIN
 	// ##########################################################################
 	
-	public <T> T insert(ColumnValue<T,?>... values){
+	public <T> T insert(ColumnSetter<T,?>... values){
 		if (values.length == 0) return null;// nothing to do
 		
 		Class<T> type = values[0].column.getTable() ;
@@ -170,7 +170,7 @@ public class Database {
 	// ##########################################################################
 	// UPDATE BEGIN
 	// ##########################################################################
-	public <T> T update(Singleton<T> oldValue, ColumnValue<T,?>... values){
+	public <T> T update(Singleton<T> oldValue, ColumnSetter<T,?>... values){
 		return update(oldValue.get(), values);
 	}
 	
@@ -180,7 +180,7 @@ public class Database {
 	 * @param values
 	 * @return 
 	 */
-	public <T> T update(T oldValue, ColumnValue<T,?>... values){
+	public <T> T update(T oldValue, ColumnSetter<T,?>... values){
 		ContentTable<T> data = typed.get(oldValue.getClass());
 		T n = data.update(oldValue, values);
 		assert data.updateOperation !=null : "unexpected null update operation";
@@ -196,7 +196,7 @@ public class Database {
 	 * @param oldValue
 	 * @param values
 	 */
-	public <T> void update(Class<T> type, Predicate<T> predicate, ColumnValue<T,?>... values){
+	public <T> void update(Class<T> type, Predicate<T> predicate, ColumnSetter<T,?>... values){
 		ContentTable<T> data = typed.get(type);
 		data.update(predicate, values);
 		assert data.updateOperation !=null : "unexpected null update operation";

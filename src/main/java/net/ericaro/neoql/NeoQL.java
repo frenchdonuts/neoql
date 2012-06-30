@@ -253,6 +253,28 @@ public class NeoQL {
 		return map(table, map);
 	}
 	
+	/**
+	 * if this columns has a foreign key, returns a predicate that is true if the pair left joins.
+	 * for instance
+	 * for a Pair<Student,Teacher> p, and this column is "Student.teacher" then
+	 * p.getLeft().teacher = p.getRight()
+	 * 
+	 * 
+	 * @return
+	 */
+	public static <L,R> Predicate<Pair<L, R>> joins(final Column<L,R> column) {
+		return new Predicate<Pair<L, R>>() {
+			@Override
+			public boolean eval(Pair<L, R> pair) {
+				return column.get( pair.getLeft() ) == pair.getRight();
+			}
+			public String toString(){
+				return "this.id = that.id";
+			}
+
+		};
+	}
+	
 	/** returns a simple iterator over a table. 
 	 * 
 	 * @param table

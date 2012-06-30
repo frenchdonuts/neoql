@@ -103,28 +103,7 @@ class MyColumn<T, V> implements Column<T, V> {
 			};
 	}
 
-	/**
-	 * if this columns has a foreign key, returns a predicate that is true if the pair left joins.
-	 * for instance
-	 * for a Pair<Student,Teacher> p, and this column is "Student.teacher" then
-	 * p.getLeft().teacher = p.getRight()
-	 * 
-	 * 
-	 * @return
-	 */
-	public Predicate<Pair<T, V>> joins() {
-		return new Predicate<Pair<T, V>>() {
 
-			@Override
-			public boolean eval(Pair<T, V> t) {
-				return get(t.getLeft()) == t.getRight();
-			}
-			public String toString(){
-				return MyColumn.this.attr+".id = that.id";
-			}
-
-		};
-	}
 	
 	private Class<V> getType() {
 		return attr.getType();

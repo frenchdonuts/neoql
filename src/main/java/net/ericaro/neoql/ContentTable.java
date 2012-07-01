@@ -18,7 +18,7 @@ import net.ericaro.neoql.eventsupport.TableListenerSupport;
 
 
 /**
- * basic table, essentially a metadata and an iterable of Object[]
+ * basic table, the only table that actually contains data.
  * 
  * @author eric
  * 
@@ -28,16 +28,21 @@ public class ContentTable<T> implements Table<T> {
 	// public events
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
 	// internal ones, means between tables through foreign keys only
+	
 	private TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
 	
-	private MyColumn<T, ?>[] columns;
-	private Set<T> rows = new HashSet<T>();
-	private Class<T> type;
-	private Database owner;
+	private MyColumn<T, ?>[] columns; // column definition
+	private Set<T> rows = new HashSet<T>(); // content definition (note that duplicates are not allowed)
 	
-	private TableListener[] internalColumnListeners;
+	private Class<T> type; // table type
+	private Database owner; // database owner 
+	
+	private TableListener[] internalColumnListeners; // if this table has foreign key (one per column) this are the listeners to the foreign table
 
-	// transactions
+	// transactions, i.e changes not yet applied but:
+	// should not affect any read query
+	// should looks liked actually applied for edit queries (update, insert, delete).
+	// => edit queries should not rely on read queries, but rather on the actual edit they have made)
 	MyDeleteChange	deleteOperation = null; 
 	MyInsertChange	insertOperation = null;
 	MyUpdateChange	updateOperation = null;
@@ -48,34 +53,48 @@ public class ContentTable<T> implements Table<T> {
 		this.owner = owner;
 		this.type = table;
 		
-		// copy columns
+		// copy columns, to force the right type, because I known that Column are of MyColumn type. the interface
+		// is just a clan way to store colums.
+		assert columnsAreAllOfTheRightType(cols) : "Columns cannot be implemented by third party, they must created with NeoQL.column factory";
 		this.columns = new MyColumn[cols.length];
 		System.arraycopy(cols, 0, columns, 0, cols.length);
 		this.internalColumnListeners = new TableListener[this.columns.length];
 	}
 
-	
+	/** internal assertion methods
+	 * 
+	 * @param cols
+	 * @return
+	 */
+	private boolean columnsAreAllOfTheRightType(Column[] cols) {
+		for(Column c: cols)
+			if (! MyColumn.class.isAssignableFrom(c.getClass()))
+				return false;
+		return true;
+	}
+
+
 	@Override
 	public void drop() {
-		uninstall() ;
-		this.rows.clear();
+		// disconnect foreign keys
+		int i = 0;
+		for (Column<T, ?> col : columns)
+			disconnectForeignKey(i++, col);
+		
+		if (internals.getListenerCount() > 0)
+			throw new NeoQLException("Cannot drop table " + type
+					+ ". Constraint violation(s)" + internals);
+		this.rows.clear(); // really ? 
 		fireDrop(this);
 	}
 
+	/** called by the database (at creation) to connect foreign keys.
+	 * 
+	 */
 	void install() {
 		int i = 0;
 		for (Column<T, ?> col : columns)
 			connectForeignKey(i++, col);
-	}
-
-	void uninstall() {
-		int i = 0;
-		for (Column<T, ?> col : columns)
-			disconnectForeignKey(i++, col);
-		if (internals.getListenerCount() > 0)
-			throw new NeoQLException("Cannot drop table " + type
-					+ ". Constraint violation(s)" + internals);
-		
 	}
 
 	private <V> void connectForeignKey(int i, Column<T, V> col) {
@@ -124,7 +143,7 @@ public class ContentTable<T> implements Table<T> {
 		@Override
 		public void updated(final V oldValue, final V newValue) {
 			// the foreign key has been updated
-			if (oldValue == newValue) return; // it's a false change, take a shortcut ( when is that happenning, infact ?)
+			if (NeoQL.eq(oldValue , newValue) ) return; // it's a false change, take a shortcut ( when is that happenning, infact ?)
 			
 			// now we are going to update every row that points to the oldValue
 			//(kind of execute update where vol is oldValue)
@@ -164,6 +183,10 @@ public class ContentTable<T> implements Table<T> {
 		return owner;
 	}
 	
+	/** Table type, the type of row.
+	 * 
+	 * @return
+	 */
 	public Class<T> getType() {
 		return type;
 	}
@@ -182,9 +205,8 @@ public class ContentTable<T> implements Table<T> {
 	
 	
 	// ##########################################################################
-	// UPDATE END
+	// UPDATE BEGIN
 	// ##########################################################################
-	
 	
 	T update(T oldValue, ColumnSetter<T, ?>[] setters) {
 		return getUpdateOperation().update(oldValue, setters);
@@ -209,10 +231,8 @@ public class ContentTable<T> implements Table<T> {
 	void delete(Predicate<? super T> where) {
 		for (Iterator<T> i = rows.iterator(); i.hasNext();) {
 			T row = i.next();
-			if (where.eval(row)) {
+			if (where.eval(row))
 				getDeleteOperation().delete(row);
-				internals.fireDeleted(row);
-			}
 		}
 	}
 	
@@ -228,7 +248,6 @@ public class ContentTable<T> implements Table<T> {
 		if (insertOperation == null)
 			insertOperation = new MyInsertChange();
 		insertOperation.insert(row);
-		internals.fireInserted(row);
 		return row;
 	}
 
@@ -246,9 +265,10 @@ public class ContentTable<T> implements Table<T> {
 		
 		try {
 			T row  = type.newInstance();
-			assert allSameType(values): "cannot use columns values from another type";
+			assert allSameType(values): "Column Setter mismatch: cannot use alien column setter";
 			for (ColumnSetter s : values)
 				s.set(row);
+			
 			// TODO handle default values (like ids etc, so I need to 'update' the object a little bit and return it
 
 			return row;
@@ -257,24 +277,24 @@ public class ContentTable<T> implements Table<T> {
 		}
 	}
 
-	public T clone(T row) {
+	T clone(T row) {
 		T clone = newInstance();
 		for (MyColumn<T, ?> c : columns )
 			c.copy(row, clone);
 		return clone;
 	}	
 
-	// helper method to asser that all columnvalue have the same class definition
+	// helper method to assert that all columnvalue have the same class definition
 	private boolean allSameType(ColumnSetter<T, ?>... values) {
 		if (values.length == 0)
 			return true;
 		for (ColumnSetter cv : values)
-			if (! type.equals(cv.column.getTable()))
+			if (! type.isAssignableFrom(cv.column.getTable() ))
 				return false;
 		return true;
 	}
 		
-	/** include transaction
+	/** special query that include the transaction content.
 	 * 
 	 * @return
 	 */
@@ -396,6 +416,12 @@ public class ContentTable<T> implements Table<T> {
 					if (rows.add(r))// actually add the item back
 						fireInserted(r);
 			}
+			@Override
+			public void insert(T row) {
+				super.insert(row);
+				internals.fireInserted(row);
+			}
+			
 			
 		}
 		
@@ -409,8 +435,8 @@ public class ContentTable<T> implements Table<T> {
 					getInsertOperation().remove(row);
 				if (getUpdateOperation().containsOld(row) || getUpdateOperation().containsNew(row) )
 					getUpdateOperation().remove(row);
-				
 				super.delete(row);
+				internals.fireDeleted(row);
 		}
 
 			public void revert() {
@@ -428,19 +454,16 @@ public class ContentTable<T> implements Table<T> {
 		}
 	    
 	    public void fireDeleted(T row) {
-	    	//internals.fireDeleted(row);
 			events.fireDeleted(row);
 		}
 
 
 
 		public void fireInserted(T row) {
-			//internals.fireInserted(row);
 			events.fireInserted(row);
 		}
 
 		public void fireDrop(Table<T> table) {
-			//internals.fireDrop(table);
 			events.fireDrop(table);
 		}
 	    

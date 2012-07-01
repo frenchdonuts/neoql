@@ -37,6 +37,7 @@ public class IntrospectionAttribute<T, V> implements Attribute<T, V> {
 	}
 
 	 public V get(T src) {
+		 if (src == null ) return null;
 		try {
 			return (V) field.get(src);
 		} catch (Exception e) {

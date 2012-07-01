@@ -304,10 +304,17 @@ public class NeoQL {
 		};
 	}
 
-	
+	/** return 
+	 * if a is null, return true if b is null.
+	 * otherwise return a.equals(b).
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
 	public static <T> boolean eq(T a, T b) {
 			if (a == null)
-				return b == null; // null is always false
+				return b == null; 
 			else
 				return a.equals(b);
 			

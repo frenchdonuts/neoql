@@ -6,43 +6,45 @@ import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
  * 
  * @author eric
  *
- * @param <T>
- * @param <V>
+ * @param <T> Table type
+ * @param <C> Column type
  */
-public class ColumnSingleton<T,V> implements Singleton<V> {
+public class ColumnSingleton<T,C> implements Singleton<C> {
 
-	private Column<T,V>	col;
-	private PropertyListenerSupport<V>	support	= new PropertyListenerSupport<V>();
+	private Column<T,C>	col;
+	private PropertyListenerSupport<C>	support	= new PropertyListenerSupport<C>();
 	private Singleton<T> row;
 	private PropertyListener<T> listener;
 	
-	public ColumnSingleton(Singleton<T> row, Column<T,V> column) {
+	ColumnSingleton(Singleton<T> row, Column<T,C> column) {
 		this.col = column;
 		this.row = row;
 		listener = new PropertyListener<T>() {
 			@Override
-			public void updated(T oldValue, T newValue) {
-				V oldCol = oldValue==null?null: col.get(oldValue);
-				V newCol = newValue==null?null: col.get(newValue);
-				if (oldCol != newCol)
+			public void updated(T oldRow, T newRow) { // row has changed, track changes for the column itself
+				C oldCol = col.get(oldRow); 
+				C newCol = col.get(newRow);
+				if (NeoQL.eq(oldCol, newCol))
 					support.fireUpdated(oldCol, newCol);
-					
-					
 			}
-			
 		};
 		row.addPropertyListener(listener);
 	}
 
-	public Class<V> getType() {
+	/** return the column's type
+	 * 
+	 */
+	public Class<C> getType() {
 		return col.getType();
 	}
 
-	public void removePropertyListener(PropertyListener<V> l) {support.removePropertyListener(l);}
+	public void removePropertyListener(PropertyListener<C> l) {support.removePropertyListener(l);}
 
-	public void addPropertyListener(PropertyListener<V> l) {support.addPropertyListener(l);}
+	public void addPropertyListener(PropertyListener<C> l) {support.addPropertyListener(l);}
 
-	public V get() {
+	
+
+	public C get() {
 		return col.get(row.get());
 	}
 
@@ -50,11 +52,12 @@ public class ColumnSingleton<T,V> implements Singleton<V> {
 		row.removePropertyListener(listener);
 	}
 
+	
 	Singleton<T> getRow() {
 		return row;
 	}
 
-	Column<T,V> getColumn() {
+	Column<T,C> getColumn() {
 		return col;
 	}
 

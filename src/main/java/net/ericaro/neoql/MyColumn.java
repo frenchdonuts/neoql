@@ -26,7 +26,7 @@ class MyColumn<T, V> implements Column<T, V> {
 	
 	@Override
 	public ColumnSetter<T, V> set(Singleton<V> value) {
-		return set(value.get());
+		return new ColumnSetter<T, V>( this, value);
 	}
 	@Override
 	public ColumnSetter<T, V> set(V value) {

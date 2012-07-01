@@ -20,7 +20,7 @@ public interface Attribute<T,V> {
 	public Class<V> getType();
 	
 	/** return the attribute's value for a row
-	 * 
+	 * if row is null, the returned value should be null too.
 	 * @param row
 	 * @return the actual value for the row's attribute.
 	 */

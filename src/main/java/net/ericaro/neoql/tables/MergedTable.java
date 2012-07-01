@@ -53,8 +53,7 @@ public class MergedTable<T> implements Table<T> {
 
 	}
 
-	@Override
-	public void drop() {
+	void drop() {
 		for (Table t : tables)
 			t.removeTableListener(listener);
 		events.fireDrop(this);

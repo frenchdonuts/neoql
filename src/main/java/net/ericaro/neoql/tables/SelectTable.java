@@ -86,8 +86,7 @@ public class SelectTable<T> implements Table<T> {
 		return where.eval(row);
 	}
 
-	@Override
-	public void drop() {
+	void drop() {
 		table.removeTableListener(listener);
 		events.fireDrop(this);
 	}

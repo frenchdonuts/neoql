@@ -123,8 +123,7 @@ public class OrderByTable<T,V extends Comparable<? super V> > implements Table<T
 		table.addTableListener(listener); // register to actual changes after the loop so that no changes can be tested twice
 	}
 
-	@Override
-	public void drop() {
+	void drop() {
 		this.content.clear();
 		table.removeTableListener(listener);
 		events.fireDrop(this);

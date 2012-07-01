@@ -74,8 +74,7 @@ public class ContentTable<T> implements Table<T> {
 	}
 
 
-	@Override
-	public void drop() {
+	void drop() {
 		// disconnect foreign keys
 		int i = 0;
 		for (Column<T, ?> col : columns)

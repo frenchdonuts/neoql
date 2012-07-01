@@ -12,6 +12,6 @@ public interface Table<T> extends Iterable<T> {
 	/** this tables drops every thing.
 	 * 
 	 */
-	public void drop();
+	//public void drop();
 	
 }

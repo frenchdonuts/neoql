@@ -215,9 +215,9 @@ public class Database {
 	// ##########################################################################
 	
 
-	public <T> void drop(Table<T> table) {
-		if (table instanceof ContentTable)
-			this.typed.remove(((ContentTable)table).getType());
+	public <T> void drop(Class<T> tableType) {
+		ContentTable<T> table = get(tableType);
+		this.typed.remove(((ContentTable)table).getType());
 		table.drop();
 	}
 	
@@ -228,10 +228,10 @@ public class Database {
 	 * 
 	 * @param type
 	 */
-	public <T> void drop(Class<T> type) {
-		for(Property<T> s: getProperties(type) )
-			s.drop();
-	}
+//	public <T> void drop(Class<T> type) {
+//		for(Property<T> s: getProperties(type) )
+//			s.drop();
+//	}
 
 	// ##########################################################################
 	// DROP END

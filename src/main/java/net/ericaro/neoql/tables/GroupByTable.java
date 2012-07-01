@@ -106,8 +106,7 @@ public class GroupByTable<S, T> implements Table<T> {
 	}
 
 	
-	@Override
-	public void drop() {
+	void drop() {
 		table.removeTableListener(listener);
 		equivalents.clear() ;
 		events.fireDrop(this);

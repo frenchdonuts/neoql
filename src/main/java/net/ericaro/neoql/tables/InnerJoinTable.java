@@ -82,8 +82,7 @@ public class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 
 	
 	
-	@Override
-	public void drop() {
+	void drop() {
 		this.data.clear();
 		left.removeTableListener(leftListener);
 		if (rightListener != null) // might be null because auto join does not record twice

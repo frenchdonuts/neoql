@@ -1,7 +1,7 @@
 package net.ericaro.neoql.smarttree;
 
 import net.ericaro.neoql.PropertyListener;
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Student;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
 import net.ericaro.neoql.smarttree.tree.JListNode;
@@ -13,7 +13,7 @@ public class JTeacherNode extends JListNode<Teacher,Student> {
 
 	public JTeacherNode(TreeTesterModel model, Teacher teacher) {
 		super();
-		Singleton<Teacher> t = model.database.track(teacher) ;
+		Property<Teacher> t = model.database.track(teacher) ;
 		this.tutorialModel = model;
 		setModel(t);
 		setList( model.getStudentsOf(t) );

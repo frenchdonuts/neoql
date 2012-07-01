@@ -10,11 +10,11 @@ import javax.swing.JComponent;
 import javax.swing.JTextField;
 
 import net.ericaro.neoql.PropertyListener;
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 
 /**
- * Uses a Singleton as a model. It strictly observe the singleton, and display its value.
+ * Uses a Property as a model. It strictly observe the property, and display its value.
  * When editable, it tries to commit the new value.
  * If the commit is triggered buy a focus lost, and it fails to parse the string as an object, then it reads the focuslost strategy
  * to determine if it should yield the focus, or simply revert (or revert without parsing).
@@ -40,7 +40,7 @@ public class JNeoField<T> extends JTextField {
 	PropertyListenerSupport<T>	support				= new PropertyListenerSupport<T>();
 	private PropertyListener<T>	listener			= new MyPropertyListener();
 
-	private Singleton<T>		model;
+	private Property<T>		model;
 	private Format				format;
 	FocusLostStrategy			focusLostStrategy	= FocusLostStrategy.COMMIT_OR_REVERT;
 
@@ -55,7 +55,7 @@ public class JNeoField<T> extends JTextField {
 		});
 	}
 
-	public void setModel(Singleton<T> t, Format format) {
+	public void setModel(Property<T> t, Format format) {
 		if (this.model != null)
 			this.model.removePropertyListener(listener);
 		this.model = t;

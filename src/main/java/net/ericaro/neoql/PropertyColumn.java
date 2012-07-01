@@ -2,21 +2,21 @@ package net.ericaro.neoql;
 
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 
-/** A singleton that tracks a single column value from a row singleton
+/** A property that tracks a single column value from a row property
  * 
  * @author eric
  *
  * @param <T> Table type
  * @param <C> Column type
  */
-public class ColumnSingleton<T,C> implements Singleton<C> {
+public class PropertyColumn<T,C> implements Property<C> {
 
 	private Column<T,C>	col;
 	private PropertyListenerSupport<C>	support	= new PropertyListenerSupport<C>();
-	private Singleton<T> row;
+	private Property<T> row;
 	private PropertyListener<T> listener;
 	
-	ColumnSingleton(Singleton<T> row, Column<T,C> column) {
+	PropertyColumn(Property<T> row, Column<T,C> column) {
 		this.col = column;
 		this.row = row;
 		listener = new PropertyListener<T>() {
@@ -53,7 +53,7 @@ public class ColumnSingleton<T,C> implements Singleton<C> {
 	}
 
 	
-	Singleton<T> getRow() {
+	Property<T> getRow() {
 		return row;
 	}
 

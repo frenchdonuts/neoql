@@ -13,7 +13,7 @@ package net.ericaro.neoql;
 public class ColumnSetter<T, V> {
 
 	Column<T, V> column;
-	Singleton<V> value;
+	Property<V> value;
 
 	/** construct using this two parameters.
 	 * 
@@ -23,15 +23,15 @@ public class ColumnSetter<T, V> {
 	public ColumnSetter(Column<T, V> column, V value) {
 		super();
 		this.column = (Column<T, V>) column;
-		this.value =  new FinalSingleton<V>(value);
+		this.value =  new PropertyValue<V>(value);
 	}
 
-	/** Construct an association between a column, and a singleton. The singleton "get()" value will be always used.
+	/** Construct an association between a column, and a property. The property "get()" value will be always used.
 	 * 
 	 * @param column
 	 * @param value
 	 */
-	public ColumnSetter(Column<T, V> column, Singleton<V> value) {
+	public ColumnSetter(Column<T, V> column, Property<V> value) {
 		this.column = column;
 		this.value = value;
 	}
@@ -45,8 +45,8 @@ public class ColumnSetter<T, V> {
 	}
 	
 	/** returns the current value from this association. 
-	 * Note that this association, actually stores a singleton, hence the returned value may change,
-	 *  if the singleton value changes.
+	 * Note that this association, actually stores a property, hence the returned value may change,
+	 *  if the property value changes.
 	 * 
 	 * @return
 	 */
@@ -54,11 +54,11 @@ public class ColumnSetter<T, V> {
 		return value.get();
 	}
 	
-	/** return the current singleton from this association.
+	/** return the current property from this association.
 	 * 
 	 * @return
 	 */
-	public Singleton<V> getSingletonValue() {
+	public Property<V> getPropertyValue() {
 		return value;
 	}
 

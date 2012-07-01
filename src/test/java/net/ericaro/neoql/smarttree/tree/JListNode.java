@@ -6,7 +6,7 @@ import javax.swing.event.ListDataListener;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 
 public abstract class JListNode<M,I> extends JNode<M>{
 	
@@ -42,10 +42,10 @@ public abstract class JListNode<M,I> extends JNode<M>{
 		node.setAllowsChildren(true);
 	}
 
-	public JListNode(Singleton<M> item) {
+	public JListNode(Property<M> item) {
 		super(item);
 	}
-	public JListNode(Singleton<M> model, ListModel items) {
+	public JListNode(Property<M> model, ListModel items) {
 		this(model);
 		setList(items);
 	}

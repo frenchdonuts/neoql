@@ -5,7 +5,7 @@ import java.beans.PropertyChangeListener;
 import javax.swing.ListModel;
 
 import net.ericaro.neoql.PropertyListener;
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.Table;
 
 /** Query Langage Adapter for Swing
@@ -26,13 +26,13 @@ public class SwingQL {
 
 	
 	
-	public static <T> PropertyListener<T> addPropertyChangeListener(Singleton<T> source, String propertyName, PropertyChangeListener listener) {
+	public static <T> PropertyListener<T> addPropertyChangeListener(Property<T> source, String propertyName, PropertyChangeListener listener) {
 		PropertyChangeAdapter<T> l = new PropertyChangeAdapter<T>(source, propertyName, listener);
 		source.addPropertyListener(l);
 		return l;
 	}
 	
-	public static <T> void removePropertyChangeListener(Singleton<T> source, PropertyListener<T> adapter) {
+	public static <T> void removePropertyChangeListener(Property<T> source, PropertyListener<T> adapter) {
 		source.removePropertyListener(adapter);
 	}
 }

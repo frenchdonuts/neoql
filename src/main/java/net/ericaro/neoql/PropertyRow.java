@@ -1,22 +1,19 @@
 package net.ericaro.neoql;
 
-import net.ericaro.neoql.changeset.SingletonChange;
+import net.ericaro.neoql.changeset.PropertyChange;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 import net.ericaro.neoql.eventsupport.TableListener;
 
 
-
-
-
-public class RowSingleton<T> implements Singleton<T>{
+public class PropertyRow<T> implements Property<T>{
 
 	PropertyListenerSupport<T>	support	= new PropertyListenerSupport<T>();
 	T							value;
 	private ContentTable<T>		source;
 	private TableListener<T>	listener;
-	SingletonChange<T> 			singletonChange = null;
+	PropertyChange<T> 			propertyChange = null;
 
-	RowSingleton(ContentTable<T> source) {
+	PropertyRow(ContentTable<T> source) {
 		super();
 		this.source = source;
 		this.listener = new TableListener<T>() {
@@ -55,9 +52,9 @@ public class RowSingleton<T> implements Singleton<T>{
 	
 	void set(T newValue) {
 		T oldValue = value;
-		if (singletonChange == null)
-			singletonChange = new MySingletonChange();
-		singletonChange.set(oldValue, newValue);
+		if (propertyChange == null)
+			propertyChange = new MyPropertyChange();
+		propertyChange.set(oldValue, newValue);
 	}
 	
 	@Override
@@ -76,7 +73,7 @@ public class RowSingleton<T> implements Singleton<T>{
 	}
 	
 	
-	class MySingletonChange extends SingletonChange<T>{
+	class MyPropertyChange extends PropertyChange<T>{
 		
 		@Override
 		public void commit() {

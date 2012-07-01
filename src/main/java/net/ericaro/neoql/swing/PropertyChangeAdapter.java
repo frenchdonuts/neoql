@@ -4,7 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import net.ericaro.neoql.PropertyListener;
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 
 public class PropertyChangeAdapter<T> implements PropertyListener<T> {
 	

@@ -1,6 +1,6 @@
 package net.ericaro.neoql.simpleeditor;
 
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.smarttree.tree.JListNode;
 import net.ericaro.neoql.smarttree.tree.JNode;
 
@@ -10,7 +10,7 @@ public class JDirectoryNode extends JListNode<Directory, HasName> {
 	private EditorModel	editorModel;
 
 
-	public JDirectoryNode(EditorModel model,  Singleton<Directory> dir) {
+	public JDirectoryNode(EditorModel model,  Property<Directory> dir) {
 		super(dir, model.childsOf(dir));
 		editorModel = model;
 		
@@ -32,7 +32,7 @@ public class JDirectoryNode extends JListNode<Directory, HasName> {
 		// everything depends on the kind of tree you want here.
 		//In my case, a switch is enough
 		if (item instanceof Directory)
-			return new JDirectoryNode(editorModel, editorModel.singletonOf((Directory) item));
+			return new JDirectoryNode(editorModel, editorModel.propertyOf((Directory) item));
 		if (item instanceof Editable)
 			return new JEditableNode(editorModel, (Editable) item);
 		return null;

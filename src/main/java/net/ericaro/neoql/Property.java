@@ -1,6 +1,6 @@
 package net.ericaro.neoql;
 
-public interface Singleton<T> {
+public interface Property<T> {
 
 	public abstract Class<T> getType();
 
@@ -8,7 +8,7 @@ public interface Singleton<T> {
 
 	public abstract void addPropertyListener(PropertyListener<T> l);
 
-	/** retrieve the current value pointed by this singleton.
+	/** retrieve the current value pointed by this property.
 	 * 
 	 * @return
 	 */

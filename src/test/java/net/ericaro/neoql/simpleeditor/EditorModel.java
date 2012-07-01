@@ -5,7 +5,7 @@ import javax.swing.ListModel;
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.ContentTable;
 import net.ericaro.neoql.swing.SwingQL;
 import net.ericaro.neoql.tables.MergedTable;
@@ -45,7 +45,7 @@ public class EditorModel {
 		
 	}
 
-	public ListModel childsOf(Singleton<Directory> parent) {
+	public ListModel childsOf(Property<Directory> parent) {
 		SelectTable<Directory> dirs = NeoQL.where(dirTable, dirParent.is(parent));
 		SelectTable<Editable> edits = NeoQL.where(editableTable, editableParent.is(parent));
 		
@@ -54,11 +54,11 @@ public class EditorModel {
 		return SwingQL.listFor(merged) ;
 	}
 
-	public Singleton<Directory> singletonOf(Directory item) {
+	public Property<Directory> propertyOf(Directory item) {
 		return database.track(item);
 	}
 
-	public Singleton<Editable> singletonOf(Editable item) {
+	public Property<Editable> propertyOf(Editable item) {
 		return database.track(item);
 	}
 	

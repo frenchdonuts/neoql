@@ -4,13 +4,13 @@ import javax.swing.JLabel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import net.ericaro.neoql.PropertyListener;
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.smarttree.TreeTesterModel;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
 
 // basic controller
 public class JNode<M> {
-	protected Singleton<M> model;
+	protected Property<M> model;
 	protected DefaultMutableTreeNode node;
 	protected NodeModel	nodeModel;
 	private PropertyListener<M> propertyListener = new PropertyListener<M>() {
@@ -20,7 +20,7 @@ public class JNode<M> {
 	};
 	
 	
-	public JNode(Singleton<M> item) {
+	public JNode(Property<M> item) {
 		this();
 		node.setAllowsChildren(false);
 		setModel(item);
@@ -40,7 +40,7 @@ public class JNode<M> {
 
 
 
-	public void setModel(Singleton<M> m) {
+	public void setModel(Property<M> m) {
 		if (this.model !=null)
 			model.removePropertyListener(propertyListener);
 		this.model= m;

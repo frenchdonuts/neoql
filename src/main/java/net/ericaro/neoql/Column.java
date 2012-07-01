@@ -24,10 +24,10 @@ public class Column<T, C> {
 	}
 
 	/** 
-	 * @param singleton
+	 * @param property
 	 * @return
 	 */
-	public ColumnSetter<T, C> set(Singleton<C> value) {
+	public ColumnSetter<T, C> set(Property<C> value) {
 		return new ColumnSetter<T, C>(this, value);
 	}
 
@@ -90,12 +90,12 @@ public class Column<T, C> {
 		return hasForeignKey;
 	}
 
-	/** return a predicate that test the identity of the given singleton
+	/** return a predicate that test the identity of the given property
 	 * 
 	 * @param value
 	 * @return
 	 */
-	public Predicate<T> is(final Singleton<C> value) {
+	public Predicate<T> is(final Property<C> value) {
 		return new Predicate<T>() {
 			public boolean eval(T t) {
 				C that = Column.this.get(t);
@@ -115,7 +115,7 @@ public class Column<T, C> {
 	 * @return
 	 */
 	public Predicate<T> is(final C value) {
-		return is(new FinalSingleton<C>(value));
+		return is(new PropertyValue<C>(value));
 	}
 
 	@Override

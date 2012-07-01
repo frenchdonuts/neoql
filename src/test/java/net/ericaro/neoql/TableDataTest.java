@@ -61,7 +61,7 @@ public class TableDataTest {
 		CloneTable<Student> clone = new CloneTable<Student>(students);
 		
 		Student s1 = db.insert(Student.NAME.set("toto") );
-		Singleton<Student> t1 = db.track(s1);
+		Property<Student> t1 = db.track(s1);
 		ChangeSet c1 = db.commit();
 		clone.add(s1);
 		assert clone.areEquals() : "insert was not sucessfully redone";
@@ -107,8 +107,8 @@ public class TableDataTest {
 		Killer a = db.insert(Killer.NAME.set("a"));
 		Killer b = db.insert(Killer.NAME.set("b"), Killer.TARGET.set(a));
 		
-		Singleton<Killer> ta = db.track(a);
-		Singleton<Killer> tb = db.track(b);
+		Property<Killer> ta = db.track(a);
+		Property<Killer> tb = db.track(b);
 		
 		assert tb.get() == null : "b values should not be available until the commit";
 		assert ta.get() == null : "a values should not be available until the commit";
@@ -137,9 +137,9 @@ public class TableDataTest {
 		Database db = new Database();
 		ContentTable<Killer> killers = db.createTable(Killer.NAME, Killer.TARGET);
 		
-		Singleton<Killer> a = db.track( db.insert(Killer.NAME.set("a")) );
+		Property<Killer> a = db.track( db.insert(Killer.NAME.set("a")) );
 		
-		Singleton<Killer> b = db.track(db.insert(Killer.NAME.set("b"), Killer.TARGET.set(a)));
+		Property<Killer> b = db.track(db.insert(Killer.NAME.set("b"), Killer.TARGET.set(a)));
 		
 		assert b.get().target == a.get() : "wrong target ref";
 		// updating a into a' to check that b is updated

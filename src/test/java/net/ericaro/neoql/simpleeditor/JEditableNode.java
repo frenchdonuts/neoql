@@ -1,6 +1,6 @@
 package net.ericaro.neoql.simpleeditor;
 
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.smarttree.tree.JNode;
 
 public class JEditableNode extends JNode<Editable> {
@@ -9,7 +9,7 @@ public class JEditableNode extends JNode<Editable> {
 
 
 	public JEditableNode(EditorModel editorModel, Editable item) {
-		super(editorModel.singletonOf(item));
+		super(editorModel.propertyOf(item));
 		this.editorModel = editorModel;
 	}
 

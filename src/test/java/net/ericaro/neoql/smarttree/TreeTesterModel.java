@@ -7,10 +7,10 @@ import javax.swing.ListModel;
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
-import net.ericaro.neoql.Singleton;
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.ContentTable;
-import net.ericaro.neoql.RowSingleton;
+import net.ericaro.neoql.PropertyRow;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
 import net.ericaro.neoql.swing.SwingQL;
 import net.ericaro.neoql.swing.TableList;
@@ -85,8 +85,8 @@ public class TreeTesterModel {
 	private ContentTable<Teacher> teachers;
 	private ContentTable<Student> students;
 	private ListModel	availableStudentList;
-	private RowSingleton<Teacher>	editingTeacher;
-	private Singleton<String> editingTeacherName;
+	private PropertyRow<Teacher>	editingTeacher;
+	private Property<String> editingTeacherName;
 	
 	public TreeTesterModel() {
 		super();
@@ -108,14 +108,14 @@ public class TreeTesterModel {
 //		selectedTeacherList = NeoQL.listFor(selectedTeachers);
 //		selectedStudentList = NeoQL.listFor(selectedStudents);
 		availableStudentList = SwingQL.listFor(availableStudents);
-		editingTeacher = database.createSingleton(Teacher.class);
+		editingTeacher = database.createProperty(Teacher.class);
 		editingTeacherName = database.track(editingTeacher, Teacher.NAME); 
 	}
 	
 	// operations
 	// this could be in another class if needed
 	
-	public Singleton<String> getEditingTeacherName() {
+	public Property<String> getEditingTeacherName() {
 		return editingTeacherName;
 	}
 
@@ -175,7 +175,7 @@ public class TreeTesterModel {
 		return selectedStudentList;
 	}
 
-	public ListModel getStudentsOf(Singleton<Teacher> teacher) {
+	public ListModel getStudentsOf(Property<Teacher> teacher) {
 		return SwingQL.listFor(NeoQL.where(database.get(Student.class) , Student.TEACHER.is(teacher) ));
 	}
 
@@ -191,7 +191,7 @@ public class TreeTesterModel {
 		database.put(editingTeacher, selection);
 	}
 
-	public Singleton<Teacher> getEditingTeacher() {
+	public Property<Teacher> getEditingTeacher() {
 		return editingTeacher;
 	}
 

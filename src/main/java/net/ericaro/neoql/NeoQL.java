@@ -57,6 +57,21 @@ public class NeoQL {
 			}
 		};
 	}
+	
+	/**
+	 * return the identity predicate for this property .
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public static <T> Predicate<T> is(final Property<T> value) {
+		return new Predicate<T>() {
+			@Override
+			public boolean eval(T t) {
+				return eq(value.get(), t);
+			}
+		};
+	}
 
 	/** return true if the column value is in the set of values
 	 * 

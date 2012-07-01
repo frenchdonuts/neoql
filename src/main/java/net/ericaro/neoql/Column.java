@@ -1,68 +1,126 @@
 package net.ericaro.neoql;
 
-
 /**
+ * The column implementation. Separated from the interface to avoid references to it in the client's model.
  * 
  * @author eric
- *
- * @param <T> Table type
- * @param <C> Column Type
+ * 
+ * @param <T>
+ *            table type
+ * @param <C>
+ *            column type
  */
-public interface Column<T, C>{
-	
+public class Column<T, C> {
+
+	private final Attribute<T, C>			attr;
+	private final Class<T>		table;
+	private final boolean	hasForeignKey;
+
+	Column(Class<T> table, Attribute<T, C> attr, Class<C> foreignTable, boolean hasForeignKey) {
+		super();
+		this.table = table;
+		this.attr = attr;
+		this.hasForeignKey = hasForeignKey;
+	}
+
+	/** 
+	 * @param singleton
+	 * @return
+	 */
+	public ColumnSetter<T, C> set(Singleton<C> value) {
+		return new ColumnSetter<T, C>(this, value);
+	}
+
+	/** Returns a ColumnSetter
+	  * @param value
+	  * @return
+	  */
+	public ColumnSetter<T, C> set(C value) {
+		return new ColumnSetter<T, C>(this, value);
+	}
+
+	/** return the table's type.
+	 * 
+	 */
+	public Class<T> getTable() {
+		return table;
+	}
+
+	/**
+	 * Copies every columns values from src into target.
+	 * new ColumnValue<T, V>((ColumnDef<T, V>) col, value);
+	 * make use of the abstract get and set method to achieve it's goal.
+	 * 
+	 * @param src
+	 * @param target
+	 */
+	void copy(T src, T target) {
+		set(target, get(src));
+	}
+
 	/** returns the value of for this column, and src row.
 	 * 
 	 * @param src
 	 * @return
 	 */
-	C get(T src);
-	
-	
+	public C get(T src) {
+		return attr.get(src);
+	}
+
+	boolean set(T src, C value) {
+		if (NeoQL.eq(value, get(src)))
+			return false;
+		attr.set(src, value);
+		return true;
+	}
+
+	C map(T source) {
+		return get(source);
+	}
+
 	/** returns the class that defines the type associated with this column.
 	 * 
 	 * @return
 	 */
-	Class<C> getType() ;
-	
-	/** Convenient method to test if there is a foreign key associated with this column
-	 * 
-	 * @return
-	 */
-	boolean hasForeignKey() ;
-	
-	 /**Convenient method. equivalent to:
-	  * 	<code>set(singleton.get() )</code> 
-	  * uses the singleton value and then call the set(T value) method. 
-	 * @param singleton
-	 * @return
-	 */
-	ColumnSetter<T, C> set(Singleton<C> singleton);
-	
-	 /** Returns a ColumnSetter object dedicated to set <code>value</code> on this column.
-	  * A ColumnSetter is used to update, or insert a row in a table.
-	  * 
-	  * @param value
-	  * @return
-	  */
-	ColumnSetter<T, C> set(C value);
-	
+	public Class<C> getType() {
+		return attr.getType();
+	}
+
+	public boolean hasForeignKey() {
+		return hasForeignKey;
+	}
+
 	/** return a predicate that test the identity of the given singleton
 	 * 
 	 * @param value
 	 * @return
 	 */
-	Predicate<T> is(final Singleton<C> value);
-	
+	public Predicate<T> is(final Singleton<C> value) {
+		return new Predicate<T>() {
+			public boolean eval(T t) {
+				C that = Column.this.get(t);
+				C v = value.get();
+				return NeoQL.eq(v, that);
+			}
+
+			public String toString() {
+				return Column.this.attr + " = " + value;
+			}
+		};
+	}
+
 	/** returns a predicate that test the == for this column's value and the value
 	 * 
 	 * @param value
 	 * @return
 	 */
-	Predicate<T> is(final C value);
-	
-	/** return the actual table type this column is attached to.
-	 * 
-	 * @return
-	 */
-	Class<T> getTable();
+	public Predicate<T> is(final C value) {
+		return is(new FinalSingleton<C>(value));
+	}
+
+	@Override
+	public String toString() {
+		return attr + " " + getType().getSimpleName() + (hasForeignKey ? "" : " FOREIGN KEY REFERENCES " + getType().getName());
+	}
+
 }

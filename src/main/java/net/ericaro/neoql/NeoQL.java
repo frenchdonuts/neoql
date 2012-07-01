@@ -179,7 +179,7 @@ public class NeoQL {
 	 * @return
 	 */
 	public static <T,V> Column<T, V> column(Class<T> type, Attribute<T, V> attr, Class<V> columnType, boolean hasForeignKey) {
-		return new MyColumn<T, V>(type, attr, columnType,hasForeignKey);
+		return new Column<T, V>(type, attr, columnType,hasForeignKey);
 	}
 	
 	/** creates a Select Table from another table and a predicate.

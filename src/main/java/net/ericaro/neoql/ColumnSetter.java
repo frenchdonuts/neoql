@@ -12,7 +12,7 @@ package net.ericaro.neoql;
  */
 public class ColumnSetter<T, V> {
 
-	MyColumn<T, V> column;
+	Column<T, V> column;
 	Singleton<V> value;
 
 	/** construct using this two parameters.
@@ -22,7 +22,7 @@ public class ColumnSetter<T, V> {
 	 */
 	public ColumnSetter(Column<T, V> column, V value) {
 		super();
-		this.column = (MyColumn<T, V>) column;
+		this.column = (Column<T, V>) column;
 		this.value =  new FinalSingleton<V>(value);
 	}
 
@@ -31,7 +31,7 @@ public class ColumnSetter<T, V> {
 	 * @param column
 	 * @param value
 	 */
-	public ColumnSetter(MyColumn<T, V> column, Singleton<V> value) {
+	public ColumnSetter(Column<T, V> column, Singleton<V> value) {
 		this.column = column;
 		this.value = value;
 	}

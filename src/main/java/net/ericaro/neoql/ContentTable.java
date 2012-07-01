@@ -31,7 +31,7 @@ public class ContentTable<T> implements Table<T> {
 	
 	private TableListenerSupport<T> internals = new TableListenerSupport<T>(); // fire the internal cascading ( i.e foreign key manager)
 	
-	private MyColumn<T, ?>[] columns; // column definition
+	private Column<T, ?>[] columns; // column definition
 	private Set<T> rows = new HashSet<T>(); // content definition (note that duplicates are not allowed)
 	
 	private Class<T> type; // table type
@@ -56,7 +56,7 @@ public class ContentTable<T> implements Table<T> {
 		// copy columns, to force the right type, because I known that Column are of MyColumn type. the interface
 		// is just a clan way to store colums.
 		assert columnsAreAllOfTheRightType(cols) : "Columns cannot be implemented by third party, they must created with NeoQL.column factory";
-		this.columns = new MyColumn[cols.length];
+		this.columns = new Column[cols.length];
 		System.arraycopy(cols, 0, columns, 0, cols.length);
 		this.internalColumnListeners = new TableListener[this.columns.length];
 	}
@@ -68,7 +68,7 @@ public class ContentTable<T> implements Table<T> {
 	 */
 	private boolean columnsAreAllOfTheRightType(Column[] cols) {
 		for(Column c: cols)
-			if (! MyColumn.class.isAssignableFrom(c.getClass()))
+			if (! Column.class.isAssignableFrom(c.getClass()))
 				return false;
 		return true;
 	}
@@ -279,7 +279,7 @@ public class ContentTable<T> implements Table<T> {
 
 	T clone(T row) {
 		T clone = newInstance();
-		for (MyColumn<T, ?> c : columns )
+		for (Column<T, ?> c : columns )
 			c.copy(row, clone);
 		return clone;
 	}	

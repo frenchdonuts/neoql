@@ -2,27 +2,33 @@ package net.ericaro.neoql;
 
 import java.lang.reflect.Field;
 
-
-/** Implementation of attribute that uses introspection to get/set the attribute.
+/**
+ * Implementation of attribute that uses introspection to get/set the attribute.
  * 
  * @author eric
- *
+ * 
  * @param <T>
  * @param <V>
  */
 public class IntrospectionAttribute<T, V> implements Attribute<T, V> {
 
-	Field field;
-	String fname;
+	private Field	field;
 
-	IntrospectionAttribute(Class<T> tableClass, String fname) {
+	public IntrospectionAttribute(Field field) {
 		super();
-		this.fname = fname;
-		init(tableClass);
+		this.field = field;
+		field.setAccessible(true);
 	}
 
-	
-	
+	protected IntrospectionAttribute(Class<T> tableClass, String fname) {
+		super();
+		try {
+			field = tableClass.getDeclaredField(fname);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException("Introspection Error initializing column " + fname, e);
+		}
+	}
+
 	@Override
 	public Class<V> getType() {
 		return (Class<V>) field.getType();
@@ -36,8 +42,9 @@ public class IntrospectionAttribute<T, V> implements Attribute<T, V> {
 		}
 	}
 
-	 public V get(T src) {
-		 if (src == null ) return null;
+	public V get(T src) {
+		if (src == null)
+			return null;
 		try {
 			return (V) field.get(src);
 		} catch (Exception e) {
@@ -45,24 +52,9 @@ public class IntrospectionAttribute<T, V> implements Attribute<T, V> {
 		}
 	}
 
-	void init(Class<T> tableClass)  {
-		if (field == null) {// not init
-			try {
-				field = tableClass.getDeclaredField(fname);
-				field.setAccessible(true);
-			} catch (NoSuchFieldException e) {
-				throw new RuntimeException("Introspection Error initializing column "+fname, e);
-			}
-		}
-	}
-
-
-
 	@Override
 	public String toString() {
-		return fname ;
+		return field.getName();
 	}
-	
-	
-	
+
 }

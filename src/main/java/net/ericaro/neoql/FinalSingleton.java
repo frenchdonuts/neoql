@@ -1,12 +1,17 @@
 package net.ericaro.neoql;
 
-public class FinalSingleton<T> implements Singleton<T>{
+/**
+ * A singleton implementation that tracks a final instance. Yes, its silly, but sometimes it makes implementation
+ * cleaner to be able to handle trivial cases. Tracking something that cannot change its trivial.
+ * 
+ * @author eric
+ * 
+ * @param <T>
+ */
+public class FinalSingleton<T> implements Singleton<T> {
 
 	private Class<T>	type;
-	private final T	value;
-
-	
-	
+	private final T		value;
 
 	public FinalSingleton(T value) {
 		super();
@@ -32,6 +37,5 @@ public class FinalSingleton<T> implements Singleton<T>{
 
 	@Override
 	public void drop() {}
-	
 
 }

@@ -12,6 +12,5 @@ public abstract class DeleteChange<T> implements Change {
 	public void delete(T row) {
 		deleted.add(row);
 	}
-
 	
 }

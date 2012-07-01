@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.DeleteChange;
 import net.ericaro.neoql.changeset.InsertChange;
 import net.ericaro.neoql.changeset.UpdateChange;
@@ -345,6 +347,14 @@ public class ContentTable<T> implements Table<T> {
 	}
 	class MyUpdateChange extends UpdateChange<T>{
 		
+		@Override
+		public Change copy() {
+			MyUpdateChange that = new MyUpdateChange();
+			for(Entry<T, T>  e: this.updatedRows.entrySet())
+				that.updatedRows.put(e.getKey(), e.getValue());
+			return that;
+		}
+		
 		public void update(Predicate<T> p, ColumnSetter<T, ?>[] setters) {
 			// now that we have the set of rows involved in the update
 			for (T row : newRowsWhere(p))
@@ -398,11 +408,23 @@ public class ContentTable<T> implements Table<T> {
 				events.fireUpdated(left,right);
 			}
 		}
+
+		
+		
+		
 	}
 	
 	
 	class MyInsertChange extends InsertChange<T>{
 			
+		@Override
+		public Change copy() {
+			MyInsertChange that = new MyInsertChange();
+			for(T t: this.inserted)
+				that.inserted.add(t);
+			return that;
+		}
+		
 			@Override
 			public void revert() {
 				for (T r :inserted) 
@@ -426,6 +448,13 @@ public class ContentTable<T> implements Table<T> {
 		
 	class MyDeleteChange extends DeleteChange<T>{
 		
+		@Override
+		public Change copy() {
+			MyDeleteChange that = new MyDeleteChange();
+			for(T t: this.deleted)
+				that.deleted.add(t);
+			return that;
+		}
 		
 			@Override
 		public void delete(T row) {

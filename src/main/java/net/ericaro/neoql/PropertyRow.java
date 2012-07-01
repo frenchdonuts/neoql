@@ -1,5 +1,6 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.PropertyChange;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 import net.ericaro.neoql.eventsupport.TableListener;
@@ -75,6 +76,16 @@ public class PropertyRow<T> implements Property<T>{
 	
 	class MyPropertyChange extends PropertyChange<T>{
 		
+		
+		
+		@Override
+		public Change copy() {
+			MyPropertyChange that = new MyPropertyChange();
+			that.newValue = this.newValue;
+			that.oldValue = this.newValue;
+			return that;
+		}
+
 		@Override
 		public void commit() {
 			value = newValue;

@@ -345,7 +345,6 @@ public class Database {
 	}
 	
 	public ChangeSet commit() {
-		// also collect changes from properties
 		for(PropertyRow s : properties) {
 			tx.addChange(s.propertyChange);
 			s.propertyChange = null;
@@ -374,21 +373,38 @@ public class Database {
 		return otx;
 	}
 	
+	/** Enter staging mode: i.e do not auto commit
+	 * 
+	 */
 	public void stage() {
 		autocommit = false;
 	}
+	/** leave staging mode: commit and reset autocommit mode
+	 * 
+	 */
 	public void unstage() {
+		commit();
 		autocommit = true;
 	}
 	
+	/** Commit a whole changeset.
+	 * assert that the current transaction is empty
+	 * 
+	 * @param cs
+	 */
 	public void commit(ChangeSet cs) {
-		assert tx.isEmpty(): "cannot commit a changeset when there are local changes nnot yet applyed";
+		assert tx.isEmpty(): "cannot commit a changeset when there are local changes not yet applyed";
+		// I need to clone the cs, before applying.
+		cs = cs.clone(tx);
 		cs.commit();
-		tx = new ChangeSet(cs);
+		tx = new ChangeSet(cs);// creates a new empty tx, with this as parent
+		
 	}
 	public ChangeSet revert(ChangeSet cs) {
-		assert tx.isEmpty(): "cannot revert a changeset when there are local changes nnot yet applied";
-		assert tx.getParent() == cs : "cannot rebase change set";
+		assert tx.isEmpty(): "cannot revert a changeset when there are local changes not yet applied";
+		//assert tx.getParent() == cs : "cannot rebase change set";
+		// this assertion was not correct (parent might get null if garbage collected)
+		// but not totatlly wrong, I might have issues if trying to revert the wrong changeset.
 		cs.revert();
 		ChangeSet otx = tx;
 		tx = new ChangeSet(cs.getParent()); // fork here

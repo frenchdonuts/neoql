@@ -9,5 +9,6 @@ public interface Change {
 
 	void commit();
 	void revert();
+	Change copy();
 	
 }

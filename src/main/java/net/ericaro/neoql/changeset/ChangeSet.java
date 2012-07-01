@@ -72,4 +72,16 @@ public class ChangeSet implements Change{
 		return operations.size() == 0;
 	}
 	
+	
+	public ChangeSet clone(ChangeSet newParent) {
+		ChangeSet that = copy();
+		that.parent = new WeakReference<ChangeSet>(newParent);
+		return that;
+	}
+	public ChangeSet copy() {
+		ChangeSet that = new ChangeSet();
+		for(Change c: operations)
+			that.operations.add(c.copy());
+		return that;
+	}
 }

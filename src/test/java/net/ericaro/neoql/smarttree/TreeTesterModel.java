@@ -23,8 +23,8 @@ public class TreeTesterModel {
 		public static final Column<Teacher, String> NAME = NeoQL.column(Teacher.class, "name", String.class, false);
 		public static final Column<Teacher, Boolean> SELECTED   = NeoQL.column(Teacher.class, "selected", Boolean.class, false);
 		
-		private String name;
-		private boolean selected = false;
+		String name;
+		boolean selected = false;
 		
 		public Teacher() {}
 		public Teacher(String name) {
@@ -50,8 +50,8 @@ public class TreeTesterModel {
 		public static final Column<Student, String> NAME 		= NeoQL.column(Student.class, "name", String.class, false);
 		public static final Column<Student, Teacher> TEACHER    = NeoQL.column(Student.class, "teacher", Teacher.class, true);
 		
-		private String name;
-		private Teacher teacher;
+		String name;
+		Teacher teacher;
 		
 		public Student() {}
 		
@@ -97,7 +97,7 @@ public class TreeTesterModel {
 		
 //		SelectTable<Teacher> selectedTeachers = NeoQL.where(teachers, Teacher.SELECTED.is(true) );
 //		Table<Student> selectedStudents = NeoQL.left(  NeoQL.innerJoin(students, selectedTeachers, Student.TEACHER.joins() ));
-		Table<Student> availableStudents = NeoQL.where(students, Student.TEACHER.is((Teacher)null)) ;
+		Table<Student> availableStudents = NeoQL.where(students, Student.TEACHER.isNull(Teacher.class)) ;
 		
 //		public static final TableDef<Student> STUDENTS = NeoQL.select(Student.TABLE);
 //		public static final TableDef<Teacher> TEACHERS = NeoQL.select(Teacher.TABLE);
@@ -176,7 +176,7 @@ public class TreeTesterModel {
 	}
 
 	public ListModel getStudentsOf(Property<Teacher> teacher) {
-		return SwingQL.listFor(NeoQL.where(database.get(Student.class) , Student.TEACHER.is(teacher) ));
+		return SwingQL.listFor(NeoQL.where(students , Student.TEACHER.is(teacher) ));
 	}
 
 	public void rename(Teacher selection, String next) {

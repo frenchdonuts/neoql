@@ -58,6 +58,7 @@ public class TreeTester extends JPanel {
 		availableStudents.setModel(model.getAvailableStudents());
 		model.getEditingTeacherName().addPropertyListener( new PropertyListener<String>() {
 			public void updated(String oldValue, String newValue) { whenTeacherNameChanged();	}});
+		
 		treeNode1.addNode(new JTeachersNode(model));
 		treeNode1.addNode(new JStudentsNode(model));
 	}

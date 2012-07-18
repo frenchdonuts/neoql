@@ -14,9 +14,13 @@ public class PropertyValue<T> implements Property<T> {
 	private final T		value;
 
 	public PropertyValue(T value) {
+		this((Class<T>) value.getClass(), value);
+	}
+	
+	public PropertyValue(Class<T> type, T value) {
 		super();
 		this.value = value;
-		this.type = (Class<T>) value.getClass();
+		this.type = type;
 	}
 
 	@Override

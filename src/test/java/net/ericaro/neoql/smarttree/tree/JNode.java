@@ -1,12 +1,9 @@
 package net.ericaro.neoql.smarttree.tree;
 
-import javax.swing.JLabel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import net.ericaro.neoql.PropertyListener;
 import net.ericaro.neoql.Property;
-import net.ericaro.neoql.smarttree.TreeTesterModel;
-import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
+import net.ericaro.neoql.PropertyListener;
 
 // basic controller
 public class JNode<M> {

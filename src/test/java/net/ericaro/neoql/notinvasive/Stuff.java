@@ -6,6 +6,7 @@ public class Stuff {
 	private String name;
 	private int id;
 	boolean selected = true;
+	
 	public String getName() {
 		return name;
 	}

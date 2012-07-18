@@ -117,6 +117,10 @@ public class Column<T, C> {
 	public Predicate<T> is(final C value) {
 		return is(new PropertyValue<C>(value));
 	}
+	
+	public Predicate<T> isNull(Class<C> type) {
+		return is(new PropertyValue<C>(type, null));
+	}
 
 	@Override
 	public String toString() {

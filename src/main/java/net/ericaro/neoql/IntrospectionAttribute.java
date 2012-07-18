@@ -24,6 +24,7 @@ public class IntrospectionAttribute<T, V> implements Attribute<T, V> {
 		super();
 		try {
 			field = tableClass.getDeclaredField(fname);
+			field.setAccessible(true);
 		} catch (NoSuchFieldException e) {
 			throw new RuntimeException("Introspection Error initializing column " + fname, e);
 		}

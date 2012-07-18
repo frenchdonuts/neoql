@@ -1,0 +1,31 @@
+======================
+NeoQL documentation
+======================
+
+
+What is NeoQL
+===============
+
+NeoQL job is to provide a database as close to the GUI as possible. In any  big Application, the program is divided into layers, one of them is for data persistence.
+There are many  available technologies to help developpers handling persistence: mainly database technologies ( SQL, ORM, JPA, etc.).
+On the contrary, the GUI layer is very empty. Here comes NeoQL mission.
+
+NeoQL tend to act like a database, but as close to the GUI as possible. This as consequences:
+
+  - we cannot be the persistence database => NeoQL database is not persistent.
+  - using a database in a GUI require that the database be as much observable as possible.
+  - because we do assume that NeoQL is the topmost layer, NeoQL must be easy to use with underlying layer (mainly service layer, or database layer).
+
+
+
+Getting Started
+===============
+
+There is nothing special to get started with NeoQL.
+
+NeoQL is a standalone library available in maven central.
+
+
+
+Concepts
+========

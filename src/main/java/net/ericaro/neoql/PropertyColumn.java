@@ -24,7 +24,7 @@ public class PropertyColumn<T,C> implements Property<C> {
 			public void updated(T oldRow, T newRow) { // row has changed, track changes for the column itself
 				C oldCol = col.get(oldRow); 
 				C newCol = col.get(newRow);
-				if (NeoQL.eq(oldCol, newCol))
+				if (!NeoQL.eq(oldCol, newCol))
 					support.fireUpdated(oldCol, newCol);
 			}
 		};

@@ -12,15 +12,17 @@ import net.ericaro.neoql.eventsupport.TableListener;
 
 public class Database {
 
-	static Logger						LOG			= Logger.getLogger(Database.class.getName());
+	static Logger							LOG			= Logger.getLogger(Database.class.getName());
 
 	// real class -> table mapping
-	private Map<Class, ContentTable>	typed		= new HashMap<Class, ContentTable>();
-	
-	ChangeSet							tx			= new ChangeSet(new ChangeSet());				// trick to force a "root" changeset
-	boolean								autocommit	= true;
+	private Map<Class, ContentTable>		typed		= new HashMap<Class, ContentTable>();
 
-	private Collection<PropertyRow>		properties	= new HashSet<PropertyRow>();
+	ChangeSet								tx			= new ChangeSet(new ChangeSet());				// trick to force a "root" changeset
+	boolean									autocommit	= true;
+
+	private Collection<PropertyRow>			properties	= new HashSet<PropertyRow>();
+	private Collection<PropertySingleton>	singletons	= new HashSet<PropertySingleton>();
+
 	// I need to track properties, because they hold one bit of information: the actual type they are tracking, this might change => it should be transactional.
 
 	// TODO provide generic JTAble for every table for debug purpose )
@@ -48,7 +50,8 @@ public class Database {
 	/**
 	 * creates a content table, using the columns definition
 	 * 
-	 * @param columns column definition
+	 * @param columns
+	 *            column definition
 	 * @return
 	 */
 	public <T> ContentTable<T> createTable(Column<T, ?>... columns) {
@@ -72,8 +75,9 @@ public class Database {
 				return false;
 		return true;
 	}
-	
-	/** Return the actual ContentTable associated with this type.
+
+	/**
+	 * Return the actual ContentTable associated with this type.
 	 * 
 	 * @param type
 	 * @return
@@ -82,11 +86,31 @@ public class Database {
 		return typed.get(type);
 	}
 
-	/** Creates a Property for a given table type. 
+	/**
+	 * Creates a Singleton Property. A Singleton Property holds a single value, and notify changes for it.
+	 * 
+	 * @param type
+	 * @return
+	 */
+	public <T> PropertySingleton<T> createSingleton(Class<T> type) {
+		PropertySingleton<T> s = new PropertySingleton<T>(type);
+		singletons.add(s);
+		return s;
+	}
+	public <T> PropertySingleton<T> createSingleton(Class<T> type, T value) {
+		PropertySingleton<T> s = createSingleton(type);
+		put(s, value);
+		return s;
+	}
+	
+	/**
+	 * Creates a Property for a given table type.
 	 * A Property is an object that will return always the same row from a table.
 	 * If the row changes in the table, so does the property.
 	 * Start with a null row (i.e does nothing, until the value is set).
-	 * @param type must correspond to an existing table type
+	 * 
+	 * @param type
+	 *            must correspond to an existing table type
 	 * @return
 	 */
 	public <T> PropertyRow<T> createProperty(Class<T> type) {
@@ -94,24 +118,24 @@ public class Database {
 		properties.add(s);
 		return s;
 	}
-	
+
+
+
 	/**
 	 * creates and returns a table property initialized on the value
 	 * 
 	 * @param value
 	 */
 	public <T> Property<T> track(T value) {
-		PropertyRow<T> prop = createProperty((Class<T>) value.getClass());
-		prop.set(value);
-		precommit();
+		Property<T> prop = createProperty((Class<T>) value.getClass());
+		put(prop, value);
 		return prop;
+
 	}
 
 	public <T, V> Property<V> track(Property<T> row, Column<T, V> column) {
 		return new PropertyColumn<T, V>(row, column);
 	}
-
-	
 
 	// ##########################################################################
 	// CREATE END
@@ -121,7 +145,8 @@ public class Database {
 	// INSERT BEGIN
 	// ##########################################################################
 
-	/** insert a new default value in the table identified by its type.
+	/**
+	 * insert a new default value in the table identified by its type.
 	 * 
 	 * @param type
 	 * @return
@@ -133,7 +158,9 @@ public class Database {
 		precommit();
 		return row;
 	}
-	/** Insert a new value in a table.
+
+	/**
+	 * Insert a new value in a table.
 	 * The table is inferred from the column setters (they know their column type).
 	 * 
 	 * 
@@ -161,23 +188,26 @@ public class Database {
 	// DELETE BEGIN
 	// ##########################################################################
 
-	/** delete the row pointed by the property.
+	/**
+	 * delete the row pointed by the property.
 	 * 
 	 * @param value
 	 */
 	public <T> void delete(Property<T> value) {
 		delete(value.getType(), NeoQL.is(value));
 	}
-	
-	/** delete the value from its table.
+
+	/**
+	 * delete the value from its table.
 	 * 
 	 * @param value
 	 */
 	public <T> void delete(T value) {
-		delete((Class<T>)value.getClass(), NeoQL.is(value));
+		delete((Class<T>) value.getClass(), NeoQL.is(value));
 	}
 
-	/** generic delete: delete all values from the table 'type' that matches the predicate.
+	/**
+	 * generic delete: delete all values from the table 'type' that matches the predicate.
 	 * 
 	 * @param type
 	 * @param predicate
@@ -195,20 +225,22 @@ public class Database {
 	// ##########################################################################
 	// UPDATE BEGIN
 	// ##########################################################################
-	
-	/** Update the value denoted by the property setting values using the setters.
+
+	/**
+	 * Update the value denoted by the property setting values using the setters.
 	 * 
 	 * @param property
 	 * @param setters
 	 * @return
 	 */
 	public <T> T update(Property<T> property, ColumnSetter<T, ?>... setters) {
-		update((Class<T>)property.getType(), NeoQL.is(property), setters);
-		return property.get() ;// this is the new value
-		
+		update((Class<T>) property.getType(), NeoQL.is(property), setters);
+		return property.get();// this is the new value
+
 	}
 
-	/** Update the value using the setters.
+	/**
+	 * Update the value using the setters.
 	 * 
 	 * @param oldValue
 	 * @param setters
@@ -219,16 +251,18 @@ public class Database {
 		T n = update(p, setters);
 		drop(p);
 		return n;
-		
 
 	}
 
 	/**
 	 * Update rows matching the given predicate, with the given setters.
 	 * 
-	 * @param type table to update
-	 * @param predicate the predicate that triggers the update
-	 * @param setters the action to take
+	 * @param type
+	 *            table to update
+	 * @param predicate
+	 *            the predicate that triggers the update
+	 * @param setters
+	 *            the action to take
 	 */
 	public <T> void update(Class<T> type, Predicate<T> predicate, ColumnSetter<T, ?>... setters) {
 		ContentTable<T> data = typed.get(type);
@@ -236,8 +270,9 @@ public class Database {
 		assert data.updateOperation != null : "unexpected null update operation";
 		precommit();
 	}
-	
-	/** Update the cell referenced by this property.
+
+	/**
+	 * Update the cell referenced by this property.
 	 * 
 	 * @param prop
 	 * @param value
@@ -247,7 +282,7 @@ public class Database {
 			return; // nothing to do, it's the exact same value that is set
 		update(prop.getRow(), prop.getColumn().set(value));
 	}
-	
+
 	// ##########################################################################
 	// UPDATE END
 	// ##########################################################################
@@ -256,7 +291,8 @@ public class Database {
 	// DROP BEGIN
 	// ##########################################################################
 
-	/** remove table from the database
+	/**
+	 * remove table from the database
 	 * 
 	 * @param tableType
 	 */
@@ -266,7 +302,8 @@ public class Database {
 		table.drop();
 	}
 
-	/** remove property from the database.
+	/**
+	 * remove property from the database.
 	 * 
 	 * @param s
 	 */
@@ -281,21 +318,24 @@ public class Database {
 	// ##########################################################################
 	// PROPERTY EDIT BEGIN
 	// ##########################################################################
-	
-	/** manually change the value of a given row property 
+
+	/**
+	 * manually change the value of a given row property
 	 * 
 	 * @param prop
 	 * @param value
 	 */
 	public <T> void put(Property<T> prop, T value) {
-		if (prop instanceof PropertyRow) {
-			PropertyRow t = (PropertyRow) prop;
-			put(t, value);
-		} else
+		if (prop instanceof PropertyRow)
+			put((PropertyRow) prop, value);
+		else if (prop instanceof PropertySingleton)
+			put((PropertySingleton) prop, value);
+		else
 			throw new IllegalArgumentException("Cannot assign a value to a Property that is not either a Table or a Column one");
 	}
 
-	/** change the row this property is tracking. This a single bit of information, hence it cause a transaction.
+	/**
+	 * change the row this property is tracking. This a single bit of information, hence it cause a transaction.
 	 * 
 	 * @param prop
 	 * @param value
@@ -305,6 +345,16 @@ public class Database {
 		precommit();
 	}
 
+	/**
+	 * change the value this property is tracking. This a single bit of information, hence it cause a transaction.
+	 * 
+	 * @param prop
+	 * @param value
+	 */
+	public <T> void put(PropertySingleton<T> prop, T value) {
+		prop.set(value);
+		precommit();
+	}
 
 	// ##########################################################################
 	// PROPERTY EDIT END
@@ -358,6 +408,10 @@ public class Database {
 
 	public ChangeSet commit() {
 		for (PropertyRow s : properties) {
+			tx.addChange(s.propertyChange);
+			s.propertyChange = null;
+		}
+		for (PropertySingleton s : singletons) {
 			tx.addChange(s.propertyChange);
 			s.propertyChange = null;
 		}
@@ -418,7 +472,8 @@ public class Database {
 
 	}
 
-	/** Reverts an alien changeset.
+	/**
+	 * Reverts an alien changeset.
 	 * 
 	 * @param cs
 	 * @return

@@ -1,12 +1,9 @@
 package net.ericaro.neoql;
 
-import static org.junit.Assert.*;
-
 import java.util.Iterator;
 
 import javax.swing.undo.UndoManager;
 
-import net.ericaro.neoql.properties.ColumnProperty;
 import net.ericaro.neoql.swing.UndoableAdapter;
 
 import org.junit.Test;
@@ -44,7 +41,7 @@ public class ContentTableTest {
 		Database db = new Database() ;
 		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
 		Cursor<Tester> c = db.createCursor(t);
-		ColumnProperty<Tester, String> name = NeoQL.track(c, NAME);
+		Property<String> name = NeoQL.track(c, NAME);
 		
 		UndoManager m = new UndoManager();
 		new UndoableAdapter(this, db).addUndoableEditListener(m); // record the undomanager

@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.properties.FinalProperty;
+
 
 
 
@@ -23,7 +25,7 @@ public class ColumnSetter<T, V> {
 	public ColumnSetter(Column<T, V> column, V value) {
 		super();
 		this.column = (Column<T, V>) column;
-		this.value =  new PropertyValue<V>(value);
+		this.value =  new FinalProperty<V>(value);
 	}
 
 	/** Construct an association between a column, and a property. The property "get()" value will be always used.

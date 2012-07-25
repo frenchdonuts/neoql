@@ -50,6 +50,9 @@ public class OrderByTable<T,V extends Comparable<? super V> > implements Table<T
 			return inf*v1.compareTo(v2);
 		}
 	}
+	
+	
+	
 
 	public static class OrderByIterator<T, V extends Comparable<? super V> > implements Iterator<T> {
 
@@ -121,6 +124,10 @@ public class OrderByTable<T,V extends Comparable<? super V> > implements Table<T
 		for (T r : table)
 			listener.inserted(r); // cause events to be fire just like if the items where appended
 		table.addTableListener(listener); // register to actual changes after the loop so that no changes can be tested twice
+	}
+	@Override
+	public Class<T> getType() {
+		return table.getType();
 	}
 
 	void drop() {

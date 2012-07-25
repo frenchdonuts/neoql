@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.properties.FinalProperty;
+
 /**
  * The column implementation. Separated from the interface to avoid references to it in the client's model.
  * 
@@ -115,11 +117,11 @@ public class Column<T, C> {
 	 * @return
 	 */
 	public Predicate<T> is(final C value) {
-		return is(new PropertyValue<C>(value));
+		return is(new FinalProperty<C>(value));
 	}
 	
 	public Predicate<T> isNull(Class<C> type) {
-		return is(new PropertyValue<C>(type, null));
+		return is(new FinalProperty<C>(type, null));
 	}
 
 	@Override

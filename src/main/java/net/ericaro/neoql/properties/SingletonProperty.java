@@ -1,7 +1,9 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.properties;
 
+import net.ericaro.neoql.Property;
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.PropertyChange;
+import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 
 /**
@@ -10,14 +12,14 @@ import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
  * 
  * @param <T>
  */
-public class PropertySingleton<T> implements Property<T> {
+public class SingletonProperty<T> implements Property<T> {
 
 	PropertyListenerSupport<T>	support			= new PropertyListenerSupport<T>();
 	private Class<T>			type;
 	private T					value;
 	PropertyChange<T>			propertyChange	= null;
 
-	PropertySingleton(Class<T> type) {
+	SingletonProperty(Class<T> type) {
 		super();
 		this.type = type;
 	}

@@ -23,13 +23,15 @@ public class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 	TableListenerSupport<Pair<L, R>> events = new TableListenerSupport<Pair<L, R>>();
 	private TableListener<R> rightListener;
 	private TableListener<L> leftListener;
+	private Class<Pair<L, R>>	type;
 
-	public InnerJoinTable(Table<L> left, Table<R> right,
+	public InnerJoinTable(Class<Pair<L, R>> type, Table<L> left, Table<R> right,
 			Predicate<? super Pair<L, R>> on) {
 		super();
 		this.left = left;
 		this.right = right;
 		this.on = on;
+		this.type = type;
 		leftListener = new TableListener<L>() {
 			@Override
 			public void updated(L oldRow, L newRow) {
@@ -294,4 +296,13 @@ public class InnerJoinTable<L, R> implements Table<Pair<L, R>> {
 		events.addTableListener(listener);
 	}
 
+
+
+	@Override
+	public Class<Pair<L, R>> getType() {
+		return type;
+	}
+
+	
+	
 }

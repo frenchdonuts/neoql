@@ -1,20 +1,28 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.properties;
 
-import net.ericaro.neoql.changeset.Change;
+import net.ericaro.neoql.NeoQL;
+import net.ericaro.neoql.Property;
+import net.ericaro.neoql.Table;
 import net.ericaro.neoql.changeset.PropertyChange;
+import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 import net.ericaro.neoql.eventsupport.TableListener;
 
-
-public class PropertyRow<T> implements Property<T>{
+/** Observable only cursor property
+ * 
+ * @author eric
+ *
+ * @param <T>
+ */
+public class ObservableCursor<T> implements Property<T>{
 
 	PropertyListenerSupport<T>	support	= new PropertyListenerSupport<T>();
 	T							value;
-	private ContentTable<T>		source;
+	private Table<T>		source;
 	private TableListener<T>	listener;
 	PropertyChange<T> 			propertyChange = null;
 
-	PropertyRow(ContentTable<T> source) {
+	public ObservableCursor(Table<T> source) {
 		super();
 		this.source = source;
 		this.listener = new TableListener<T>() {
@@ -41,21 +49,21 @@ public class PropertyRow<T> implements Property<T>{
 			}
 
 		};
-		source.addInternalTableListener(listener);
+		source.addTableListener(listener);
 	}
 	
 	@Override
 	public void drop() {
-		this.source.removeInternalTableListener(listener);
+		this.source.removeTableListener(listener);
 		set(null); // also nullify the value
 	}
 
 	
 	void set(T newValue) {
 		T oldValue = value;
-		if (propertyChange == null)
-			propertyChange = new MyPropertyChange();
-		propertyChange.set(oldValue, newValue);
+		value = newValue;
+		if (NeoQL.eq(newValue, oldValue))
+			support.fireUpdated(oldValue, newValue);
 	}
 	
 	@Override
@@ -74,30 +82,6 @@ public class PropertyRow<T> implements Property<T>{
 	}
 	
 	
-	class MyPropertyChange extends PropertyChange<T>{
-		
-		
-		
-		@Override
-		public Change copy() {
-			MyPropertyChange that = new MyPropertyChange();
-			that.newValue = this.newValue;
-			that.oldValue = this.newValue;
-			return that;
-		}
-
-		@Override
-		public void commit() {
-			value = newValue;
-			support.fireUpdated(oldValue, newValue);
-		}
-
-		@Override
-		public void revert() {
-			value = oldValue;
-			support.fireUpdated(newValue, oldValue);
-		}
-	}
 
 
 	@Override

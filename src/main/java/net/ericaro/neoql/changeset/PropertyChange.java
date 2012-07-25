@@ -8,6 +8,6 @@ public abstract class PropertyChange<T> implements Change {
 		this.oldValue = oldValue;
 		this.newValue = newValue ;
 	}
-	
+	public void accept(ChangeVisitor visitor) {visitor.changed(this);}
 	
 }

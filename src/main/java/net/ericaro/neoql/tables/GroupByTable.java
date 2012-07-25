@@ -124,4 +124,12 @@ public class GroupByTable<S, T> implements Table<T> {
 	public void removeTableListener(TableListener<T> l) {
 		events.removeTableListener(l);
 	}
+
+
+	@Override
+	public Class<T> getType() {
+		return this.groupByColumn.getType();
+	}
+	
+	
 }

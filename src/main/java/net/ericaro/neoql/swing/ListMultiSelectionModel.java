@@ -8,7 +8,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import net.ericaro.neoql.Column;
+import net.ericaro.neoql.ContentTable;
 import net.ericaro.neoql.Database;
+import net.ericaro.neoql.NeoQL;
 
 public class ListMultiSelectionModel<T> extends DefaultListSelectionModel {
 
@@ -48,8 +50,9 @@ public class ListMultiSelectionModel<T> extends DefaultListSelectionModel {
 
 	void onChanged(int first, int last) {
 		on = true;
+		ContentTable<T> table = database.getTable(selected.getTable() );
 		for (int i = first; i < Math.min(last + 1, data.getSize()); i++)
-			database.update(data.getElementAt(i), selected.set(isSelectedIndex(i)));
+			database.update(table, NeoQL.is(data.getElementAt(i)), selected.set(isSelectedIndex(i)));
 		on = false;
 	}
 

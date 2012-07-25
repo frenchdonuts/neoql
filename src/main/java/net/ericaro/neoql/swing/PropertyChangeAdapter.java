@@ -3,8 +3,8 @@ package net.ericaro.neoql.swing;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import net.ericaro.neoql.PropertyListener;
 import net.ericaro.neoql.Property;
+import net.ericaro.neoql.eventsupport.PropertyListener;
 
 public class PropertyChangeAdapter<T> implements PropertyListener<T> {
 	

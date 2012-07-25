@@ -9,8 +9,8 @@ import javax.swing.InputVerifier;
 import javax.swing.JComponent;
 import javax.swing.JTextField;
 
-import net.ericaro.neoql.PropertyListener;
 import net.ericaro.neoql.Property;
+import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 
 /**

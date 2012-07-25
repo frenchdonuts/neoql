@@ -1,4 +1,4 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.eventsupport;
 
 import java.util.EventListener;
 

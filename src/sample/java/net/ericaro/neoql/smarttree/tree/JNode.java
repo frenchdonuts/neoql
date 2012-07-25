@@ -3,7 +3,7 @@ package net.ericaro.neoql.smarttree.tree;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import net.ericaro.neoql.Property;
-import net.ericaro.neoql.PropertyListener;
+import net.ericaro.neoql.eventsupport.PropertyListener;
 
 // basic controller
 public class JNode<M> {

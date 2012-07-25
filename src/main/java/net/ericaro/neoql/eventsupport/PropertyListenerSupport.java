@@ -2,7 +2,6 @@ package net.ericaro.neoql.eventsupport;
 
 import javax.swing.event.EventListenerList;
 
-import net.ericaro.neoql.PropertyListener;
 
 public class PropertyListenerSupport<T> {
 

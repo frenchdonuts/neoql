@@ -100,7 +100,7 @@ public class ContentTable<T> implements Table<T> {
 
 	private <V> void connectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			ContentTable<V> ftable = owner.get(col.getType());
+			ContentTable<V> ftable = owner.getTable(col.getType());
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(ftable, internalColumnListeners[i]);
 		}
@@ -108,7 +108,7 @@ public class ContentTable<T> implements Table<T> {
 
 	private <V> void disconnectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			ContentTable<V> ftable = owner.get(col.getType());
+			ContentTable<V> ftable = owner.getTable(col.getType());
 			owner.removeInternalTableListener(ftable,
 					internalColumnListeners[i]);
 		}
@@ -481,17 +481,17 @@ public class ContentTable<T> implements Table<T> {
 			}
 		}
 	    
-	    public void fireDeleted(T row) {
+	    void fireDeleted(T row) {
 			events.fireDeleted(row);
 		}
 
 
 
-		public void fireInserted(T row) {
+		void fireInserted(T row) {
 			events.fireInserted(row);
 		}
 
-		public void fireDrop(Table<T> table) {
+		void fireDrop(Table<T> table) {
 			events.fireDrop(table);
 		}
 	    

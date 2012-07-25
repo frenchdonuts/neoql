@@ -4,9 +4,9 @@ import java.beans.PropertyChangeListener;
 
 import javax.swing.ListModel;
 
-import net.ericaro.neoql.PropertyListener;
 import net.ericaro.neoql.Property;
 import net.ericaro.neoql.Table;
+import net.ericaro.neoql.eventsupport.PropertyListener;
 
 /** Query Langage Adapter for Swing
  * 

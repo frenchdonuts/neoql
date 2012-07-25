@@ -1,4 +1,7 @@
-package net.ericaro.neoql;
+package net.ericaro.neoql.properties;
+
+import net.ericaro.neoql.Property;
+import net.ericaro.neoql.eventsupport.PropertyListener;
 
 /**
  * A property implementation that tracks a final instance. Yes, its silly, but sometimes it makes implementation
@@ -8,16 +11,16 @@ package net.ericaro.neoql;
  * 
  * @param <T>
  */
-public class PropertyValue<T> implements Property<T> {
+public class FinalProperty<T> implements Property<T> {
 
 	private Class<T>	type;
 	private final T		value;
 
-	public PropertyValue(T value) {
+	public FinalProperty(T value) {
 		this((Class<T>) value.getClass(), value);
 	}
 	
-	public PropertyValue(Class<T> type, T value) {
+	public FinalProperty(Class<T> type, T value) {
 		super();
 		this.value = value;
 		this.type = type;

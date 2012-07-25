@@ -23,4 +23,5 @@ public abstract class InsertChange<T> implements Change {
 	}
 	
 	public Iterable<T> values(){ return Collections.unmodifiableCollection(inserted);}
+	public void accept(ChangeVisitor visitor) {visitor.changed(this);}
 }

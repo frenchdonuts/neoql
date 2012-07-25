@@ -36,8 +36,8 @@ public class EditorModel {
 		
 		
 		database = new Database() ;
-		dirTable = database.createTable(dirName, dirParent);
-		editableTable = database.createTable(editableName, editableEditing , editableParent);
+		dirTable = database.createTable(Directory.class, dirName, dirParent);
+		editableTable = database.createTable(Editable.class, editableName, editableEditing , editableParent);
 		// base for the database, I've got everything I need here.
 		
 		// now building stuff required for the GUI
@@ -55,11 +55,12 @@ public class EditorModel {
 	}
 
 	public Property<Directory> propertyOf(Directory item) {
-		return database.track(item);
+		
+		return database.track(Directory.class, item);
 	}
 
 	public Property<Editable> propertyOf(Editable item) {
-		return database.track(item);
+		return database.track(Editable.class, item);
 	}
 	
 	

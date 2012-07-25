@@ -81,6 +81,15 @@ public class SelectTable<T> implements Table<T> {
 		};
 		table.addTableListener(listener);
 	}
+	
+	
+
+	@Override
+	public Class<T> getType() {
+		return table.getType();
+	}
+
+
 
 	protected boolean where(T row) {
 		return where.eval(row);

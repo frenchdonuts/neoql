@@ -21,9 +21,11 @@ public class MappedTable<S, T> implements Table<T> {
 	private TableListenerSupport<T> events = new TableListenerSupport<T>();
 	private MapMapping<S, T> mapping;
 	private TableListener<S> listener;
+	private Class<T>	type;
 
-	public MappedTable(Mapper<S,T> mapper, Table<S> table) {
+	public MappedTable(Class<T> type, Mapper<S,T> mapper, Table<S> table) {
 		super();
+		this.type = type;
 		this.table = table;
 		this.mapping = new MapMapping<S, T>(mapper);
 		for (S s : table)
@@ -54,6 +56,13 @@ public class MappedTable<S, T> implements Table<T> {
 
 	
 	
+	@Override
+	public Class<T> getType() {
+		return type;
+	}
+
+
+
 	void drop() {
 		table.removeTableListener(listener);
 		events.fireDrop(this);

@@ -45,5 +45,5 @@ public abstract class UpdateChange<T> implements Change {
 			updatedRows.put(oldValue, newValue);
 	}
 	
-	
+	public void accept(ChangeVisitor visitor) {visitor.changed(this);}
 }

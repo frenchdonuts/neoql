@@ -30,7 +30,7 @@ public class StuffListModel {
 		stuffId = NeoQL.column(Stuff.class, "id", Integer.class, false);
 		stuffSelected = NeoQL.column(Stuff.class, "selected", Boolean.class, false);
 		
-		stuffTable = database.createTable(stuffName, stuffId, stuffSelected);
+		stuffTable = database.createTable(Stuff.class, stuffName, stuffId, stuffSelected);
 		listModel = SwingQL.listFor(stuffTable);
 		listSelectionModel = new ListMultiSelectionModel<Stuff>(database, listModel, stuffSelected);
 	}
@@ -40,12 +40,12 @@ public class StuffListModel {
 	}
 	
 	public void addStuff(String name) {
-		database.insert(stuffName.set(name), stuffId.set(++count) );
-		database.update(Stuff.class,(Predicate<Stuff>) NeoQL.True, stuffSelected.set(true) );
+		database.insert(stuffTable, stuffName.set(name), stuffId.set(++count) );
+		database.update(stuffTable, (Predicate<Stuff>) NeoQL.True, stuffSelected.set(true) );
 	}
 	public void removeStuff(Stuff stuff) {
-		database.delete(stuff);
-		database.update(Stuff.class,(Predicate<Stuff>) NeoQL.True, stuffSelected.set(false) );
+		database.delete(stuffTable, NeoQL.is (stuff) );
+		database.update(stuffTable, (Predicate<Stuff>) NeoQL.True, stuffSelected.set(false) );
 	}
 
 	public ListMultiSelectionModel<Stuff> getListSelectionModel() {

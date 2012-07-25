@@ -31,8 +31,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import net.ericaro.neoql.PropertyListener;
 import net.ericaro.neoql.RandName;
+import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Student;
 import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
 import net.ericaro.neoql.smarttree.tree.JNode;

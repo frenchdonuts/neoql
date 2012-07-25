@@ -11,4 +11,6 @@ public interface Change {
 	void revert();
 	Change copy();
 	
+	void accept(ChangeVisitor visitor);
+	
 }

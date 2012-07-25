@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.ericaro.neoql.properties.ColumnProperty;
+import net.ericaro.neoql.properties.ObservableCursor;
+import net.ericaro.neoql.properties.Tracker;
 import net.ericaro.neoql.tables.GroupByTable;
 import net.ericaro.neoql.tables.InnerJoinTable;
 import net.ericaro.neoql.tables.MappedTable;
@@ -213,8 +216,8 @@ public class NeoQL {
 	 * @param mapper
 	 * @return
 	 */
-	public static <S, T> MappedTable<S,T> map(Table<S> table,Mapper<S, T> mapper) {
-		return new MappedTable<S, T>(mapper, table);
+	public static <S, T> MappedTable<S,T> map(Table<S> table, Class<T> target, Mapper<S, T> mapper) {
+		return new MappedTable<S, T>(target, mapper, table);
 	}
 	
 	/** returns  table with a single colum of type T, so that T is a column of table<S> and t values are unique.
@@ -234,7 +237,7 @@ public class NeoQL {
 	 * @param ascendent
 	 * @return
 	 */
-	public static <T, V extends Comparable<? super V>> Table<T> orderyBy(Table<T> table, Column<T, V> orderBy, boolean ascendent) {
+	public static <T, V extends Comparable<? super V>> Table<T> orderBy(Table<T> table, Column<T, V> orderBy, boolean ascendent) {
 		return new OrderByTable<T, V>(table,orderBy, ascendent);
 	}
 	/** creates an inner join table.
@@ -244,8 +247,8 @@ public class NeoQL {
 	 * @param on
 	 * @return
 	 */
-	public static <L, R> Table<Pair<L, R>> innerJoin(Table<L> leftTable, Table<R> rightTable, Predicate<? super Pair<L, R>> on) {
-		return new InnerJoinTable<L, R>(leftTable, rightTable,  on );
+	public static <L, R> Table<Pair<L, R>> innerJoin(Table<L> leftTable, Table<R> rightTable, Class<Pair<L,R>> target, Predicate<? super Pair<L, R>> on) {
+		return new InnerJoinTable<L, R>(target, leftTable, rightTable,  on );
 	}
 	
 	/** split and inner join table into it's left counter part (usefull if you really need inner join to operation filter, or order)
@@ -253,9 +256,10 @@ public class NeoQL {
 	 * @param table
 	 * @return
 	 */
-	public static <L,R> Table<L> left(Table<Pair<L,R>> table) {
+	public static <L,R> Table<L> left(Class<L> left, Table<Pair<L,R>> table) {
 		Mapper<Pair<L,R>, L> map= Pair.left() ;
-		return map(table, map);
+		
+		return map(table,left,  map);
 	}
 	
 	/** same as left but for the right counterpart of the inner join.
@@ -263,9 +267,9 @@ public class NeoQL {
 	 * @param table
 	 * @return
 	 */
-	public static <L,R> Table<R> right(Table<Pair<L,R>> table) {
+	public static <L,R> Table<R> right(Class<R> right, Table<Pair<L,R>> table) {
 		Mapper<Pair<L,R>, R> map= Pair.right() ;
-		return map(table, map);
+		return map(table, right, map);
 	}
 	
 	/**
@@ -332,6 +336,15 @@ public class NeoQL {
 				return b == null; 
 			else
 				return a.equals(b);
-			
 	}
+	
+	public static <T> Property<T> track(Table<T> table, T value) {
+		return Tracker.track(table, value);
+	}
+
+	public static <T, C> ColumnProperty<T, C> track(Property<T> source, Column<T, C> column) {
+		return Tracker.track(source, column);
+	}
+	
+	
 }

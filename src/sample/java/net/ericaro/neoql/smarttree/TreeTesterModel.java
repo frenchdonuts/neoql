@@ -1,20 +1,16 @@
 package net.ericaro.neoql.smarttree;
 
-import java.util.List;
-
 import javax.swing.ListModel;
 
 import net.ericaro.neoql.Column;
+import net.ericaro.neoql.ContentTable;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Property;
+import net.ericaro.neoql.RowProperty;
 import net.ericaro.neoql.Table;
-import net.ericaro.neoql.ContentTable;
-import net.ericaro.neoql.PropertyRow;
-import net.ericaro.neoql.smarttree.TreeTesterModel.Teacher;
 import net.ericaro.neoql.swing.SwingQL;
 import net.ericaro.neoql.swing.TableList;
-import net.ericaro.neoql.tables.SelectTable;
 
 public class TreeTesterModel {
 	
@@ -85,15 +81,15 @@ public class TreeTesterModel {
 	private ContentTable<Teacher> teachers;
 	private ContentTable<Student> students;
 	private ListModel	availableStudentList;
-	private PropertyRow<Teacher>	editingTeacher;
+	private RowProperty<Teacher>	editingTeacher;
 	private Property<String> editingTeacherName;
 	
 	public TreeTesterModel() {
 		super();
 		this.database = new Database();
 		
-		teachers = database.createTable(Teacher.NAME, Teacher.SELECTED);
-		students = database.createTable(Student.NAME, Student.TEACHER );
+		teachers = database.createTable(Teacher.class, Teacher.NAME, Teacher.SELECTED);
+		students = database.createTable(Student.class, Student.NAME, Student.TEACHER );
 		
 //		SelectTable<Teacher> selectedTeachers = NeoQL.where(teachers, Teacher.SELECTED.is(true) );
 //		Table<Student> selectedStudents = NeoQL.left(  NeoQL.innerJoin(students, selectedTeachers, Student.TEACHER.joins() ));
@@ -108,8 +104,8 @@ public class TreeTesterModel {
 //		selectedTeacherList = NeoQL.listFor(selectedTeachers);
 //		selectedStudentList = NeoQL.listFor(selectedStudents);
 		availableStudentList = SwingQL.listFor(availableStudents);
-		editingTeacher = database.createProperty(Teacher.class);
-		editingTeacherName = database.track(editingTeacher, Teacher.NAME); 
+		editingTeacher = database.createRowProperty(Teacher.class, "editing");
+		//editingTeacherName = database.createColumnProperty(editingTeacher, Teacher.NAME); 
 	}
 	
 	// operations
@@ -124,10 +120,10 @@ public class TreeTesterModel {
 	 * @param name
 	 */
 	public void addStudent(final String name) {
-		database.insert(Student.NAME.set(name));
+		database.insert(students, Student.NAME.set(name));
 	}
 	public void addStudent(final String name, Teacher teacher) {
-		database.insert(Student.NAME.set(name), Student.TEACHER.set(teacher));
+		database.insert(students, Student.NAME.set(name), Student.TEACHER.set(teacher));
 	}
 	
 	/** add a teacher in the database
@@ -136,7 +132,7 @@ public class TreeTesterModel {
 	 * @return 
 	 */
 	public Teacher addTeacher(final String name) {
-		return database.insert(Teacher.NAME.set(name) );
+		return database.insert(teachers, Teacher.NAME.set(name) );
 //			database.execute(new Script() {{
 //				insertInto(Teacher.TABLE).set(Teacher.NAME, name);
 //			}});
@@ -148,11 +144,11 @@ public class TreeTesterModel {
 	 * @param teacher
 	 */
 	public void link(final Student student, final Teacher teacher) {
-		database.update(student, Student.TEACHER.set(teacher) );
+		database.update(students, NeoQL.is(student), Student.TEACHER.set(teacher) );
 	}
 	
 	public void selectTeacher(final Teacher teacher, final boolean selected) {
-		database.update(teacher, Teacher.SELECTED.set(selected) );
+		database.update(teachers, NeoQL.is(teacher), Teacher.SELECTED.set(selected) );
 	}
 	
 	public Iterable<Teacher> teachers(){
@@ -180,15 +176,15 @@ public class TreeTesterModel {
 	}
 
 	public void rename(Teacher selection, String next) {
-		database.update(selection, Teacher.NAME.set(next));
+		database.update(teachers, NeoQL.is(selection), Teacher.NAME.set(next));
 	}
 	public void rename(Student selection, String next) {
-		database.update(selection, Student.NAME.set(next));
+		database.update(students, NeoQL.is(selection), Student.NAME.set(next));
 	}
 
 	public void select(Teacher selection) {
 		System.out.println("selecting "+ selection);
-		database.put(editingTeacher, selection);
+		database.moveTo(editingTeacher, selection);
 	}
 
 	public Property<Teacher> getEditingTeacher() {
@@ -196,7 +192,7 @@ public class TreeTesterModel {
 	}
 
 	public void renameEditingTeacher(String value) {
-		database.put(editingTeacherName, value);
+		//database.put(editingTeacherName, value);
 	}
 	
 	

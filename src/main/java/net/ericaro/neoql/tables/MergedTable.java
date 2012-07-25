@@ -16,10 +16,13 @@ public class MergedTable<T> implements Table<T> {
 	protected TableListenerSupport<T>		events	= new TableListenerSupport<T>();
 	protected TableListener<? extends T>	listener;
 	Set<T>									values	= new HashSet<T>();
+	private Class<T>	type;
 
 	public MergedTable(Table<? extends T>... tables) {
 		super();
 		this.tables = tables;
+		if (tables.length>0)
+			type = (Class<T>) tables[0].getType() ;
 		for (Table<? extends T> table : tables)
 			for (T t : table)
 				events.fireInserted(t); // cause events to be fire just like if the items where appended
@@ -52,6 +55,13 @@ public class MergedTable<T> implements Table<T> {
 			t.addTableListener(listener);
 
 	}
+	
+	
+	@Override
+	public Class<T> getType() {
+		return type;
+	}
+
 
 	void drop() {
 		for (Table t : tables)

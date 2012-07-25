@@ -8,7 +8,7 @@ public class JStudentNode extends JNode<Student> {
 
 
 	public JStudentNode(TreeTesterModel model, Student item) {
-		super(model.database.track( item ));
+		super(model.database.track( Student.class, item ));
 	}
 	
 	

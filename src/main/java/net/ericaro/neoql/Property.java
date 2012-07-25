@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.eventsupport.PropertyListener;
+
 public interface Property<T> {
 
 	public abstract Class<T> getType();

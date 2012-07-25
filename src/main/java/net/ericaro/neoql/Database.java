@@ -2,7 +2,6 @@ package net.ericaro.neoql;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,9 +16,6 @@ import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TransactionListener;
 import net.ericaro.neoql.eventsupport.TransactionListenerSupport;
-import net.ericaro.neoql.keys.ClassName;
-import net.ericaro.neoql.keys.ColumnName;
-import net.ericaro.neoql.properties.SingletonProperty;
 
 public class Database implements DDL, DQL, DML, DTL {
 

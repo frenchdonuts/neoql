@@ -8,6 +8,15 @@ import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 import net.ericaro.neoql.eventsupport.TableListener;
 
+/** A cursor is an observable property that follows an single row in a table.
+ * Whenever it changes it fires events to notify observers. There are two sources for changes:
+ * the source "row" is changing, the cursor fires a simple event.
+ * the database is editing (through the "moveTo" method) the cursor, then the change is store in a change, and applied in the next commit.
+ * 
+ * @author eric
+ *
+ * @param <T>
+ */
 public class Cursor<T> implements Property<T> {
 
 	PropertyListenerSupport<T>	support			= new PropertyListenerSupport<T>();

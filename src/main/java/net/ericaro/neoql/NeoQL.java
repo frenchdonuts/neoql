@@ -342,9 +342,12 @@ public class NeoQL {
 		return Tracker.track(table, value);
 	}
 
-	public static <T, C> ColumnProperty<T, C> track(Property<T> source, Column<T, C> column) {
+	public static <T, C> Property<C> track(Property<T> source, Column<T, C> column) {
 		return Tracker.track(source, column);
 	}
-	
+	public static <T, C> Property<C> track(Property<T> source, Class<C> target, Mapper<T, C> mapper) {
+		return Tracker.track(source, target, mapper);
+	}
+		
 	
 }

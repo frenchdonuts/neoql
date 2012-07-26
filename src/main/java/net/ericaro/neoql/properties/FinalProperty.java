@@ -16,10 +16,6 @@ public class FinalProperty<T> implements Property<T> {
 	private Class<T>	type;
 	private final T		value;
 
-	public FinalProperty(T value) {
-		this((Class<T>) value.getClass(), value);
-	}
-	
 	public FinalProperty(Class<T> type, T value) {
 		super();
 		this.value = value;

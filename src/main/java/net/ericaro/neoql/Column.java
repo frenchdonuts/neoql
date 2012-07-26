@@ -117,7 +117,7 @@ public class Column<T, C> {
 	 * @return
 	 */
 	public Predicate<T> is(final C value) {
-		return is(new FinalProperty<C>(value));
+		return is(new FinalProperty<C>(getType(), value));
 	}
 	
 	public Predicate<T> isNull(Class<C> type) {

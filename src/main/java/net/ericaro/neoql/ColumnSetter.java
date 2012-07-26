@@ -25,7 +25,7 @@ public class ColumnSetter<T, V> {
 	public ColumnSetter(Column<T, V> column, V value) {
 		super();
 		this.column = (Column<T, V>) column;
-		this.value =  new FinalProperty<V>(value);
+		this.value =  new FinalProperty<V>(column.getType(), value);
 	}
 
 	/** Construct an association between a column, and a property. The property "get()" value will be always used.

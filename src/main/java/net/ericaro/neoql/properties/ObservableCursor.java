@@ -1,5 +1,7 @@
 package net.ericaro.neoql.properties;
 
+import java.lang.ref.WeakReference;
+
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Property;
 import net.ericaro.neoql.Table;
@@ -22,27 +24,36 @@ public class ObservableCursor<T> implements Property<T>{
 	private TableListener<T>	listener;
 	PropertyChange<T> 			propertyChange = null;
 
-	public ObservableCursor(Table<T> source) {
+	public ObservableCursor(Table<T> source, T val) {
 		super();
 		this.source = source;
+		this.value = val;
 		this.listener = new TableListener<T>() {
 
+			private WeakReference<T>	deletedValue;
 			@Override
 			public void updated(T oldRow, T newRow) {
 				if (oldRow == value)
-					set(newRow);
+					follow(newRow);
 
 			}
 
 			@Override
 			public void deleted(T oldRow) {
-				if (oldRow == value) // ? delete or not delete ?
-					set(null);
+				if (oldRow == value) {
+					deletedValue = new WeakReference<T>(value) ; // keep a weak ref, to "restore" the tracker if needed
+					follow(null);
+				}
 			}
 
 			@Override
-			public void inserted(T newRow) {}
-			
+			public void inserted(T newRow) {
+				if (value == null && deletedValue !=null && deletedValue.get() == newRow ) {
+					// halleluia, it is resurected (probably a nice "undo" manager ;-)
+					deletedValue = null;
+					follow(newRow);
+				}
+			}
 			@Override
 			public void dropped(Table<T> table) {
 				drop();
@@ -55,11 +66,11 @@ public class ObservableCursor<T> implements Property<T>{
 	@Override
 	public void drop() {
 		this.source.removeTableListener(listener);
-		set(null); // also nullify the value
+		follow(null); // also nullify the value
 	}
 
-	
-	void set(T newValue) {
+	void follow(T newValue) {
+		// changed, but this not due to a human decision to move the cursor, but due to the fact that the target has changed
 		T oldValue = value;
 		value = newValue;
 		if (NeoQL.eq(newValue, oldValue))

@@ -74,8 +74,9 @@ public class Cursor<T> implements Property<T> {
 	void follow(T newValue) {
 		// changed, but this not due to a human decision to move the cursor, but due to the fact that the target has changed
 		T oldValue = value;
-		value = newValue;
-		support.fireUpdated(oldValue, newValue);
+		value = newValue;		
+		if (NeoQL.eq(newValue, oldValue))
+			support.fireUpdated(oldValue, newValue);
 	}
 	
 	/** changed due to a user's decision to point to something else, the change is "transactional" like any other changes.

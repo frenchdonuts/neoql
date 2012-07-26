@@ -223,11 +223,22 @@ public 	void testUndoBug() {
 		System.out.println("undoing ---------------");
 		System.out.println(cv.get());
 		System.out.println(c.get());
-		while (um.canUndo()) {
-			um.undo();
-			System.out.println(cv.get());
-			System.out.println(c.get());
-		}
+		
+		/////////////////////////////////////////////////////////////////////////
+		um.undo();
+		assert len(t) == 1 : "the table was not filled correctly";
+		assert len(m) == 1 : "the table was not filled correctly";
+		assert c.get().marked : "cursor has not the right value";
+		assert c.get().target == cv.get() : "the marker target is no the expected target";
+
+		/////////////////////////////////////////////////////////////////////////
+		um.undo();
+		
+		assert len(t) == 0 : "the table was not filled correctly";
+		assert len(m) == 0 : "the table was not filled correctly";
+		assert c.get() == null: "cursor has not the right value";
+		assert cv.get() == null : "the marker target is no the expected target";
+		
 		
 	}
 	

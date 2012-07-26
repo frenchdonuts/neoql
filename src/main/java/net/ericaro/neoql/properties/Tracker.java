@@ -14,7 +14,7 @@ import net.ericaro.neoql.tables.Mapper;
 public class Tracker {
 	
 	public static <T> Property<T> track(Table<T> table, T value) {
-		return new ObservableCursor<T>(table);
+		return new ObservableCursor<T>(table, value);
 	}
 
 	public static <T, C> ColumnProperty<T, C> track(Property<T> source, Column<T, C> column) {

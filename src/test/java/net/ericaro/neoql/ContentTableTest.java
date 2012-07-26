@@ -12,6 +12,9 @@ public class ContentTableTest {
 	public static Column<Tester, String> NAME = NeoQL.column(Tester.class, "name", String.class, false);
 	public static Column<Tester, Integer> COUNT= NeoQL.column(Tester.class, "count", Integer.class, false);
 	
+	public static Column<Marker, Boolean> MARKED= NeoQL.column(Marker.class, "marked", Boolean.class, false);
+	public static Column<Marker, Tester> TARGET= NeoQL.column(Marker.class, "target", Tester.class, true);
+	
 	
 	public static class Tester{
 		private String name ;
@@ -20,10 +23,20 @@ public class ContentTableTest {
 		public String toString() {
 			return "Tester [name=" + name + ", count=" + count + "]";
 		}
-		
+	}
+	
+	public static class Marker {
+		// class used to test inner joins, and above all, the foreign key mechanism
+		boolean marked = false;
+		Tester target;
+		@Override
+		public String toString() {
+			return "Marker [marked=" + marked + ", target=" + target + "]";
+		}
 		
 		
 	}
+	
 	
 	@Test
 	public void testCreate() {
@@ -37,7 +50,7 @@ public class ContentTableTest {
 	
 	@Test
 	public void testBasic() {
-		
+		// we started with a few "usual" changes, and we added step by step some "decoration" 
 		Database db = new Database() ;
 		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
 		Cursor<Tester> c = db.createCursor(t);
@@ -150,6 +163,7 @@ public class ContentTableTest {
 	}
 	@Test
 public 	void testUndoBug() {
+		// had a bug with thee undo, and the cursor, this test was build to fail
 		Database db = new Database() ;
 		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
 		Cursor<Tester> c = db.createCursor(t);
@@ -167,18 +181,60 @@ public 	void testUndoBug() {
 		assert c.get() != null && "1".equals(c.get().name ): "oops, the cursor didn't follow";
 		
 		
-/////////////////////////////////////////////////////////////////////////:
+		/////////////////////////////////////////////////////////////////////////:
 		db.delete(t, NeoQL.is(c));
 		db.commit();
 		assert c.get() == null : "oops, the cursor didn't follow";
 		
 		m.undo() ;
 		assert c.get() != null : "oops, the cursor didn't undo well";
-		
-		
-		
-		
-
 	}
+	
 
+	@Test public void testForeignKey() {
+		Database db = new Database() ;
+		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
+		ContentTable<Marker> m = db.createTable(Marker.class, MARKED, TARGET );
+		Cursor<Marker> c = db.createCursor(m);
+		Cursor<Tester> cv = db.createCursor(t);
+		
+		UndoManager um = new UndoManager();
+		new UndoableAdapter(this, db).addUndoableEditListener(um); // record the undomanager
+		
+		/////////////////////////////////////////////////////////////////////////
+		Tester v = db.insert(t, NAME.set("hello"));
+		Marker mv = db.insert(m, MARKED.set(true), TARGET.set(v));
+		db.moveTo(c, mv);
+		db.moveTo(cv, v);
+		assert len(m) == 0 : "precommit has changed the overall length";
+		db.commit();
+		
+		
+		assert len(t) == 1 : "the table was not filled correctly";
+		assert len(m) == 1 : "the table was not filled correctly";
+		assert c.get().marked : "cursor has not the right value";
+		assert c.get().target == cv.get() : "the marker target is no the expected target";
+		
+		/////////////////////////////////////////////////////////////////////////
+		db.update(m, NeoQL.is(c), MARKED.set(false));
+		db.commit();
+		assert !c.get().marked : "cursor has not the right value";
+		assert c.get().target == cv.get() : "the marker target is no the expected target";
+		System.out.println("undoing ---------------");
+		System.out.println(cv.get());
+		System.out.println(c.get());
+		while (um.canUndo()) {
+			um.undo();
+			System.out.println(cv.get());
+			System.out.println(c.get());
+		}
+		
+	}
+	
+	
+	public static final int len(Iterable<?> i) {
+		int l= 0;
+		for(Object o: i) l++;
+		return l;
+	}
 }

@@ -17,9 +17,14 @@ package net.ericaro.neoql;
  */
 public interface DDL {
 
+	//TODO : finalize the drop protocol (and test it), this requires the capacity to 'idify cursors. Tables are by "class", what about cursor ?
+	
 	//<T> void dropTable(Class<T> table);
+	
 	<T> ContentTable<T> createTable(Class<T> table, Column<T, ?>... columns);
 	<T> Cursor<T> createCursor(Table<T> table);
+	
+	
 	//<T> void dropSingletonProperty(Class<T> type, String name);
 	//<T> SingletonProperty<T> createSingletonProperty(Class<T> type, String name);
 	

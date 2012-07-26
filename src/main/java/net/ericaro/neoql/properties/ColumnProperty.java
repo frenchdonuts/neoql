@@ -38,7 +38,7 @@ public class ColumnProperty<T, C> implements Property<C> {
 	void follow(T oldValue, T newValue) {
 		C oldColumn = col.get(oldValue);
 		C newColumn = col.get(newValue);
-		if (NeoQL.eq(oldColumn, newColumn))
+		if (!NeoQL.eq(oldColumn, newColumn))
 			support.fireUpdated(oldColumn, newColumn);
 	}
 

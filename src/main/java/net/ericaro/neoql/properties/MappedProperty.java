@@ -37,7 +37,7 @@ public class MappedProperty<T, C> implements Property<C> {
 	void follow(T oldValue, T newValue) {
 		C oldColumn = map.map(oldValue);
 		C newColumn = map.map(newValue);
-		if (NeoQL.eq(oldColumn, newColumn))
+		if (!NeoQL.eq(oldColumn, newColumn))
 			support.fireUpdated(oldColumn, newColumn);
 	}
 

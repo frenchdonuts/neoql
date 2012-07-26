@@ -75,7 +75,7 @@ public class Cursor<T> implements Property<T> {
 		// changed, but this not due to a human decision to move the cursor, but due to the fact that the target has changed
 		T oldValue = value;
 		value = newValue;		
-		if (NeoQL.eq(newValue, oldValue))
+		if (!NeoQL.eq(newValue, oldValue))
 			support.fireUpdated(oldValue, newValue);
 	}
 	

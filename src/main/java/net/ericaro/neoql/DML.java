@@ -1,6 +1,5 @@
 package net.ericaro.neoql;
 
-import net.ericaro.neoql.properties.SingletonProperty;
 
 /** The Data Manipulation Language interface
  * 

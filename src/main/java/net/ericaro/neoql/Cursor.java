@@ -3,7 +3,6 @@ package net.ericaro.neoql;
 import java.lang.ref.WeakReference;
 
 import net.ericaro.neoql.changeset.Change;
-import net.ericaro.neoql.changeset.PropertyChange;
 import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 import net.ericaro.neoql.eventsupport.TableListener;
@@ -17,16 +16,23 @@ import net.ericaro.neoql.eventsupport.TableListener;
  *
  * @param <T>
  */
-public class Cursor<T> implements Property<T> {
+public class Cursor<T> implements Property<T>, Content {
 
 	PropertyListenerSupport<T>	support			= new PropertyListenerSupport<T>();
 	T							value;
 	private Table<T>			source;
 	private TableListener<T>	listener;
 	PropertyChange<T>			propertyChange	= null;
+	private Object	key;
 
-	Cursor(Table<T> source) {
+	/** creates a new cursor, key is any object used to retrieve the cursor later, must be unique per database
+	 * 
+	 * @param key
+	 * @param source
+	 */
+	Cursor(Object key, Table<T> source) {
 		super();
+		this.key = key;
 		this.source = source;
 		this.listener = new TableListener<T>() {
 
@@ -65,6 +71,10 @@ public class Cursor<T> implements Property<T> {
 		source.addTableListener(listener);
 	}
 
+	public Object getKey() {
+		return key;
+	}
+	
 	@Override
 	public void drop() {
 		this.source.removeTableListener(listener);
@@ -86,7 +96,7 @@ public class Cursor<T> implements Property<T> {
 	void set(T newValue) {
 		T oldValue = value;
 		if (propertyChange == null)
-			propertyChange = new MyPropertyChange();
+			propertyChange = new PropertyChange<T>(key);
 		propertyChange.set(oldValue, newValue);
 	}
 
@@ -105,31 +115,18 @@ public class Cursor<T> implements Property<T> {
 		support.removePropertyListener(l);
 	}
 
-	class MyPropertyChange extends PropertyChange<T> {
-
-		@Override
-		public Change copy() {
-			MyPropertyChange that = new MyPropertyChange();
-			that.newValue = this.newValue;
-			that.oldValue = this.newValue;
-			return that;
-		}
-
-		@Override
-		public void commit() {
-			value = newValue;
-			support.fireUpdated(oldValue, newValue);
-		}
-
-		@Override
-		public void revert() {
-			value = oldValue;
-			support.fireUpdated(newValue, oldValue);
-		}
-	}
-
 	@Override
 	public Class<T> getType() {
 		return source.getType();
 	}
+	
+	void doCommit(PropertyChange<T> change) {
+		support.fireUpdated(value, value=change.getNewValue());
+	}
+
+	@Override
+	public void accept(ContentVisitor visitor) { visitor.visit(this);}
+	
+	
+	
 }

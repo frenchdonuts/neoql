@@ -1,6 +1,5 @@
 package net.ericaro.neoql;
 
-import net.ericaro.neoql.properties.SingletonProperty;
 
 /** The Data Query Language Interface
  * 
@@ -16,6 +15,7 @@ public interface DQL {
 	Iterable<Cursor> getRows();            
 	                                                        
 	<T> ContentTable<T> getTable(Class<T> table);
+	<T> Cursor<T> getCursor(Object key);
 	
 	
 	

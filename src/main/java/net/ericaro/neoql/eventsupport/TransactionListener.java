@@ -13,13 +13,6 @@ public interface TransactionListener extends EventListener{
 	 */
 	void committed(Change change);
 	
-	/** a change has been made, back in the history
-	 * 
-	 * @param change
-	 */
-	void reverted(Change change);
-	
-	
 	/** the change has not been made, but was rollbacked instead.
 	 * 
 	 * @param change

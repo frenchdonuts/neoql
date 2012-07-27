@@ -37,10 +37,6 @@ public class TransactionListenerSupport {
 		for (TransactionListener l : listeners())
 			l.rolledBack(change);
 	}
-	public void fireReverted(Change change) {
-		for (TransactionListener l : listeners())
-			l.reverted(change);
-	}
 
 	@Override
 	public String toString() {

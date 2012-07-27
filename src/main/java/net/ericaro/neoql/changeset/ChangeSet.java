@@ -4,6 +4,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -16,7 +17,7 @@ import java.util.List;
  * @author eric
  *
  */
-public class ChangeSet implements Change{
+public class ChangeSet implements Change, Iterable<Change>{
 
 	List<Change> operations = new ArrayList<Change>();
 	// TODO when I'll handle merge, need to have a list of merge parent
@@ -37,22 +38,15 @@ public class ChangeSet implements Change{
 	}
 	
 	
-	/** Apply stored operations
-	 * 
-	 */
-	public void commit() {
-		for(Change o: operations)
-			o.commit() ;
+	@Override
+	public Iterator<Change> iterator() {
+		return Collections.unmodifiableList(operations).iterator();
 	}
-	/** revert stored operations
-	 * 
-	 */
-	public void revert() {
-		for(int i=operations.size();i>0;i--)
-			operations.get(i-1).revert() ;
+	
+	public List<Change> changes() {
+		return Collections.unmodifiableList(operations);
 	}
-
-
+	
 	public boolean isEmpty() {
 		return operations.size() == 0;
 	}
@@ -70,7 +64,7 @@ public class ChangeSet implements Change{
 	public ChangeSet reverse() {
 		ChangeSet that = new ChangeSet();
 		for(Change c: operations)
-			that.operations.add(0, new ReverseChange(c) );
+			that.operations.add(0, c.reverse() );
 		return that;
 	}
 	

@@ -25,9 +25,6 @@ public class UndoableAdapter {
 			public void rolledBack(Change change) {
 			}
 			
-			@Override
-			public void reverted(Change change) {
-			}
 			
 			@Override
 			public void committed(Change change) {
@@ -65,7 +62,7 @@ public class UndoableAdapter {
 			super.undo();
 			try {
 				source.removeTransactionListener(listener);
-				change.revert() ;
+				source.apply(change.reverse());
 			}finally {
 				source.addTransactionListener(listener);
 			}
@@ -77,7 +74,7 @@ public class UndoableAdapter {
 			super.redo();
 			try {
 				source.removeTransactionListener(listener);
-				change.commit() ;
+				source.apply(change) ;
 			}finally {
 				source.addTransactionListener(listener);
 			}

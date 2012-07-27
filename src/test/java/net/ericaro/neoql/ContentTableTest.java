@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import javax.swing.undo.UndoManager;
 
+import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.swing.UndoableAdapter;
 
 import org.junit.Test;
@@ -202,12 +203,13 @@ public 	void testUndoBug() {
 		new UndoableAdapter(this, db).addUndoableEditListener(um); // record the undomanager
 		
 		/////////////////////////////////////////////////////////////////////////
+		// insert hello and mark as true
 		Tester v = db.insert(t, NAME.set("hello"));
 		Marker mv = db.insert(m, MARKED.set(true), TARGET.set(v));
 		db.moveTo(c, mv);
 		db.moveTo(cv, v);
 		assert len(m) == 0 : "precommit has changed the overall length";
-		db.commit();
+		Change firstcs = db.commit();
 		
 		
 		assert len(t) == 1 : "the table was not filled correctly";
@@ -216,8 +218,9 @@ public 	void testUndoBug() {
 		assert c.get().target == cv.get() : "the marker target is no the expected target";
 		
 		/////////////////////////////////////////////////////////////////////////
+		// mark as false
 		db.update(m, NeoQL.is(c), MARKED.set(false));
-		db.commit();
+		Change secondcs = db.commit();
 		assert !c.get().marked : "cursor has not the right value";
 		assert c.get().target == cv.get() : "the marker target is no the expected target";
 		System.out.println("undoing ---------------");
@@ -225,14 +228,21 @@ public 	void testUndoBug() {
 		System.out.println(c.get());
 		
 		/////////////////////////////////////////////////////////////////////////
-		um.undo();
+		// undo, hence mark is back to true
+		
+		Change thirdcs = secondcs.reverse();
+		db.apply(thirdcs) ;
+		
 		assert len(t) == 1 : "the table was not filled correctly";
 		assert len(m) == 1 : "the table was not filled correctly";
 		assert c.get().marked : "cursor has not the right value";
 		assert c.get().target == cv.get() : "the marker target is no the expected target";
 
 		/////////////////////////////////////////////////////////////////////////
-		um.undo();
+		// undo hence, delete and delete mark as true
+		Change fourth = firstcs.reverse();
+		db.apply(fourth) ;
+		//um.undo();
 		
 		assert len(t) == 0 : "the table was not filled correctly";
 		assert len(m) == 0 : "the table was not filled correctly";

@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeSet;
+import net.ericaro.neoql.changeset.ChangeVisitor;
 import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TransactionListener;
@@ -28,7 +27,7 @@ public class Database implements DDL, DQL, DML, DTL {
 
 	// private Map<Class, SingletonProperty> singletons = new HashMap<Class, SingletonProperty>();
 
-	private Set<Cursor>					rows		= new HashSet<Cursor>();
+	private Map<Object, Cursor>			cursors		= new HashMap<Object, Cursor>();
 	TransactionListenerSupport			support		= new TransactionListenerSupport();
 
 	// I need to track properties, because they hold one bit of information: the actual type they are tracking, this might change => it should be transactional.
@@ -103,9 +102,27 @@ public class Database implements DDL, DQL, DML, DTL {
 	 */
 	@Override
 	public <T> Cursor<T> createCursor(Table<T> table) {
-		Cursor<T> s = new Cursor<T>(table);
-		rows.add(s);
+		return createCursor(table, newKey());
+	}
+
+	@Override
+	public <T> Cursor<T> createCursor(Table<T> table, Object key) {
+		Cursor<T> s = new Cursor<T>(key, table);
+		assert !cursors.containsKey(key) : "cannot create cursor: key already exists";
+		cursors.put(key, s);
 		return s;
+	}
+
+	long	keySeed	= 0;	// default key
+
+	/**
+	 * generates a new unique key (unique in this database)
+	 * 
+	 * @return
+	 */
+	Object newKey() {
+		while (cursors.containsKey(++keySeed)) {}
+		return keySeed;
 	}
 
 	// ##########################################################################
@@ -125,7 +142,11 @@ public class Database implements DDL, DQL, DML, DTL {
 	public <T> ContentTable<T> getTable(Class<T> type) {
 		return typed.get(type);
 	}
-	
+
+	@Override
+	public <T> Cursor<T> getCursor(Object key) {
+		return cursors.get(key);
+	}
 
 	/**
 	 * Return the actual ContentTables.
@@ -138,13 +159,13 @@ public class Database implements DDL, DQL, DML, DTL {
 		return typed.values();
 	}
 
-//	@Override
-//	public Iterable<SingletonProperty> getSingletons() {
-//		return singletons.values();
-//	}
+	// @Override
+	// public Iterable<SingletonProperty> getSingletons() {
+	// return singletons.values();
+	// }
 
 	public Iterable<Cursor> getRows() {
-		return Collections.unmodifiableCollection(rows);
+		return Collections.unmodifiableCollection(cursors.values());
 	}
 
 	// ##########################################################################
@@ -232,12 +253,12 @@ public class Database implements DDL, DQL, DML, DTL {
 	 * @param prop
 	 * @param value
 	 */
-//	@Override
-//	public <T> T update(SingletonProperty<T> prop, T value) {
-//		prop.set(value);
-//		precommit();
-//		return value;
-//	}
+	// @Override
+	// public <T> T update(SingletonProperty<T> prop, T value) {
+	// prop.set(value);
+	// precommit();
+	// return value;
+	// }
 
 	@Override
 	public <T> void moveTo(Cursor<T> property, T value) {
@@ -270,17 +291,17 @@ public class Database implements DDL, DQL, DML, DTL {
 	 * @param s
 	 */
 	public <T> void dropCursor(Cursor<T> cursor) {
-		rows.remove(cursor);
+		cursors.remove(cursor);
 		cursor.drop();
 	}
 
-//	@Override
-//	public <T> void dropSingletonProperty(Class<T> type) {
-//		SingletonProperty<T> p = getSingletonProperty(type);
-//		singletons.remove(type);
-//		p.drop();
-//
-//	}
+	// @Override
+	// public <T> void dropSingletonProperty(Class<T> type) {
+	// SingletonProperty<T> p = getSingletonProperty(type);
+	// singletons.remove(type);
+	// p.drop();
+	//
+	// }
 
 	// ##########################################################################
 	// DROP END
@@ -346,8 +367,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	public Change commit() {
 
 		ChangeSet otx = popChangeSet(); // flush buffers into the transaction tx
-		otx.commit();
-		support.fireCommitted(otx);
+		otx = apply(otx);
 		return otx;
 	}
 
@@ -378,14 +398,14 @@ public class Database implements DDL, DQL, DML, DTL {
 	 */
 	private ChangeSet popChangeSet() {
 		List<Change> tx = new ArrayList<Change>();
-		for (Cursor s : rows) {
+		for (Cursor s : cursors.values()) {
 			tx.add(s.propertyChange);
 			s.propertyChange = null;
 		}
-//		for (SingletonProperty s : singletons.values()) {
-//			tx.add(s.propertyChange);
-//			s.propertyChange = null;
-//		}
+		// for (SingletonProperty s : singletons.values()) {
+		// tx.add(s.propertyChange);
+		// s.propertyChange = null;
+		// }
 
 		// collect all "changes" in the tables
 		for (ContentTable t : typed.values()) {
@@ -420,27 +440,52 @@ public class Database implements DDL, DQL, DML, DTL {
 	}
 
 	public ChangeSet apply(Iterable<Change> c) {
-		ChangeSet tx = rollback(); // this has no effect if there was no incoming changes
-		assert tx.isEmpty() : "cannot commit a changeset when there are local changes not yet applyed";
-		// I need to clone the cs, before applying.
-		ChangeSet cs = new ChangeSet(c);
-		cs.commit();
-		support.fireCommitted(cs);
-		return cs;
+		return apply(new ChangeSet(c));
 	}
 
-	public ChangeSet revert(Change... c) {
-		return revert(Arrays.asList(c));
-	}
-
-	public ChangeSet revert(Iterable<Change> c) {
+	public ChangeSet apply(ChangeSet c) {
 		ChangeSet tx = rollback(); // this has no effect if there was no incoming changes
 		assert tx.isEmpty() : "cannot commit a changeset when there are local changes not yet applyed";
-		// I need to clone the cs, before applying.
-		ChangeSet cs = new ChangeSet(c);
-		cs.revert();
-		support.fireReverted(cs);
-		return cs;
+		c.accept(new ChangeVisitor() {
+
+			// ##########################################################################
+			// SPECIAL CASES BEGIN
+			// ##########################################################################
+			@Override
+			public void changed(ChangeSet change) { // composite pattern
+				for (Change c : change)
+					c.accept(this);
+			}
+
+			// ##########################################################################
+			// SPECIAL CASES END
+			// ##########################################################################
+
+			@Override
+			public <T> void changed(final UpdateChange<T> change) {
+				getTable(change.getType()).doCommit(change);
+			}
+
+			@Override
+			public <T> void changed(DeleteChange<T> change) {
+				getTable(change.getType()).doCommit(change);
+			}
+
+			@Override
+			public <T> void changed(InsertChange<T> change) {
+				getTable(change.getType()).doCommit(change);
+
+			}
+
+			@Override
+			public <T> void changed(PropertyChange<T> change) {
+				Cursor<T> c = getCursor(change.getKey());
+				c.doCommit(change);
+			}
+
+		});
+		support.fireCommitted(c);
+		return c;
 	}
 
 	// ##########################################################################

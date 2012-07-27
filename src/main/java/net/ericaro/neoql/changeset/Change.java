@@ -7,9 +7,8 @@ package net.ericaro.neoql.changeset;
  */
 public interface Change {
 
-	void commit();
-	void revert();
 	Change copy();
+	Change reverse();
 	
 	void accept(ChangeVisitor visitor);
 	

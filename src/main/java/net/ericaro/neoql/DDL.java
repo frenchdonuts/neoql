@@ -22,7 +22,20 @@ public interface DDL {
 	//<T> void dropTable(Class<T> table);
 	
 	<T> ContentTable<T> createTable(Class<T> table, Column<T, ?>... columns);
+	/** creates a new cursor, it delegates the key creation to the database
+	 * 
+	 * @param table
+	 * @return
+	 */
 	<T> Cursor<T> createCursor(Table<T> table);
+	
+	/** creates a new cursor, but using a key so that it is possible to retrieve it later
+	 * 
+	 * @param table
+	 * @param key
+	 * @return
+	 */
+	<T> Cursor<T> createCursor(Table<T> table, Object key);
 	
 	
 	//<T> void dropSingletonProperty(Class<T> type, String name);

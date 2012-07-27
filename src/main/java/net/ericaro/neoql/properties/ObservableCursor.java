@@ -4,8 +4,8 @@ import java.lang.ref.WeakReference;
 
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Property;
+import net.ericaro.neoql.PropertyChange;
 import net.ericaro.neoql.Table;
-import net.ericaro.neoql.changeset.PropertyChange;
 import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
 import net.ericaro.neoql.eventsupport.TableListener;

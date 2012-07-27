@@ -1,22 +1,18 @@
 package net.ericaro.neoql.lbr;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.ContentTable;
+import net.ericaro.neoql.Cursor;
 import net.ericaro.neoql.DDL;
 import net.ericaro.neoql.DQL;
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.Property;
-import net.ericaro.neoql.Cursor;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeSet;
 import net.ericaro.neoql.eventsupport.TransactionListener;
-import net.ericaro.neoql.properties.SingletonProperty;
 
 /**
  * handles three databases, a local one, a "proxy" of a remote one (called remote), and a "base" one. 
@@ -56,12 +52,7 @@ public class LBRDatabase implements DDL {
 			public void committed(Change change) {
 				localChanges.add(change);
 			}
-
-			@Override
-			public void reverted(Change change) {
-				localChanges.remove(change);
-			}
-
+			
 			@Override
 			public void rolledBack(Change change) {	}
 			
@@ -70,10 +61,6 @@ public class LBRDatabase implements DDL {
 			@Override
 			public void committed(Change change) {
 				remoteChanges.add(change);
-			}
-			@Override
-			public void reverted(Change change) {
-				remoteChanges.remove(change);
 			}
 			
 			@Override
@@ -91,9 +78,17 @@ public class LBRDatabase implements DDL {
 
 	@Override
 	public <T> Cursor<T> createCursor(Table<T> table) {// I don't like it, this is a fraud ! the cursor is associated to a table that do not belong to the database !! beurk !
-		base  .createCursor(table );
-		remote.createCursor(table );
-		return local.createCursor(table);
+		Cursor<T> loc = local.createCursor(table);
+		base  .createCursor(table , loc.getKey());
+		remote.createCursor(table, loc.getKey() );
+		return loc;
+	}
+	
+	public <T> Cursor<T> createCursor(Table<T> table, Object key) {
+		Cursor<T> loc = local.createCursor(table, key);
+		base  .createCursor(table , key);
+		remote.createCursor(table, key );
+		return loc;
 	}
 
 
@@ -162,8 +157,7 @@ public class LBRDatabase implements DDL {
 	public void checkout() {
 		ChangeSet remotes = new ChangeSet(remoteChanges);
 		ChangeSet locals  = new ChangeSet(localChanges);
-		local.revert(locals);
-		local.apply(remotes);
+		local.apply(locals.reverse(), remotes);
 		base.apply(remotes);
 		localChanges.clear();
 		remoteChanges.clear();
@@ -193,10 +187,4 @@ public class LBRDatabase implements DDL {
 	public void reset() throws FetchException {
 		fetch();checkout() ;
 	}
-
-	
-	
-	
-	
-
 }

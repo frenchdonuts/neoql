@@ -15,7 +15,7 @@ import net.ericaro.neoql.changeset.ChangeSet;
 import net.ericaro.neoql.eventsupport.TransactionListener;
 
 /**
- * handles three databases, a local one, a "proxy" of a remote one (called remote), and a "base" one. 
+ * handles three databases, a local one, a "proxy" of a remote one (called remote), and a "base" one.
  * Every DDL instructions are sent to the three databases, so that
  * all three shares the same structure.
  * 
@@ -23,13 +23,15 @@ import net.ericaro.neoql.eventsupport.TransactionListener;
  * Remote is expected to track remote changes.<br/>
  * Base is used as the common ancestor for local and remote.
  * 
- * There are three "atomic" operations <ul>
+ * There are three "atomic" operations
+ * <ul>
  * <li>fetch: retrieve data from the actual remote database, and write them down into the "remote" database</li>
  * <li>update: apply changes present in the "remote" database into the local database. This operation is pure local.</li>
  * <li>checkout: force all three database to be equals to the "remote" one.</li>
  * </ul>
  * 
- * There are less "atomic" operations, like, <ul>
+ * There are less "atomic" operations, like,
+ * <ul>
  * <li>save: fetch data from the database, update, and commit</li>
  * </ul>
  * 
@@ -52,46 +54,64 @@ public class LBRDatabase implements DDL {
 			public void committed(Change change) {
 				localChanges.add(change);
 			}
-			
+
 			@Override
-			public void rolledBack(Change change) {	}
-			
+			public void rolledBack(Change change) {}
+
 		});
 		remote.addTransactionListener(new TransactionListener() {
 			@Override
 			public void committed(Change change) {
 				remoteChanges.add(change);
 			}
-			
+
 			@Override
-			public void rolledBack(Change change) {	}
-			
+			public void rolledBack(Change change) {}
+
 		});
 	}
 
 	@Override
 	public <T> ContentTable<T> createTable(Class<T> table, Column<T, ?>... columns) {
-		base  .createTable(table, columns);
+		base.createTable(table, columns);
 		remote.createTable(table, columns);
 		return local.createTable(table, columns);
 	}
 
 	@Override
-	public <T> Cursor<T> createCursor(Table<T> table) {// I don't like it, this is a fraud ! the cursor is associated to a table that do not belong to the database !! beurk !
+	public <T> Cursor<T> createCursor(ContentTable<T> table) {// I don't like it, this is a fraud ! the cursor is associated to a table that do not belong to the database !! beurk !
+		return createCursor(table.getType());
+	}
+
+	public <T> Cursor<T> createCursor(Class<T> table) {// I don't like it, this is a fraud ! the cursor is associated to a table that do not belong to the database !! beurk !
+
 		Cursor<T> loc = local.createCursor(table);
-		base  .createCursor(table , loc.getKey());
-		remote.createCursor(table, loc.getKey() );
+		base.createCursor(table, loc.getKey());
+		remote.createCursor(table, loc.getKey());
 		return loc;
 	}
-	
-	public <T> Cursor<T> createCursor(Table<T> table, Object key) {
+
+	public <T> Cursor<T> createCursor(Class<T> table, Object key) {
 		Cursor<T> loc = local.createCursor(table, key);
-		base  .createCursor(table , key);
-		remote.createCursor(table, key );
+		base.createCursor(table, key);
+		remote.createCursor(table, key);
 		return loc;
 	}
 
+	
+	
+	@Override
+	public <T> void dropTable(Class<T> table) {
+		local.dropTable(table);
+		local.dropTable(table);
+		local.dropTable(table);
+	}
 
+	@Override
+	public <T> void dropCursor(Object key) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	/**
 	 * access the local database.
@@ -138,53 +158,62 @@ public class LBRDatabase implements DDL {
 		operations.fetch(remote);
 		remote.commit();
 	}
-	
+
 	public void commit() throws CommitException {
 		operations.commit(local);
 	}
-	/** assume that the remote has been fetched, then apply as many changes from the remote one, to the local database.
-	 * @throws MergeException 
+
+	/**
+	 * assume that the remote has been fetched, then apply as many changes from the remote one, to the local database.
+	 * 
+	 * @throws MergeException
 	 * 
 	 */
 	public void update() throws MergeException {
-		ChangeSet locals  = new ChangeSet(localChanges);
+		ChangeSet locals = new ChangeSet(localChanges);
 		ChangeSet remotes = new ChangeSet(remoteChanges);
 		operations.merge(local, remote, base, locals, remotes);
 	}
-	/** force all databases to be equals to the remote one. All changes are lost
+
+	/**
+	 * force all databases to be equals to the remote one. All changes are lost
 	 * 
 	 */
 	public void checkout() {
 		ChangeSet remotes = new ChangeSet(remoteChanges);
-		ChangeSet locals  = new ChangeSet(localChanges);
+		ChangeSet locals = new ChangeSet(localChanges);
 		local.apply(locals.reverse(), remotes);
 		base.apply(remotes);
 		localChanges.clear();
 		remoteChanges.clear();
-		
+
 	}
-	
-	
-	/** force a commit from the local database ( this is delegated to the Operation object).
+
+	/**
+	 * force a commit from the local database ( this is delegated to the Operation object).
 	 * then fetch the changes, and check them out to all databases
 	 * 
 	 * @throws CommitException
 	 * @throws FetchException
-	 * @throws MergeException 
+	 * @throws MergeException
 	 */
 	public void save() throws CommitException, FetchException, MergeException {
-		fetch();update();
-		
+		fetch();
+		update();
+
 		commit(); // cause the local database to be fully copied to the remote one
-		
-		fetch();checkout(); // force local sync
+
+		fetch();
+		checkout(); // force local sync
 	}
-	
-	/** reset all local changes to match the remote database now.
+
+	/**
+	 * reset all local changes to match the remote database now.
 	 * 
 	 * @throws FetchException
 	 */
 	public void reset() throws FetchException {
-		fetch();checkout() ;
+		fetch();
+		checkout();
 	}
 }

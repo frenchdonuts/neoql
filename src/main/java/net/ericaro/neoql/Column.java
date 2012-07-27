@@ -126,7 +126,7 @@ public class Column<T, C> {
 
 	@Override
 	public String toString() {
-		return attr + " " + getType().getSimpleName() + (hasForeignKey ? "" : " FOREIGN KEY REFERENCES " + getType().getName());
+		return attr + " " + getType().getSimpleName() + (!hasForeignKey ? "" : " FOREIGN KEY REFERENCES " + getType().getName());
 	}
 
 }

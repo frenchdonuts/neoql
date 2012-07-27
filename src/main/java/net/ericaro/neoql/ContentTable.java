@@ -24,7 +24,7 @@ public class ContentTable<T> implements Table<T>, Content {
 
 	private TableListenerSupport<T>	internals		= new TableListenerSupport<T>();	// fire the internal cascading ( i.e foreign key manager)
 
-	private Column<T, ?>[]			columns;											// column definition
+	Column<T, ?>[]					columns;											// column definition
 	private Set<T>					rows			= new HashSet<T>();				// content definition (note that duplicates are not allowed)
 
 	private Class<T>				type;												// table type
@@ -89,7 +89,7 @@ public class ContentTable<T> implements Table<T>, Content {
 
 	private <V> void connectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			ContentTable<V> ftable = owner.getTable(col.getType());
+			ContentTable<V> ftable = owner.getTxTable(col.getType());
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(ftable, internalColumnListeners[i]);
 		}
@@ -97,7 +97,7 @@ public class ContentTable<T> implements Table<T>, Content {
 
 	private <V> void disconnectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			ContentTable<V> ftable = owner.getTable(col.getType());
+			ContentTable<V> ftable = owner.getTxTable(col.getType());
 			owner.removeInternalTableListener(ftable, internalColumnListeners[i]);
 		}
 	}
@@ -364,13 +364,12 @@ public class ContentTable<T> implements Table<T>, Content {
 			if (rows.add(r))// actually add the item back
 				fireInserted(r);
 	}
-	
+
 	void doCommit(DeleteChange<T> change) {
 		for (T r : change.deleted())
 			if (rows.remove(r))// actually add the item back
 				fireDeleted(r);
 	}
-	
 
 	// ##########################################################################
 	// ACTUAL TRANSACTION OPERATIONS END
@@ -414,6 +413,8 @@ public class ContentTable<T> implements Table<T>, Content {
 	// UNDO END
 	// ##########################################################################
 	@Override
-	public void accept(ContentVisitor visitor) { visitor.visit(this);}
-	
+	public void accept(ContentVisitor visitor) {
+		visitor.visit(this);
+	}
+
 }

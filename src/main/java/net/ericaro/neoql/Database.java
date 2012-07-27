@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -15,20 +16,28 @@ import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TransactionListener;
 import net.ericaro.neoql.eventsupport.TransactionListenerSupport;
+import net.ericaro.neoql.tables.Pair;
 
 public class Database implements DDL, DQL, DML, DTL {
 
 	static Logger						LOG			= Logger.getLogger(Database.class.getName());
 
-	// real class -> table mapping
-	private Map<Class, ContentTable>	typed		= new HashMap<Class, ContentTable>();
-
 	boolean								autoCommit	= false;
+	long								keySeed		= 0;											// default key
 
-	// private Map<Class, SingletonProperty> singletons = new HashMap<Class, SingletonProperty>();
+	// real class -> table mapping
+	private Map<Class, ContentTable>	tables		= new HashMap<Class, ContentTable>();
+	private Map<Class, ContentTable>	txTables	= new HashMap<Class, ContentTable>();
 
 	private Map<Object, Cursor>			cursors		= new HashMap<Object, Cursor>();
+	private Map<Object, Cursor>			txCursors	= new HashMap<Object, Cursor>();
+
 	TransactionListenerSupport			support		= new TransactionListenerSupport();
+
+	private DropTableChange				dropTableChange;
+	private DropCursorChange			dropCursorChange;
+	private CreateCursorChange			createCursorChange;
+	private CreateTableChange			createTableChange;
 
 	// I need to track properties, because they hold one bit of information: the actual type they are tracking, this might change => it should be transactional.
 
@@ -58,18 +67,35 @@ public class Database implements DDL, DQL, DML, DTL {
 	 */
 	@Override
 	public <T> ContentTable<T> createTable(Class<T> table, Column<T, ?>... columns) {
+		assert columns.length > 0 : "cannot create a table with no columns";
+		LOG.fine("CREATE TABLE " + table); // always log before assert, so that assertion fail can be traced in the logs
+		assert !tables.containsKey(table) : "failed to create a table data that already exists";
+		assert allColumsAreOfType(table, columns) : "cannot create columns that do not have the same type";
+		if (createTableChange ==null ) 
+			createTableChange = new CreateTableChange();
+		createTableChange.create(table, columns);
+		ContentTable<T> data = new ContentTable<T>(this, table, columns);
+		this.txTables.put(table, data);
+		data.install(); // let this table connect to others foreign key. This implies that foreign keys are already created, hence there is no dependency loop
+		return data;
+	}
+
+	private <T> void doCreateTable(Class<T> table, Column<T, ?>... columns) {
 		// assert !tables.containsKey(table):"failed to create a table data that already exists";
 		assert columns.length > 0 : "cannot create a table with no columns";
 
 		LOG.fine("CREATE TABLE " + table); // always log before assert, so that assertion fail can be traced in the logs
-		assert !typed.containsKey(table) : "failed to create a table data that already exists";
+		assert !tables.containsKey(table) : "failed to create a table data that already exists";
 		assert allColumsAreOfType(table, columns) : "cannot create columns that do not have the same type";
-
 		ContentTable<T> data = new ContentTable<T>(this, table, columns);
-		this.typed.put(table, data);
-		data.install(); // let this table connect to others foreign key. This implies that foreign keys are already created, hence there is no dependency loop
-		return data;
+		doReuseTable(data);
 	}
+
+	private <T> void doReuseTable(ContentTable<T> data) {
+		this.tables.put(data.getType(), data);
+		data.install(); // let this table connect to others foreign key. This implies that foreign keys are already created, hence there is no dependency loop
+	}
+	
 
 	private static <T> boolean allColumsAreOfType(Class<T> type, Column... columns) {
 		for (Column c : columns)
@@ -78,18 +104,9 @@ public class Database implements DDL, DQL, DML, DTL {
 		return true;
 	}
 
-	/**
-	 * Creates a Singleton Property. A Singleton Property holds a single value, and notify changes for it.
-	 * 
-	 * @param type
-	 * @return
-	 */
-	// public <T> SingletonProperty<T> createSingletonProperty(Class<T> type) {
-	// SingletonProperty<T> s = new SingletonProperty<T>(type);
-	// singletons.put(type, s);
-	// return s;
-	// }
-
+	public <T> Cursor<T> createCursor(ContentTable<T> table) {
+		return createCursor(table.getType());
+	}
 	/**
 	 * Creates a Property for a given table type.
 	 * A Property is an object that will return always the same row from a table.
@@ -101,19 +118,74 @@ public class Database implements DDL, DQL, DML, DTL {
 	 * @return
 	 */
 	@Override
-	public <T> Cursor<T> createCursor(Table<T> table) {
+	public <T> Cursor<T> createCursor(Class<T> table) {
 		return createCursor(table, newKey());
 	}
 
 	@Override
-	public <T> Cursor<T> createCursor(Table<T> table, Object key) {
-		Cursor<T> s = new Cursor<T>(key, table);
+	public <T> Cursor<T> createCursor(Class<T> table, Object key) {
+		if (createCursorChange == null)
+			createCursorChange = new CreateCursorChange();
+		createCursorChange.create(table, key);
+		// now prebuild the cursor for the live time of the transaction
+		
+		Cursor<T> s = new Cursor<T>(key, getTxTable(table));
 		assert !cursors.containsKey(key) : "cannot create cursor: key already exists";
-		cursors.put(key, s);
+		txCursors.put(key, s);
+		s.install() ;// (install for the tx live time only
+		precommit();
 		return s;
 	}
 
-	long	keySeed	= 0;	// default key
+	<T> void doCreateCursor(Class<T> table, Object key) {
+		Cursor<T> s = new Cursor<T>(key, getTable(table));
+		doReuseCursor(s);
+	}
+
+	/**
+	 * called by the insert either a "reused" pre created cursor, or the brand new one.
+	 * 
+	 * @param toreuse
+	 */
+	<T> void doReuseCursor(Cursor<T> toreuse) {
+		assert !cursors.containsKey(toreuse.getKey()) : "cannot create cursor: key already exists";
+		toreuse.install();
+		cursors.put(toreuse.getKey(), toreuse);
+	}
+
+	// TODO add "changes" for create and drop too
+	@Override
+	public <T> void dropCursor(Object key) {
+		if (dropCursorChange == null)
+			dropCursorChange = new DropCursorChange();
+		dropCursorChange.drop(getCursor(key).getType(), key);
+		precommit();
+	}
+
+	<T> void doDropCursor(Object key) {
+		Cursor c = getCursor(key);
+		c.drop();
+		cursors.remove(key);
+	}
+
+	/**
+	 * remove table from the database
+	 * 
+	 * @param tableType
+	 */
+	public <T> void dropTable(Class<T> tableType) {
+		if (dropTableChange == null)
+			dropTableChange = new DropTableChange();
+		
+		dropTableChange.drop(tableType, getTable(tableType).columns);
+		precommit();
+	}
+
+	private <T> void doDropTable(Class<T> tableType) {
+		ContentTable<T> table = getTable(tableType);
+		this.tables.remove(tableType);
+		table.drop();
+	}
 
 	/**
 	 * generates a new unique key (unique in this database)
@@ -140,7 +212,16 @@ public class Database implements DDL, DQL, DML, DTL {
 	 */
 	@Override
 	public <T> ContentTable<T> getTable(Class<T> type) {
-		return typed.get(type);
+		return tables.get(type);
+	}
+	/** retrieve all tables, including the ones in the transaction
+	 * 
+	 * @param type
+	 * @return
+	 */
+	<T> ContentTable<T> getTxTable(Class<T> type) {
+		if(txTables.containsKey(type)) return txTables.get(type);
+		return tables.get(type);
 	}
 
 	@Override
@@ -156,7 +237,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	 */
 	@Override
 	public Iterable<ContentTable> getTables() {
-		return typed.values();
+		return tables.values();
 	}
 
 	// @Override
@@ -164,7 +245,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	// return singletons.values();
 	// }
 
-	public Iterable<Cursor> getRows() {
+	public Iterable<Cursor> getCursors() {
 		return Collections.unmodifiableCollection(cursors.values());
 	}
 
@@ -192,10 +273,8 @@ public class Database implements DDL, DQL, DML, DTL {
 			precommit();
 			return row;
 		} else {
-			Class<T> type = values[0].column.getTable();
-			ContentTable<T> data = getTable(type);
-			T row = data.insert(data.newInstance(values));
-			assert data.insertOperation != null : "unexpected empty transaction";
+			T row = table.insert(table.newInstance(values));
+			assert table.insertOperation != null : "unexpected empty transaction";
 			precommit();
 			return row;
 		}
@@ -271,43 +350,6 @@ public class Database implements DDL, DQL, DML, DTL {
 	// ##########################################################################
 
 	// ##########################################################################
-	// DROP BEGIN
-	// ##########################################################################
-
-	/**
-	 * remove table from the database
-	 * 
-	 * @param tableType
-	 */
-	public <T> void dropTable(Class<T> tableType) {
-		ContentTable<T> table = getTable(tableType);
-		this.typed.remove(tableType);
-		table.drop();
-	}
-
-	/**
-	 * remove property from the database.
-	 * 
-	 * @param s
-	 */
-	public <T> void dropCursor(Cursor<T> cursor) {
-		cursors.remove(cursor);
-		cursor.drop();
-	}
-
-	// @Override
-	// public <T> void dropSingletonProperty(Class<T> type) {
-	// SingletonProperty<T> p = getSingletonProperty(type);
-	// singletons.remove(type);
-	// p.drop();
-	//
-	// }
-
-	// ##########################################################################
-	// DROP END
-	// ##########################################################################
-
-	// ##########################################################################
 	// EVENTS BEGIN
 	// ##########################################################################
 
@@ -376,6 +418,13 @@ public class Database implements DDL, DQL, DML, DTL {
 		ChangeSet tx = popChangeSet();
 		if (!tx.isEmpty())
 			support.fireRolledBack(tx);
+		for(Cursor c: txCursors.values())
+			c.drop();
+		txCursors = new HashMap<Object, Cursor>(); // reset the txCursor
+		
+		for(ContentTable c: txTables.values())
+			c.drop();
+		txTables = new HashMap<Class, ContentTable>();
 		return tx;
 	}
 
@@ -398,17 +447,28 @@ public class Database implements DDL, DQL, DML, DTL {
 	 */
 	private ChangeSet popChangeSet() {
 		List<Change> tx = new ArrayList<Change>();
-		for (Cursor s : cursors.values()) {
+		if (createTableChange != null)
+			tx.add(createTableChange);
+		createTableChange = null;
+		if (dropTableChange != null)
+			tx.add(dropTableChange);
+		dropTableChange = null;
+
+		if (createCursorChange != null)
+			tx.add(createCursorChange);
+		createCursorChange = null;
+		if (dropCursorChange != null)
+			tx.add(dropCursorChange);
+		dropCursorChange = null;
+		
+
+		for (Cursor s : plus(cursors.values(), txCursors.values())) {
 			tx.add(s.propertyChange);
 			s.propertyChange = null;
 		}
-		// for (SingletonProperty s : singletons.values()) {
-		// tx.add(s.propertyChange);
-		// s.propertyChange = null;
-		// }
 
 		// collect all "changes" in the tables
-		for (ContentTable t : typed.values()) {
+		for (ContentTable t : plus(tables.values(), txTables.values())) {
 			tx.add(t.insertOperation);
 			t.insertOperation = null;
 
@@ -419,6 +479,38 @@ public class Database implements DDL, DQL, DML, DTL {
 			t.deleteOperation = null;
 		}
 		return new ChangeSet(tx);
+	}
+	
+	static <U> Iterable<U> plus(final Iterable<U> u, final Iterable<U> v){
+		return new Iterable<U>() {
+
+			@Override
+			public Iterator<U> iterator() {
+				return new Iterator<U>() {
+					private Iterator<U>	iu;
+					private Iterator<U>	iv;
+
+					{
+						iu = u.iterator();
+						iv= v.iterator();
+					}
+					@Override
+					public boolean hasNext() {
+						return iu.hasNext() || iv.hasNext();
+					}
+
+					@Override
+					public U next() {
+						if (iu.hasNext()) 
+							return iu.next();
+						else
+							return iv.next();
+					}
+
+					@Override
+					public void remove() {throw new UnsupportedOperationException();
+					}};
+			}};
 	}
 
 	// ##########################################################################
@@ -444,6 +536,8 @@ public class Database implements DDL, DQL, DML, DTL {
 	}
 
 	public ChangeSet apply(ChangeSet c) {
+		final Map<Object, Cursor> myCursors = txCursors; // keep track of the cursors, because they have been created in advance, and might be required for this "apply"
+		final Map<Class, ContentTable> myTables = txTables; // keep track of the cursors, because they have been created in advance, and might be required for this "apply"
 		ChangeSet tx = rollback(); // this has no effect if there was no incoming changes
 		assert tx.isEmpty() : "cannot commit a changeset when there are local changes not yet applyed";
 		c.accept(new ChangeVisitor() {
@@ -483,7 +577,42 @@ public class Database implements DDL, DQL, DML, DTL {
 				c.doCommit(change);
 			}
 
+			@Override
+			public void changed(DropCursorChange change) {
+				for (Object key : change.dropped())
+					doDropCursor(key);
+			}
+
+			@Override
+			public void changed(CreateCursorChange change) {
+				for (Pair<Class, Object> key : change.created()) {
+					Object k = key.getRight();
+					if (myCursors.containsKey(k)) 
+						doReuseCursor(myCursors.get(k));
+					else
+						doCreateCursor(key.getLeft(), k);
+				}
+			}
+
+			@Override
+			public void changed(CreateTableChange change) {
+				for (Pair<Class, Column[]> key : change.created()) {
+					Class k = key.getLeft();
+					if (myTables.containsKey(k)) 
+						doReuseTable(myTables.get(k));
+					else
+						doCreateTable(k, key.getRight());
+				}
+			}
+
+			@Override
+			public void changed(DropTableChange change) {
+				for(Pair<Class, Column[]> c: change.dropped())
+					doDropTable(c.getLeft());
+			}
 		});
+		
+		// now clean the txTables
 		support.fireCommitted(c);
 		return c;
 	}

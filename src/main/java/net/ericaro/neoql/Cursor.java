@@ -34,6 +34,7 @@ public class Cursor<T> implements Property<T>, Content {
 		super();
 		this.key = key;
 		this.source = source;
+		assert source !=null : "unexpected null source during cursor creation";
 		this.listener = new TableListener<T>() {
 
 			private WeakReference<T>	deletedValue;
@@ -68,6 +69,10 @@ public class Cursor<T> implements Property<T>, Content {
 			}
 
 		};
+		install();
+	}
+
+	void install() {
 		source.addTableListener(listener);
 	}
 

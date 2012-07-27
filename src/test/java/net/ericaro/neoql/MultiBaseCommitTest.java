@@ -1,11 +1,10 @@
 package net.ericaro.neoql;
 
-import static org.junit.Assert.*;
-
-import net.ericaro.neoql.CursorTest.Tester;
-import net.ericaro.neoql.Git.Commit;
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.eventsupport.TransactionListener;
+import net.ericaro.neoql.git.Commit;
+import net.ericaro.neoql.git.Git;
+import net.ericaro.neoql.git.Repository;
 
 import org.junit.Test;
 
@@ -31,36 +30,29 @@ public class MultiBaseCommitTest {
 	public void testMulti() {
 		
 		// test that commits from a base can be applied to another one
-		Database db1 = new Database() ;
-		final Database db2 = new Database() ;
+		Repository repo = new Repository();
 		
-		Git git = new Git(db1);
-		ContentTable<Tester> t = db1.createTable(Tester.class, NAME, COUNT);
-		ContentTable<Tester> t2 = db2.createTable(Tester.class, NAME, COUNT);
-		Cursor<Tester> c = db1.createCursor(t);
-		Cursor<Tester> c2 = db2.createCursor(t);
+		Git git= Git.clone(repo);
+		Git db2= Git.clone(repo);
 		
-		Commit start = git.tag();
-		
-		db1.addTransactionListener(new TransactionListener() {
-			public void rolledBack(Change change) {}
-			public void committed(Change change) {
-				db2.apply(change);
-			}
-		});
-		
-		Tester v = db1.insert(t, NAME.set("2"), COUNT.set(1));
-		db1.moveTo(c, v);
-		
+		ContentTable<Tester> t = git.createTable(Tester.class, NAME, COUNT);
+		Cursor<Tester> c = git.createCursor(t);
+		Commit start = git.commit();
+		Tester v = git.insert(t, NAME.set("2"), COUNT.set(1));
+		git.moveTo(c, v);
 		Commit first   = git.commit("first");
+		db2.checkout(first); // move db2 to first
+		Cursor<Tester> c2 = db2.getCursor(c.getKey());
 		
-		assert c2.get() == c.get(): "clone as failed";
+		assert c2.get() == c.get(): "clone as failed "+ c2.get()+" <> "+ c.get();
 		assert "2".equals(c2.get().name): "clone as failed";
 		git.checkout(start);
+		db2.checkout(start);
 		
 		assert c2.get() == null : "clone as failed";
 		
 		git.checkout(first);
+		db2.checkout(first);
 		assert "2".equals(c2.get().name): "clone as failed";
 		assert c2.get() == c.get(): "clone as failed";
 		

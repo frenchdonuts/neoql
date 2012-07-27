@@ -12,7 +12,7 @@ public interface DQL {
 	
 //	Iterable<SingletonProperty> getSingletons();            
 	Iterable<ContentTable> getTables();                     
-	Iterable<Cursor> getRows();            
+	Iterable<Cursor> getCursors();            
 	                                                        
 	<T> ContentTable<T> getTable(Class<T> table);
 	<T> Cursor<T> getCursor(Object key);

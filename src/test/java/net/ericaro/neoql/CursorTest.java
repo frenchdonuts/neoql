@@ -1,6 +1,8 @@
 package net.ericaro.neoql;
 
-import net.ericaro.neoql.Git.Commit;
+import net.ericaro.neoql.git.Commit;
+import net.ericaro.neoql.git.Git;
+import net.ericaro.neoql.git.Repository;
 
 import org.junit.Test;
 
@@ -21,34 +23,36 @@ public class CursorTest {
 
 	@Test
 	public void testBasic() {
-
-		Database db = new Database();
 		
-		Git git = new Git(db);
-		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
-		Cursor<Tester> c = db.createCursor(t);
+		Repository repo = new Repository();
+		Git git = Git.clone(repo);
+		
+		ContentTable<Tester> t = git.createTable(Tester.class, NAME, COUNT);
+		Cursor<Tester> c = git.createCursor(t);
+		//git.commit();
 
-		db.insert(t, NAME.set("1"), COUNT.set(0));
-		Tester v = db.insert(t, NAME.set("2"), COUNT.set(1));
-		db.moveTo(c, v);
+		git.insert(t, NAME.set("1"), COUNT.set(0));
+		Tester v = git.insert(t, NAME.set("2"), COUNT.set(1));
+		git.moveTo(c, v);
+		
 		git.commit("first");
 		Commit first = git.tag();
 		
 
-		assert c.get() == v : "cursor wrongly initialized";
+		assert c.get() == v : "cursor wrongly initialized: "+c.get()+ " <> "+ v;
 		assert c.get().count == 1 : "cursor points to a wrong value";
 
 		v = NeoQL.select(t, COUNT.is(0)).iterator().next();
-		db.moveTo(c, v);
+		git.moveTo(c, v);
 		git.commit("moving cursor");
 		
-		db.update(t, NeoQL.is(c), NAME.set("tutu"));
+		git.update(t, NeoQL.is(c), NAME.set("tutu"));
 		git.commit("intern step");
-		db.update(t, NeoQL.is(c), NAME.set("tata"));
-		git.commit("basecamp1");
-		Commit b = git.tag();
+		git.update(t, NeoQL.is(c), NAME.set("tata"));
+		Commit b = git.commit("basecamp1");
+		//Commit b = git.tag();
 		
-		db.update(t, NeoQL.is(c), NAME.set("titi"));
+		git.update(t, NeoQL.is(c), NAME.set("titi"));
 		git.commit("explore1");
 		Commit explore1 = git.tag();
 		
@@ -56,17 +60,17 @@ public class CursorTest {
 		System.out.println("head="+git.tag());
 		git.checkout(b);
 		System.out.println("head="+git.tag());
-		db.update(t, NeoQL.is(c), NAME.set("b-titi"));
+		git.update(t, NeoQL.is(c), NAME.set("b-titi"));
 		git.commit("derive1- step1");
-		db.update(t, NeoQL.is(c), NAME.set("b-tutu"));
+		git.update(t, NeoQL.is(c), NAME.set("b-tutu"));
 		git.commit("derive1-step2");
 		System.out.println("head="+git.tag());
 		
 		git.checkout(explore1);
-		db.update(t, NeoQL.is(c), NAME.set("a-tutu"));
+		git.update(t, NeoQL.is(c), NAME.set("a-tutu"));
 		git.commit("explore-2");
 		
-		JungUtils.disp(git.graph, true, false, true);
+		JungUtils.disp(git.getRepositoryGraph(), true, false, true);
 		assert c.get().count == 0 : "cursor didn't move";
 		
 

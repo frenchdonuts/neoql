@@ -83,7 +83,7 @@ public class Cursor<T> implements Property<T>, Content {
 	@Override
 	public void drop() {
 		this.source.removeTableListener(listener);
-		set(null); // also nullify the value
+		//set(null); // also nullify the value
 	}
 
 	void follow(T newValue) {

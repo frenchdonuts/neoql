@@ -1,7 +1,9 @@
 package net.ericaro.neoql;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import net.ericaro.neoql.changeset.Change;
@@ -11,8 +13,8 @@ import net.ericaro.neoql.tables.Pair;
 public class CreateTableChange implements Change {
 
 	protected Set<Pair<Class,Column[]>>	inserted	= new HashSet<Pair<Class,Column[]>>();
-
-	CreateTableChange() {	}
+	
+	CreateTableChange() { }
 
 
 	@Override
@@ -33,7 +35,6 @@ public class CreateTableChange implements Change {
 	public boolean contains(Object key) {
 		return inserted.contains(key);
 	}
-	
 
 	public Iterable<Pair<Class,Column[]>> created() {
 		return Collections.unmodifiableCollection(inserted);

@@ -1,7 +1,9 @@
 package net.ericaro.neoql;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import net.ericaro.neoql.changeset.Change;
@@ -11,9 +13,8 @@ import net.ericaro.neoql.tables.Pair;
 public class CreateCursorChange implements Change {
 
 	protected Set<Pair<Class,Object>>	inserted	= new HashSet<Pair<Class,Object>>();
-
-	CreateCursorChange() {	}
-
+	
+	CreateCursorChange() { }
 
 	@Override
 	public Change copy() {
@@ -34,7 +35,6 @@ public class CreateCursorChange implements Change {
 		return inserted.contains(key);
 	}
 	
-
 	public Iterable<Pair<Class,Object>> created() {
 		return Collections.unmodifiableCollection(inserted);
 	}

@@ -70,9 +70,8 @@ public class ContentTable<T> implements Table<T>, Content {
 		int i = 0;
 		for (Column<T, ?> col : columns)
 			disconnectForeignKey(i++, col);
-
-		if (internals.getListenerCount() > 0)
-			throw new NeoQLException("Cannot drop table " + type + ". Constraint violation(s)" + internals);
+		// if (internals.getListenerCount() > 0)
+		// throw new NeoQLException("Cannot drop table " + type + ". Constraint violation(s)" + internals);
 		this.rows.clear(); // really ?
 		fireDrop(this);
 	}
@@ -89,7 +88,7 @@ public class ContentTable<T> implements Table<T>, Content {
 
 	private <V> void connectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			ContentTable<V> ftable = owner.getTxTable(col.getType());
+			ContentTable<V> ftable = owner.getTable(col.getType());
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(ftable, internalColumnListeners[i]);
 		}
@@ -97,7 +96,7 @@ public class ContentTable<T> implements Table<T>, Content {
 
 	private <V> void disconnectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
-			ContentTable<V> ftable = owner.getTxTable(col.getType());
+			ContentTable<V> ftable = owner.getTable(col.getType());
 			owner.removeInternalTableListener(ftable, internalColumnListeners[i]);
 		}
 	}

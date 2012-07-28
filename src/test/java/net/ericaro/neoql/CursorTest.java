@@ -1,8 +1,11 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.changeset.Change;
+import net.ericaro.neoql.changeset.Changes;
 import net.ericaro.neoql.git.Commit;
 import net.ericaro.neoql.git.Git;
 import net.ericaro.neoql.git.Repository;
+import net.ericaro.neoql.tables.Pair;
 
 import org.junit.Test;
 
@@ -37,8 +40,6 @@ public class CursorTest {
 		
 		git.commit("first");
 		Commit first = git.tag();
-		
-
 		assert c.get() == v : "cursor wrongly initialized: "+c.get()+ " <> "+ v;
 		assert c.get().count == 1 : "cursor points to a wrong value";
 

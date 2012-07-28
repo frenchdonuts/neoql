@@ -20,24 +20,17 @@ import net.ericaro.neoql.tables.Pair;
 
 public class Database implements DDL, DQL, DML, DTL {
 
-	static Logger						LOG			= Logger.getLogger(Database.class.getName());
+	static Logger						LOG				= Logger.getLogger(Database.class.getName());
 
-	boolean								autoCommit	= false;
-	long								keySeed		= 0;											// default key
+	boolean								autoCommit		= false;
+	long								keySeed			= 0;											// default key
 
 	// real class -> table mapping
-	private Map<Class, ContentTable>	tables		= new HashMap<Class, ContentTable>();
-	private Map<Class, ContentTable>	txTables	= new HashMap<Class, ContentTable>();
+	private Map<Class, ContentTable>	tables			= new HashMap<Class, ContentTable>();
+	private Map<Object, Cursor>			cursors			= new HashMap<Object, Cursor>();
 
-	private Map<Object, Cursor>			cursors		= new HashMap<Object, Cursor>();
-	private Map<Object, Cursor>			txCursors	= new HashMap<Object, Cursor>();
-
-	TransactionListenerSupport			support		= new TransactionListenerSupport();
-
-	private DropTableChange				dropTableChange;
-	private DropCursorChange			dropCursorChange;
-	private CreateCursorChange			createCursorChange;
-	private CreateTableChange			createTableChange;
+	TransactionListenerSupport			support			= new TransactionListenerSupport();
+	CommitBuilder						currentCommit	= new CommitBuilder(this);
 
 	// I need to track properties, because they hold one bit of information: the actual type they are tracking, this might change => it should be transactional.
 
@@ -66,19 +59,28 @@ public class Database implements DDL, DQL, DML, DTL {
 	 * @return
 	 */
 	@Override
-	public <T> ContentTable<T> createTable(Class<T> table, Column<T, ?>... columns) {
+	public <T> void atomicCreateTable(Class<T> table, Column<T, ?>... columns) {
 		assert columns.length > 0 : "cannot create a table with no columns";
 		LOG.fine("CREATE TABLE " + table); // always log before assert, so that assertion fail can be traced in the logs
 		assert !tables.containsKey(table) : "failed to create a table data that already exists";
 		assert allColumsAreOfType(table, columns) : "cannot create columns that do not have the same type";
-		if (createTableChange ==null ) 
-			createTableChange = new CreateTableChange();
-		createTableChange.create(table, columns);
-		ContentTable<T> data = new ContentTable<T>(this, table, columns);
-		this.txTables.put(table, data);
-		data.install(); // let this table connect to others foreign key. This implies that foreign keys are already created, hence there is no dependency loop
-		return data;
+		currentCommit.createTable(table, columns);
 	}
+	
+	
+	/** little convenient method, creates a cursor atomically, commit, and then rerieve the table. If you need
+	 * fine control over the "commits" do no use this method.
+	 * 
+	 * @param table
+	 * @return
+	 */
+	public <T> ContentTable<T> createTable(Class<T> table, Column<T, ?>... columns) {
+		Object newKey = newKey();
+		atomicCreateTable(table, columns );
+		commit();
+		return getTable(table);
+	}
+	
 
 	private <T> void doCreateTable(Class<T> table, Column<T, ?>... columns) {
 		// assert !tables.containsKey(table):"failed to create a table data that already exists";
@@ -95,7 +97,6 @@ public class Database implements DDL, DQL, DML, DTL {
 		this.tables.put(data.getType(), data);
 		data.install(); // let this table connect to others foreign key. This implies that foreign keys are already created, hence there is no dependency loop
 	}
-	
 
 	private static <T> boolean allColumsAreOfType(Class<T> type, Column... columns) {
 		for (Column c : columns)
@@ -104,9 +105,7 @@ public class Database implements DDL, DQL, DML, DTL {
 		return true;
 	}
 
-	public <T> Cursor<T> createCursor(ContentTable<T> table) {
-		return createCursor(table.getType());
-	}
+
 	/**
 	 * Creates a Property for a given table type.
 	 * A Property is an object that will return always the same row from a table.
@@ -115,26 +114,43 @@ public class Database implements DDL, DQL, DML, DTL {
 	 * 
 	 * @param type
 	 *            must correspond to an existing table type
-	 * @return
+	 * @return the key to retrieve the cursor anytime
 	 */
 	@Override
-	public <T> Cursor<T> createCursor(Class<T> table) {
-		return createCursor(table, newKey());
+	public <T> Object atomicCreateCursor(Class<T> table) {
+		Object newKey = newKey();
+		atomicCreateCursor(table, newKey);
+		return newKey ;
 	}
+	
+	/** little convenient method, creates a cursor atomically, commit, and then rerieve the cursor. If you need
+	 * fine control over the "commits" do no use this method.
+	 * 
+	 * @param type
+	 * @return
+	 */
+	public <T> Cursor<T> createCursor(Class<T> type) {
+		Object newKey = newKey();
+		atomicCreateCursor(type, newKey);
+		commit();
+		return getCursor(newKey);
+	}
+	public <T> Cursor<T> createCursor(ContentTable<T> table) {
+		Object newKey = newKey();
+		atomicCreateCursor(table.getType(), newKey);
+		commit();
+		return getCursor(newKey);
+	}
+	
+	
 
 	@Override
-	public <T> Cursor<T> createCursor(Class<T> table, Object key) {
-		if (createCursorChange == null)
-			createCursorChange = new CreateCursorChange();
-		createCursorChange.create(table, key);
+	public <T> void atomicCreateCursor(Class<T> table, Object key) {
 		// now prebuild the cursor for the live time of the transaction
-		
-		Cursor<T> s = new Cursor<T>(key, getTxTable(table));
 		assert !cursors.containsKey(key) : "cannot create cursor: key already exists";
-		txCursors.put(key, s);
-		s.install() ;// (install for the tx live time only
+		
+		currentCommit.createCursor(table, key);
 		precommit();
-		return s;
 	}
 
 	<T> void doCreateCursor(Class<T> table, Object key) {
@@ -156,9 +172,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	// TODO add "changes" for create and drop too
 	@Override
 	public <T> void dropCursor(Object key) {
-		if (dropCursorChange == null)
-			dropCursorChange = new DropCursorChange();
-		dropCursorChange.drop(getCursor(key).getType(), key);
+		currentCommit.dropCursor(getCursor(key).getType(), key);
 		precommit();
 	}
 
@@ -174,10 +188,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	 * @param tableType
 	 */
 	public <T> void dropTable(Class<T> tableType) {
-		if (dropTableChange == null)
-			dropTableChange = new DropTableChange();
-		
-		dropTableChange.drop(tableType, getTable(tableType).columns);
+		currentCommit.dropTable(tableType, getTable(tableType).columns);
 		precommit();
 	}
 
@@ -214,15 +225,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	public <T> ContentTable<T> getTable(Class<T> type) {
 		return tables.get(type);
 	}
-	/** retrieve all tables, including the ones in the transaction
-	 * 
-	 * @param type
-	 * @return
-	 */
-	<T> ContentTable<T> getTxTable(Class<T> type) {
-		if(txTables.containsKey(type)) return txTables.get(type);
-		return tables.get(type);
-	}
+
 
 	@Override
 	public <T> Cursor<T> getCursor(Object key) {
@@ -408,23 +411,18 @@ public class Database implements DDL, DQL, DML, DTL {
 	@Override
 	public Change commit() {
 
-		ChangeSet otx = popChangeSet(); // flush buffers into the transaction tx
+		ChangeSet otx = currentCommit.build(); // flush buffers into the transaction tx
+		currentCommit = new CommitBuilder(this);
 		otx = apply(otx);
 		return otx;
 	}
 
 	@Override
 	public ChangeSet rollback() {
-		ChangeSet tx = popChangeSet();
+		ChangeSet tx = currentCommit.build();
+		currentCommit = new CommitBuilder(this);
 		if (!tx.isEmpty())
 			support.fireRolledBack(tx);
-		for(Cursor c: txCursors.values())
-			c.drop();
-		txCursors = new HashMap<Object, Cursor>(); // reset the txCursor
-		
-		for(ContentTable c: txTables.values())
-			c.drop();
-		txTables = new HashMap<Class, ContentTable>();
 		return tx;
 	}
 
@@ -438,81 +436,8 @@ public class Database implements DDL, DQL, DML, DTL {
 		this.autoCommit = autocommit;
 	}
 
-	/**
-	 * remove all changes from local buffers and collect them into the current transaction
-	 * 
-	 * @return
-	 * 
-	 * @return
-	 */
-	private ChangeSet popChangeSet() {
-		List<Change> tx = new ArrayList<Change>();
-		if (createTableChange != null)
-			tx.add(createTableChange);
-		createTableChange = null;
-		if (dropTableChange != null)
-			tx.add(dropTableChange);
-		dropTableChange = null;
-
-		if (createCursorChange != null)
-			tx.add(createCursorChange);
-		createCursorChange = null;
-		if (dropCursorChange != null)
-			tx.add(dropCursorChange);
-		dropCursorChange = null;
-		
-
-		for (Cursor s : plus(cursors.values(), txCursors.values())) {
-			tx.add(s.propertyChange);
-			s.propertyChange = null;
-		}
-
-		// collect all "changes" in the tables
-		for (ContentTable t : plus(tables.values(), txTables.values())) {
-			tx.add(t.insertOperation);
-			t.insertOperation = null;
-
-			tx.add(t.updateOperation);
-			t.updateOperation = null;
-
-			tx.add(t.deleteOperation);
-			t.deleteOperation = null;
-		}
-		return new ChangeSet(tx);
-	}
 	
-	static <U> Iterable<U> plus(final Iterable<U> u, final Iterable<U> v){
-		return new Iterable<U>() {
-
-			@Override
-			public Iterator<U> iterator() {
-				return new Iterator<U>() {
-					private Iterator<U>	iu;
-					private Iterator<U>	iv;
-
-					{
-						iu = u.iterator();
-						iv= v.iterator();
-					}
-					@Override
-					public boolean hasNext() {
-						return iu.hasNext() || iv.hasNext();
-					}
-
-					@Override
-					public U next() {
-						if (iu.hasNext()) 
-							return iu.next();
-						else
-							return iv.next();
-					}
-
-					@Override
-					public void remove() {throw new UnsupportedOperationException();
-					}};
-			}};
-	}
-
+	
 	// ##########################################################################
 	// TRANSACTIONS END
 	// ##########################################################################
@@ -536,8 +461,6 @@ public class Database implements DDL, DQL, DML, DTL {
 	}
 
 	public ChangeSet apply(ChangeSet c) {
-		final Map<Object, Cursor> myCursors = txCursors; // keep track of the cursors, because they have been created in advance, and might be required for this "apply"
-		final Map<Class, ContentTable> myTables = txTables; // keep track of the cursors, because they have been created in advance, and might be required for this "apply"
 		ChangeSet tx = rollback(); // this has no effect if there was no incoming changes
 		assert tx.isEmpty() : "cannot commit a changeset when there are local changes not yet applyed";
 		c.accept(new ChangeVisitor() {
@@ -585,33 +508,23 @@ public class Database implements DDL, DQL, DML, DTL {
 
 			@Override
 			public void changed(CreateCursorChange change) {
-				for (Pair<Class, Object> key : change.created()) {
-					Object k = key.getRight();
-					if (myCursors.containsKey(k)) 
-						doReuseCursor(myCursors.get(k));
-					else
-						doCreateCursor(key.getLeft(), k);
-				}
+				for (Pair<Class, Object> key : change.created())
+						doCreateCursor(key.getLeft(), key.getRight());
 			}
 
 			@Override
 			public void changed(CreateTableChange change) {
-				for (Pair<Class, Column[]> key : change.created()) {
-					Class k = key.getLeft();
-					if (myTables.containsKey(k)) 
-						doReuseTable(myTables.get(k));
-					else
-						doCreateTable(k, key.getRight());
-				}
+				for (Pair<Class, Column[]> key : change.created()) 
+						doCreateTable(key.getLeft(), key.getRight());
 			}
 
 			@Override
 			public void changed(DropTableChange change) {
-				for(Pair<Class, Column[]> c: change.dropped())
+				for (Pair<Class, Column[]> c : change.dropped())
 					doDropTable(c.getLeft());
 			}
 		});
-		
+
 		// now clean the txTables
 		support.fireCommitted(c);
 		return c;

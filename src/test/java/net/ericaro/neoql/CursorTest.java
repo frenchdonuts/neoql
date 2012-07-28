@@ -71,7 +71,7 @@ public class CursorTest {
 		git.update(t, NeoQL.is(c), NAME.set("a-tutu"));
 		git.commit("explore-2");
 		
-		JungUtils.disp(git.getRepositoryGraph(), true, false, true);
+		//JungUtils.disp(git.getRepositoryGraph(), true, false, true);
 		assert c.get().count == 0 : "cursor didn't move";
 		
 

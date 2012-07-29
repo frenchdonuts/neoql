@@ -1,23 +1,19 @@
 package net.ericaro.neoql.git;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.jung.graph.DirectedGraph;
-import edu.uci.ics.jung.graph.Graph;
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.ColumnSetter;
 import net.ericaro.neoql.ContentTable;
-import net.ericaro.neoql.Cursor;
 import net.ericaro.neoql.DDL;
 import net.ericaro.neoql.DML;
 import net.ericaro.neoql.DQL;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.Table;
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.Changes;
 import net.ericaro.neoql.tables.Pair;
+import edu.uci.ics.jung.graph.DirectedGraph;
 
 public class Git implements DDL, DML, DQL {
 	// TODO handle branches (pointers moving with head, are branches shared among repositories ? yes)
@@ -89,10 +85,6 @@ public class Git implements DDL, DML, DQL {
 		return db.getTable(type);
 	}
 
-	public <T> Cursor<T> getCursor(Object key) {
-		return db.getCursor(key);
-	}
-
 	public <T> T insert(ContentTable<T> table, ColumnSetter<T, ?>... values) {
 		return db.insert(table, values);
 	}
@@ -105,22 +97,6 @@ public class Git implements DDL, DML, DQL {
 		db.update(table, predicate, setters);
 	}
 
-	public <T> void moveTo(Cursor<T> property, T value) {
-		db.moveTo(property, value);
-	}
-
-	public <T> Object atomicCreateCursor(Class<T> table) {
-		return db.atomicCreateCursor(table);
-	}
-
-	public <T> void atomicCreateCursor(Class<T> table, Object key) {
-		db.atomicCreateCursor(table, key);
-	}
-
-	public <T> void dropCursor(Object key) {
-		db.dropCursor(key);
-	}
-
 	public <T> void dropTable(Class<T> tableType) {
 		db.dropTable(tableType);
 	}
@@ -129,9 +105,7 @@ public class Git implements DDL, DML, DQL {
 		return db.getTables();
 	}
 
-	public Iterable<Cursor> getCursors() {
-		return db.getCursors();
-	}
+	
 
 	/** creates and retrieve a table. Warning, this methods provoque a commit
 	 * 
@@ -143,21 +117,6 @@ public class Git implements DDL, DML, DQL {
 		db.atomicCreateTable(table, columns );
 		commit("auto commit for table creation");
 		return db.getTable(table);
-	}
-
-	/** convenient method to create a cursor, warning: causes a commit.
-	 * 
-	 * @param type
-	 * @return
-	 */
-	public <T> Cursor<T> createCursor(Class<T> type) {
-		Object newKey = db.atomicCreateCursor(type);
-		commit("autocommit for cursor creation");
-		return db.getCursor(newKey);
-	}
-
-	public <T> Cursor<T> createCursor(ContentTable<T> table) {
-		return createCursor(table.getType());
 	}
 
 	// ##########################################################################

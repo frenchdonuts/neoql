@@ -18,8 +18,6 @@ public class CommitBuilder {
 
 	
 	private DropTableChange				dropTableChange;
-	private DropCursorChange			dropCursorChange;
-	private CreateCursorChange			createCursorChange;
 	private CreateTableChange			createTableChange;
 	Database owner ;
 	
@@ -38,18 +36,6 @@ public class CommitBuilder {
 	}
 	
 	
-	public <T> void  createCursor(Class<T> table, Object key) {
-		if (createCursorChange == null)
-			createCursorChange = new CreateCursorChange();
-		createCursorChange.create(table, key);
-	}
-
-	public <T> void dropCursor(Class<T> type, Object key) {
-		if (dropCursorChange == null)
-			dropCursorChange = new DropCursorChange();
-		dropCursorChange.drop(type, key);
-	}
-
 
 	public <T> void dropTable(Class<T> tableType, Column<T, ?>... columns) {
 		if (dropTableChange == null)
@@ -74,11 +60,6 @@ public class CommitBuilder {
 		if (dropTableChange != null)
 			tx.add(dropTableChange);
 
-		if (createCursorChange != null)
-			tx.add(createCursorChange);
-		if (dropCursorChange != null)
-			tx.add(dropCursorChange);
-
 		// collect all "changes" in the tables
 		for (ContentTable t : owner.getTables()) {
 			tx.add(t.insertOperation);
@@ -91,14 +72,8 @@ public class CommitBuilder {
 			t.deleteOperation = null;
 		}
 		
-		for (Cursor s : owner.getCursors()) {
-			tx.add(s.propertyChange);
-			s.propertyChange = null;
-		}
 		createTableChange = null;
 		dropTableChange = null;
-		createCursorChange = null;
-		dropCursorChange = null;
 
 		return new ChangeSet(tx);
 	}

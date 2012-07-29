@@ -1,5 +1,7 @@
 package net.ericaro.neoql;
 
+import java.util.Iterator;
+
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.eventsupport.TransactionListener;
 import net.ericaro.neoql.git.Commit;
@@ -34,16 +36,22 @@ public class MultiBaseCommitTest {
 		
 		Git git= Git.clone(repo);
 		Git db2= Git.clone(repo);
-		
-		ContentTable<Tester> t = git.createTable(Tester.class, NAME, COUNT);
-		Cursor<Tester> c = git.createCursor(t);
+		git.atomicCreateTable(Tester.class, NAME, COUNT);
 		Commit start = git.commit();
+		
+		ContentTable<Tester> t = git.getTable(Tester.class);
 		Tester v = git.insert(t, NAME.set("2"), COUNT.set(1));
-		git.moveTo(c, v);
+		Property<Tester> c = NeoQL.track(t,v);
 		Commit first   = git.commit("first");
 		db2.checkout(first); // move db2 to first
-		Cursor<Tester> c2 = db2.getCursor(c.getKey());
 		
+		ContentTable<Tester> t2 = db2.getTable(Tester.class);
+		
+		Iterator<Tester> i = NeoQL.select(t2).iterator();
+		
+		Property<Tester> c2 = NeoQL.track(t2, i.next());
+		
+		assert !i.hasNext() : "table should only contain one value";
 		assert c2.get() == c.get(): "clone as failed "+ c2.get()+" <> "+ c.get();
 		assert "2".equals(c2.get().name): "clone as failed";
 		git.checkout(start);

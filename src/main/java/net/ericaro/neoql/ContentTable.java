@@ -16,7 +16,7 @@ import net.ericaro.neoql.eventsupport.TableListenerSupport;
  * @author eric
  * 
  */
-public class ContentTable<T> implements Table<T>, Content {
+public class ContentTable<T> implements Table<T>{
 
 	// public events
 	private TableListenerSupport<T>	events			= new TableListenerSupport<T>();
@@ -145,9 +145,8 @@ public class ContentTable<T> implements Table<T>, Content {
 			// fire an exception ( forbidding the deleting if the value is in
 			// use ?
 			Predicate<T> inUse = col.is(oldValue);
-			for (T t : NeoQL.select(ContentTable.this))
-				if (inUse.eval(t))
-					throw new NeoQLException("Foreign Key violation" + col);
+			for (T t : NeoQL.select(ContentTable.this, inUse))
+				throw new NeoQLException("Foreign Key violation" + col);
 		}
 
 		@Override
@@ -411,9 +410,4 @@ public class ContentTable<T> implements Table<T>, Content {
 	// ##########################################################################
 	// UNDO END
 	// ##########################################################################
-	@Override
-	public void accept(ContentVisitor visitor) {
-		visitor.visit(this);
-	}
-
 }

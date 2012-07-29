@@ -22,27 +22,5 @@ public interface DDL {
 	<T> void dropTable(Class<T> table);
 	
 	<T> void atomicCreateTable(Class<T> table, Column<T, ?>... columns);
-	
-	/** creates a new cursor, it delegates the key creation to the database
-	 * 
-	 * @param table
-	 * @return the cursor's key
-	 */
-	<T> Object atomicCreateCursor(Class<T> table);
-	
-	
-	/** creates a new cursor, but using a key so that it is possible to retrieve it later
-	 * 
-	 * @param table
-	 * @param key
-	 * @return
-	 */
-	<T> void atomicCreateCursor(Class<T> table, Object key);
-	<T> void dropCursor(Object key);
-	
-	
-	//<T> void dropSingletonProperty(Class<T> type, String name);
-	//<T> SingletonProperty<T> createSingletonProperty(Class<T> type, String name);
-	
 
 }

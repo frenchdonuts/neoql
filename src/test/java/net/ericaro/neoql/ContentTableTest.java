@@ -26,6 +26,7 @@ public class ContentTableTest {
 		}
 	}
 	
+		
 	public static class Marker {
 		// class used to test inner joins, and above all, the foreign key mechanism
 		boolean marked = false;
@@ -54,153 +55,70 @@ public class ContentTableTest {
 	public void testBasic() {
 		// we started with a few "usual" changes, and we added step by step some "decoration" 
 		Database db = new Database() ;
-		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
-		Cursor<Tester> c = db.createCursor(Tester.class);
+		db.atomicCreateTable(Tester.class, NAME, COUNT);
 		db.commit();
-		Property<String> name = NeoQL.track(c, NAME);
+		ContentTable<Tester> t = db.getTable(Tester.class);
+		
+		
 		
 		UndoManager m = new UndoManager();
 		new UndoableAdapter(this, db).addUndoableEditListener(m); // record the undomanager
 		/////////////////////////////////////////////////////////////////////////:
 		Tester v = db.insert(t);
-		db.moveTo(c, v);
+		
 		assert v !=null && v.count == 2: "wrong default value" ;
-		Iterator<Tester> iterator = NeoQL.select(t).iterator();
-		assert ! iterator.hasNext() : "database should be empty before any commit" ;
-		assert c.get() == null : "cursor is not yet active";
-		assert name.get() == null : "tracking a cursor that has not yet been commited, should be null";
+		
+		assert ! NeoQL.select(t).iterator().hasNext() : "database should be empty before any commit" ;
 		db.commit();
 		
-		iterator = NeoQL.select(t).iterator();
-		Tester w = iterator.next();
-		assert ! iterator.hasNext() : "there should be only one instance" ;
-		assert w == v  : "the only value should be the same as the one created during the transaction" ;
-		assert c.get() == w : "cursor has not followed the row";
-		assert name.get() == null : "commit happened, but the default value is still null";
+		Property<Tester> c = NeoQL.track(t, v);
+		
+		assert len(t)==1 : "Wrong table size" ;
+		assert c.get() == v  : "the only value should be the same as the one created during the transaction" ;
 
 		/////////////////////////////////////////////////////////////////////////:
 		db.update(t, NeoQL.is(v), NAME.set("tata"));
 		
-		iterator = NeoQL.select(t).iterator();
-		w = iterator.next();
-		assert ! iterator.hasNext() : "there should be only one instance before commit" ;
-		assert w == v  : "the only value should be the same as the one created during the previous transaction" ;
-		assert c.get() == w : "cursor has followed the row, pouha";
-		assert !"tata".equals(w.name) : "name shouldn't  be tata by now";
-		assert name.get() == null : "the name has changed but in the commit only, should not be available";
+		assert len(t)==1 : "Wrong table size" ;
+		assert c.get() == v  : "the only value should be the same as the one created during the previous transaction" ;
+		assert !"tata".equals(c.get().name) : "name shouldn't  be tata by now";
 		
 		db.commit(); // now things changes
 		
-		iterator = NeoQL.select(t).iterator();
-		w = iterator.next();
-		assert "tata".equals(w.name) : "name should be tata by now";
-		assert w != v  : "the only value should be the same as the one created during the previous transaction" ;
-		assert c.get() == w : "cursor has not followed the row";
-		assert "tata".equals(name.get() ) : "name should be available by now";
+		assert len(t)==1 : "Wrong table size" ;
+		assert "tata".equals(c.get().name) : "name should be tata by now";
+		assert c.get() != v  : "the only value should be the same as the one created during the previous transaction" ;
 		
 		
 		/////////////////////////////////////////////////////////////////////////:
-		db.delete(t, NeoQL.is(w));
-		iterator = NeoQL.select(t).iterator();
-		assert iterator.hasNext() : "there should be only one instance before commit" ;
-		assert c.get() == w : "cursor has followed the row before commit";
-		assert "tata".equals(name.get() ) : "name should not have change before commit";
-		
+		db.delete(t, NeoQL.is(c));
+		assert len(t)==1 : "Wrong table size before commit" ;
 		db.commit();
-		iterator = NeoQL.select(t).iterator();
-		assert ! iterator.hasNext() : "the database should be empty by now" ;
-		assert c.get() == null : "cursor has not followed the row ";
-		assert name.get() == null : "name should be null as the row has been deleted";
+		assert len(t)==0 : "the database should be empty by now" ;
 		
 		/////////////////////////////////////////////////////////////////////////:
 		v = db.insert(t, NAME.set("toto"), COUNT.set(3));
-		db.moveTo(c, v);
 		db.commit();
-		
-		assert "toto".equals(c.get().name): "cursor has not followed the row ";
-		assert "toto".equals(name.get()): "cursor should track reborn changes";
-		
+		c = NeoQL.track(t,v);
 		/////////////////////////////////////////////////////////////////////////:
 		// test that is(cursor) works
 		db.update(t, NeoQL.is(c), NAME.set("titi") );
 		db.commit();
+		
+		assert len(t) == 1 : "there is only one entity in there";
 		assert "titi".equals(c.get().name): "cursor has not followed the row ";
-		assert "titi".equals(name.get()): "cursor should track reborn changes";
 		
 		/////////////////////////////////////////////////////////////////////////:
 		// test rollback
 		db.update(t, NeoQL.is(c), NAME.set("tutu") );
 		db.rollback();
 		assert "titi".equals(c.get().name): "cursor has been roll backed";
-		assert "titi".equals(name.get()): "cursor should track reborn changes";
-		
-		/////////////////////////////////////////////////////////////////////////:
-		// test cursor move to null
-		v = c.get();
-		db.moveTo(c, null);
-		db.commit();
-		assert c.get() == null : "cursor didn't move to null";
-		assert name.get() == null : "name should be null as the cursor has been deleted";
-		
-		/////////////////////////////////////////////////////////////////////////:
-		// test cursor rollback
-		db.moveTo(c, v);
-		db.rollback();
-		assert c.get() == null : "cursor did take the bait and move to v";
-		assert name.get() == null : "name didn't take the bait neither";
-		db.moveTo(c, v);
-		db.commit();
-		assert c.get() == v : "cursor didn't take the bait and move to v";
-		assert "titi".equals(name.get()): "name failed run smoothly";
-		
-		System.out.println(name.get());
-		System.out.println(c.get());
-		while (m.canUndo()) {
-			m.undo();
-			System.out.println(name.get());
-			System.out.println(c.get());
-		}
-		
-			
-		
 	}
-	@Test
-public 	void testUndoBug() {
-		// had a bug with thee undo, and the cursor, this test was build to fail
-		Database db = new Database() ;
-		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
-		Cursor<Tester> c = db.createCursor(t);
-		UndoManager m = new UndoManager();
-		new UndoableAdapter(this, db).addUndoableEditListener(m); // record the undomanager
-		db.commit();
-		/////////////////////////////////////////////////////////////////////////:
-		Tester v = db.insert(t);
-		db.moveTo(c, v);
-		db.commit();
-		
-		assert c.get() != null && c.get().name == null: "oops, the cursor didn't follow";
-		
-		db.update(t, NeoQL.is(c), NAME.set("1"));
-		db.commit();
-		assert c.get() != null && "1".equals(c.get().name ): "oops, the cursor didn't follow";
-		
-		
-		/////////////////////////////////////////////////////////////////////////:
-		db.delete(t, NeoQL.is(c));
-		db.commit();
-		assert c.get() == null : "oops, the cursor didn't follow";
-		
-		m.undo() ;
-		assert c.get() != null : "oops, the cursor didn't undo well";
-	}
-	
 
 	@Test public void testForeignKey() {
 		Database db = new Database() ;
 		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
 		ContentTable<Marker> m = db.createTable(Marker.class, MARKED, TARGET );
-		Cursor<Marker> c = db.createCursor(m);
-		Cursor<Tester> cv = db.createCursor(t);
 		db.commit();
 		UndoManager um = new UndoManager();
 		new UndoableAdapter(this, db).addUndoableEditListener(um); // record the undomanager
@@ -209,8 +127,8 @@ public 	void testUndoBug() {
 		// insert hello and mark as true
 		Tester v = db.insert(t, NAME.set("hello"));
 		Marker mv = db.insert(m, MARKED.set(true), TARGET.set(v));
-		db.moveTo(c, mv);
-		db.moveTo(cv, v);
+		Property<Tester> cv = NeoQL.track(t, v);
+		Property<Marker> c = NeoQL.track(m, mv);
 		assert len(m) == 0 : "precommit has changed the overall length";
 		Change firstcs = db.commit();
 		

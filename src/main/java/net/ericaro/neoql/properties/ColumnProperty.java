@@ -1,15 +1,10 @@
 package net.ericaro.neoql.properties;
 
 import net.ericaro.neoql.Column;
-import net.ericaro.neoql.ContentTable;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Property;
-import net.ericaro.neoql.PropertyChange;
-import net.ericaro.neoql.Table;
-import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
-import net.ericaro.neoql.eventsupport.TableListener;
 
 public class ColumnProperty<T, C> implements Property<C> {
 

@@ -2,7 +2,6 @@ package net.ericaro.neoql.properties;
 
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.Property;
-import net.ericaro.neoql.Cursor;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.tables.Mapper;
 

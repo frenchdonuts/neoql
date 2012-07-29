@@ -4,7 +4,6 @@ import java.lang.ref.WeakReference;
 
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Property;
-import net.ericaro.neoql.PropertyChange;
 import net.ericaro.neoql.Table;
 import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.PropertyListenerSupport;
@@ -22,7 +21,6 @@ public class ObservableCursor<T> implements Property<T>{
 	T							value;
 	private Table<T>		source;
 	private TableListener<T>	listener;
-	PropertyChange<T> 			propertyChange = null;
 
 	public ObservableCursor(Table<T> source, T val) {
 		super();

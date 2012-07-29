@@ -1,11 +1,7 @@
 package net.ericaro.neoql;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -27,7 +23,6 @@ public class Database implements DDL, DQL, DML, DTL {
 
 	// real class -> table mapping
 	private Map<Class, ContentTable>	tables			= new HashMap<Class, ContentTable>();
-	private Map<Object, Cursor>			cursors			= new HashMap<Object, Cursor>();
 
 	TransactionListenerSupport			support			= new TransactionListenerSupport();
 	CommitBuilder						currentCommit	= new CommitBuilder(this);
@@ -75,7 +70,6 @@ public class Database implements DDL, DQL, DML, DTL {
 	 * @return
 	 */
 	public <T> ContentTable<T> createTable(Class<T> table, Column<T, ?>... columns) {
-		Object newKey = newKey();
 		atomicCreateTable(table, columns );
 		commit();
 		return getTable(table);
@@ -106,81 +100,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	}
 
 
-	/**
-	 * Creates a Property for a given table type.
-	 * A Property is an object that will return always the same row from a table.
-	 * If the row changes in the table, so does the property.
-	 * Start with a null row (i.e does nothing, until the value is set).
-	 * 
-	 * @param type
-	 *            must correspond to an existing table type
-	 * @return the key to retrieve the cursor anytime
-	 */
-	@Override
-	public <T> Object atomicCreateCursor(Class<T> table) {
-		Object newKey = newKey();
-		atomicCreateCursor(table, newKey);
-		return newKey ;
-	}
 	
-	/** little convenient method, creates a cursor atomically, commit, and then rerieve the cursor. If you need
-	 * fine control over the "commits" do no use this method.
-	 * 
-	 * @param type
-	 * @return
-	 */
-	public <T> Cursor<T> createCursor(Class<T> type) {
-		Object newKey = newKey();
-		atomicCreateCursor(type, newKey);
-		commit();
-		return getCursor(newKey);
-	}
-	public <T> Cursor<T> createCursor(ContentTable<T> table) {
-		Object newKey = newKey();
-		atomicCreateCursor(table.getType(), newKey);
-		commit();
-		return getCursor(newKey);
-	}
-	
-	
-
-	@Override
-	public <T> void atomicCreateCursor(Class<T> table, Object key) {
-		// now prebuild the cursor for the live time of the transaction
-		assert !cursors.containsKey(key) : "cannot create cursor: key already exists";
-		
-		currentCommit.createCursor(table, key);
-		precommit();
-	}
-
-	<T> void doCreateCursor(Class<T> table, Object key) {
-		Cursor<T> s = new Cursor<T>(key, getTable(table));
-		doReuseCursor(s);
-	}
-
-	/**
-	 * called by the insert either a "reused" pre created cursor, or the brand new one.
-	 * 
-	 * @param toreuse
-	 */
-	<T> void doReuseCursor(Cursor<T> toreuse) {
-		assert !cursors.containsKey(toreuse.getKey()) : "cannot create cursor: key already exists";
-		toreuse.install();
-		cursors.put(toreuse.getKey(), toreuse);
-	}
-
-	// TODO add "changes" for create and drop too
-	@Override
-	public <T> void dropCursor(Object key) {
-		currentCommit.dropCursor(getCursor(key).getType(), key);
-		precommit();
-	}
-
-	<T> void doDropCursor(Object key) {
-		Cursor c = getCursor(key);
-		c.drop();
-		cursors.remove(key);
-	}
 
 	/**
 	 * remove table from the database
@@ -196,16 +116,6 @@ public class Database implements DDL, DQL, DML, DTL {
 		ContentTable<T> table = getTable(tableType);
 		this.tables.remove(tableType);
 		table.drop();
-	}
-
-	/**
-	 * generates a new unique key (unique in this database)
-	 * 
-	 * @return
-	 */
-	Object newKey() {
-		while (cursors.containsKey(++keySeed)) {}
-		return keySeed;
 	}
 
 	// ##########################################################################
@@ -227,10 +137,6 @@ public class Database implements DDL, DQL, DML, DTL {
 	}
 
 
-	@Override
-	public <T> Cursor<T> getCursor(Object key) {
-		return cursors.get(key);
-	}
 
 	/**
 	 * Return the actual ContentTables.
@@ -241,15 +147,6 @@ public class Database implements DDL, DQL, DML, DTL {
 	@Override
 	public Iterable<ContentTable> getTables() {
 		return tables.values();
-	}
-
-	// @Override
-	// public Iterable<SingletonProperty> getSingletons() {
-	// return singletons.values();
-	// }
-
-	public Iterable<Cursor> getCursors() {
-		return Collections.unmodifiableCollection(cursors.values());
 	}
 
 	// ##########################################################################
@@ -326,25 +223,6 @@ public class Database implements DDL, DQL, DML, DTL {
 	public <T> void update(ContentTable<T> table, Predicate<T> predicate, ColumnSetter<T, ?>... setters) {
 		table.update(predicate, setters);
 		assert table.updateOperation != null : "unexpected null update operation";
-		precommit();
-	}
-
-	/**
-	 * Update the cell referenced by this property.
-	 * 
-	 * @param prop
-	 * @param value
-	 */
-	// @Override
-	// public <T> T update(SingletonProperty<T> prop, T value) {
-	// prop.set(value);
-	// precommit();
-	// return value;
-	// }
-
-	@Override
-	public <T> void moveTo(Cursor<T> property, T value) {
-		property.set(value);
 		precommit();
 	}
 
@@ -492,24 +370,6 @@ public class Database implements DDL, DQL, DML, DTL {
 			public <T> void changed(InsertChange<T> change) {
 				getTable(change.getType()).doCommit(change);
 
-			}
-
-			@Override
-			public <T> void changed(PropertyChange<T> change) {
-				Cursor<T> c = getCursor(change.getKey());
-				c.doCommit(change);
-			}
-
-			@Override
-			public void changed(DropCursorChange change) {
-				for (Object key : change.dropped())
-					doDropCursor(key);
-			}
-
-			@Override
-			public void changed(CreateCursorChange change) {
-				for (Pair<Class, Object> key : change.created())
-						doCreateCursor(key.getLeft(), key.getRight());
 			}
 
 			@Override

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeVisitor;
+import net.ericaro.neoql.changeset.Changes;
 import net.ericaro.neoql.tables.Pair;
 
 public class DropTableChange implements Change {
@@ -46,5 +47,9 @@ public class DropTableChange implements Change {
 
 	public void accept(ChangeVisitor visitor) {
 		visitor.changed(this);
+	}
+	
+	public String toString() {
+		return Changes.toString(this);
 	}
 }

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeVisitor;
+import net.ericaro.neoql.changeset.Changes;
 
 
 public class DeleteChange<T> implements Change {
@@ -51,4 +52,8 @@ public class DeleteChange<T> implements Change {
 		deleted.add(row);
 	}
 	public void accept(ChangeVisitor visitor) {visitor.changed(this);}
+	
+	public String toString() {
+		return Changes.toString(this);
+	}
 }

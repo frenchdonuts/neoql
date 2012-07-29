@@ -6,6 +6,7 @@ import java.util.Set;
 
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeVisitor;
+import net.ericaro.neoql.changeset.Changes;
 
 
 
@@ -56,4 +57,8 @@ Class<T> key;
 	public Iterable<T> inserted(){ return Collections.unmodifiableCollection(inserted);}
 	
 	public void accept(ChangeVisitor visitor) {visitor.changed(this);}
+	
+	public String toString() {
+		return Changes.toString(this);
+	}
 }

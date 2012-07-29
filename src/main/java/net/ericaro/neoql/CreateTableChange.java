@@ -6,6 +6,7 @@ import java.util.List;
 
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeVisitor;
+import net.ericaro.neoql.changeset.Changes;
 import net.ericaro.neoql.tables.Pair;
 
 public class CreateTableChange implements Change {
@@ -44,5 +45,8 @@ public class CreateTableChange implements Change {
 
 	public void accept(ChangeVisitor visitor) {
 		visitor.changed(this);
+	}
+	public String toString() {
+		return Changes.toString(this);
 	}
 }

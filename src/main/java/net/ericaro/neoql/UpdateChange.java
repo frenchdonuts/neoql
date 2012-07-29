@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeVisitor;
+import net.ericaro.neoql.changeset.Changes;
 
 /** Change for table Data update
  * 
@@ -80,4 +81,8 @@ public class UpdateChange<T> implements Change {
 	}
 	
 	public void accept(ChangeVisitor visitor) {visitor.changed(this);}
+	
+	public String toString() {
+		return Changes.toString(this);
+	}
 }

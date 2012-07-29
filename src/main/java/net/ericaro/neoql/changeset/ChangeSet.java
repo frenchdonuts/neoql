@@ -70,4 +70,7 @@ public class ChangeSet implements Change, Iterable<Change>{
 	
 	public void accept(ChangeVisitor visitor) {visitor.changed(this);}
 	
+	public String toString() {
+		return Changes.toString(this);
+	}
 }

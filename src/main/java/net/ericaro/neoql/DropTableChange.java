@@ -52,4 +52,8 @@ public class DropTableChange implements Change {
 	public String toString() {
 		return Changes.toString(this);
 	}
+
+	public boolean isEmpty() {
+		return deleted.isEmpty();
+	}
 }

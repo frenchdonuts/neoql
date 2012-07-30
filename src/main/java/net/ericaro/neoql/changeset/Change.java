@@ -9,6 +9,7 @@ public interface Change {
 
 	Change copy();
 	Change reverse();
+	boolean isEmpty();
 	
 	void accept(ChangeVisitor visitor);
 	

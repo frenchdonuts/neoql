@@ -2,7 +2,7 @@ package net.ericaro.neoql;
 
 import net.ericaro.neoql.properties.FinalProperty;
 
-
+// TODO provide some help for FK checker.
 
 
 /** Stores a (Column,Value) pairs in order to later be able to apply it on a row.

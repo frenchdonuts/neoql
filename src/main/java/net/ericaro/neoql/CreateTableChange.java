@@ -49,4 +49,9 @@ public class CreateTableChange implements Change {
 	public String toString() {
 		return Changes.toString(this);
 	}
+
+
+	public boolean isEmpty() {
+		return inserted.isEmpty();
+	}
 }

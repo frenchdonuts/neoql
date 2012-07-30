@@ -10,6 +10,7 @@ import net.ericaro.neoql.changeset.Changes;
 
 
 
+
 public class InsertChange<T> implements Change {
 	Class<T> table;
 	protected Set<T> inserted = new HashSet<T>();
@@ -60,5 +61,11 @@ Class<T> key;
 	
 	public String toString() {
 		return Changes.toString(this);
+	}
+
+
+
+	public boolean isEmpty() {
+		return inserted.isEmpty();
 	}
 }

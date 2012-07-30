@@ -31,7 +31,7 @@ public class ChangeSet implements Change, Iterable<Change>{
 		addChange(operation);
 	}
 
-	private void addChange(Iterable<Change> operation) { // shouldn't be public
+	private void addChange(Iterable<Change> operation) { 
 		for (Change o: operation)
 			if(o !=null)
 				operations.add(o);
@@ -48,7 +48,7 @@ public class ChangeSet implements Change, Iterable<Change>{
 	}
 	
 	public boolean isEmpty() {
-		return operations.size() == 0;
+		return operations.isEmpty();
 	}
 
 	public ChangeSet copy() {

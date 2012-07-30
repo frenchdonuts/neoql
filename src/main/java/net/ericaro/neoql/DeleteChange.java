@@ -9,6 +9,7 @@ import net.ericaro.neoql.changeset.ChangeVisitor;
 import net.ericaro.neoql.changeset.Changes;
 
 
+
 public class DeleteChange<T> implements Change {
 	protected Set<T> deleted = new HashSet<T>();
 	
@@ -55,5 +56,11 @@ public class DeleteChange<T> implements Change {
 	
 	public String toString() {
 		return Changes.toString(this);
+	}
+
+
+
+	public boolean isEmpty() {
+		return deleted.isEmpty();
 	}
 }

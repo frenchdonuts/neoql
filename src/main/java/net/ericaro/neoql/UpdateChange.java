@@ -8,6 +8,7 @@ import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeVisitor;
 import net.ericaro.neoql.changeset.Changes;
 
+
 /** Change for table Data update
  * 
  * @author eric
@@ -62,6 +63,14 @@ public class UpdateChange<T> implements Change {
 		return updatedRows.values();
 	}
 	
+	public Iterable<T> oldValues(){
+		return updatedRows.keySet();
+	}
+	
+	public T getNewValueFor(T oldValue){
+		return updatedRows.get(oldValue);
+	}
+	
 	
 	void remove(T row) {
 		if (updatedRows.containsKey(row))
@@ -84,5 +93,11 @@ public class UpdateChange<T> implements Change {
 	
 	public String toString() {
 		return Changes.toString(this);
+	}
+
+
+
+	public boolean isEmpty() {
+		return updatedRows.isEmpty();
 	}
 }

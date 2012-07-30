@@ -9,42 +9,36 @@ import java.util.Map;
 import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.changeset.ChangeSet;
 
-/** Open up a commit while in the transaction, then close it for ever as a "commit" object.
+/**
+ * Open up a commit while in the transaction, then close it for ever as a "commit" object.
  * 
  * @author eric
- *
+ * 
  */
 public class CommitBuilder {
 
-	
-	private DropTableChange				dropTableChange;
-	private CreateTableChange			createTableChange;
-	Database owner ;
-	
-	
+	private DropTableChange		dropTableChange;
+	private CreateTableChange	createTableChange;
+	Database					owner;
+
 	public CommitBuilder(Database owner) {
 		super();
 		this.owner = owner;
 	}
 
-
 	public <T> void createTable(Class<T> table, Column<T, ?>... columns) {
 		if (createTableChange == null)
 			createTableChange = new CreateTableChange();
 		createTableChange.create(table, columns);
-		
+
 	}
-	
-	
 
 	public <T> void dropTable(Class<T> tableType, Column<T, ?>... columns) {
 		if (dropTableChange == null)
 			dropTableChange = new DropTableChange();
 		dropTableChange.drop(tableType, columns);
 	}
-	
-	
-	
+
 	/**
 	 * remove all changes from local buffers and collect them into the current transaction
 	 * 
@@ -53,31 +47,33 @@ public class CommitBuilder {
 	 * @return
 	 */
 	public ChangeSet build() {
-		
+
 		List<Change> tx = new ArrayList<Change>();
-		if (createTableChange != null)
+		if (createTableChange != null && !createTableChange.isEmpty())
 			tx.add(createTableChange);
-		if (dropTableChange != null)
+		if (dropTableChange != null && !dropTableChange.isEmpty())
 			tx.add(dropTableChange);
 
 		// collect all "changes" in the tables
 		for (ContentTable t : owner.getTables()) {
-			tx.add(t.insertOperation);
+			if (!(t.insertOperation == null || t.insertOperation.isEmpty()))
+				tx.add(t.insertOperation);
 			t.insertOperation = null;
-			
-			tx.add(t.updateOperation);
+
+			if (!(t.updateOperation == null || t.updateOperation.isEmpty()))
+				tx.add(t.updateOperation);
 			t.updateOperation = null;
-			
-			tx.add(t.deleteOperation);
+
+			if (!(t.deleteOperation == null || t.deleteOperation.isEmpty()))
+				tx.add(t.deleteOperation);
 			t.deleteOperation = null;
 		}
-		
+
 		createTableChange = null;
 		dropTableChange = null;
 
 		return new ChangeSet(tx);
 	}
-
 
 	static <U> Iterable<U> plus(final Iterable<U> u, final Iterable<U> v) {
 		return new Iterable<U>() {
@@ -115,5 +111,4 @@ public class CommitBuilder {
 		};
 	}
 
-	
 }

@@ -6,6 +6,7 @@ import net.ericaro.neoql.DropTableChange;
 import net.ericaro.neoql.InsertChange;
 import net.ericaro.neoql.UpdateChange;
 
+
 public interface ChangeVisitor {
 
 	

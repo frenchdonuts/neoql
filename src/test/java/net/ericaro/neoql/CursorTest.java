@@ -53,6 +53,7 @@ public class CursorTest {
 		Property<TesterCursor> tp = NeoQL.track(tc, vc);
 		Property<Tester> c = NeoQL.track(tp, TESTER);
 		
+		
 		Commit first = 	git.commit("first");
 		assert c.get() == v : "cursor wrongly initialized: "+c.get()+ " <> "+ v;
 		assert c.get().count == 1 : "cursor points to a wrong value";

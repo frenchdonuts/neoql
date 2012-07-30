@@ -13,9 +13,6 @@ public class ContentTableTest {
 	public static Column<Tester, String> NAME = NeoQL.column(Tester.class, "name", String.class, false);
 	public static Column<Tester, Integer> COUNT= NeoQL.column(Tester.class, "count", Integer.class, false);
 	
-	public static Column<Marker, Boolean> MARKED= NeoQL.column(Marker.class, "marked", Boolean.class, false);
-	public static Column<Marker, Tester> TARGET= NeoQL.column(Marker.class, "target", Tester.class, true);
-	
 	
 	public static class Tester{
 		private String name ;
@@ -27,6 +24,8 @@ public class ContentTableTest {
 	}
 	
 		
+	public static Column<Marker, Boolean> MARKED= NeoQL.column(Marker.class, "marked", Boolean.class, false);
+	public static Column<Marker, Tester> TARGET= NeoQL.column(Marker.class, "target", Tester.class, true);
 	public static class Marker {
 		// class used to test inner joins, and above all, the foreign key mechanism
 		boolean marked = false;

@@ -59,6 +59,13 @@ public class Repository {
 		assert temphead == target : "the computed path did not end into the target as expected";
 		return rawpath;
 	}
+	
+	public List<Change> changePath(Commit from, Commit target){
+		List<Change> changes = new ArrayList<Change>();
+		for(Pair<Change, Commit>  p: path(from,target))
+			changes.add(p.getLeft());
+		return changes;
+	}
 
 	public DirectedGraph<Commit, Change> getGraph() {
 		// TODO Auto-generated method stub

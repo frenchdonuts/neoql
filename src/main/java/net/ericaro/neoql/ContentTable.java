@@ -30,15 +30,13 @@ public class ContentTable<T> implements Table<T>{
 	private Class<T>				type;												// table type
 	private Database				owner;												// database owner
 
+	DeleteChange<T>				deleteOperation;
+	InsertChange<T>				insertOperation;
+	UpdateChange<T>				updateOperation;
+	
+	
 	private TableListener[]			internalColumnListeners;							// if this table has foreign key (one per column) this are the listeners to the foreign table
 
-	// transactions, i.e changes not yet applied but:
-	// should not affect any read query
-	// should looks liked actually applied for edit queries (update, insert, delete).
-	// => edit queries should not rely on read queries, but rather on the actual edit they have made)
-	DeleteChange<T>					deleteOperation	= null;
-	InsertChange<T>					insertOperation	= null;
-	UpdateChange<T>					updateOperation	= null;
 
 	ContentTable(Database owner, Class<T> table, Column[] cols) {
 		this.owner = owner;
@@ -206,6 +204,7 @@ public class ContentTable<T> implements Table<T>{
 		boolean changed = false;
 		for (ColumnSetter s : setters)
 			changed |= s.set(newValue);
+		// TODO handle FK (one of the column might be a FK, and the newValue might not belong to the database
 
 		if (changed) {
 			up.update(oldValue, newValue);
@@ -287,7 +286,7 @@ public class ContentTable<T> implements Table<T>{
 			assert allSameType(values) : "Column Setter mismatch: cannot use alien column setter";
 			for (ColumnSetter s : values)
 				s.set(row);
-
+			// TODO : handle FK verification here, one of the column might be a FK, hence I need to check that the value belongs to the database
 			// TODO handle default values (like ids etc, so I need to 'update' the object a little bit and return it
 
 			return row;

@@ -1,10 +1,9 @@
 package net.ericaro.neoql;
 
-import java.util.Iterator;
-
 import javax.swing.undo.UndoManager;
 
-import net.ericaro.neoql.changeset.Change;
+import net.ericaro.neoql.patches.Patch;
+import net.ericaro.neoql.patches.Patches;
 import net.ericaro.neoql.swing.UndoableAdapter;
 
 import org.junit.Test;
@@ -129,7 +128,7 @@ public class ContentTableTest {
 		Property<Tester> cv = NeoQL.track(t, v);
 		Property<Marker> c = NeoQL.track(m, mv);
 		assert len(m) == 0 : "precommit has changed the overall length";
-		Change firstcs = db.commit();
+		Patch firstcs = db.commit();
 		
 		
 		assert len(t) == 1 : "the table was not filled correctly";
@@ -140,7 +139,7 @@ public class ContentTableTest {
 		/////////////////////////////////////////////////////////////////////////
 		// mark as false
 		db.update(m, NeoQL.is(c), MARKED.set(false));
-		Change secondcs = db.commit();
+		Patch secondcs = db.commit();
 		assert !c.get().marked : "cursor has not the right value";
 		assert c.get().target == cv.get() : "the marker target is no the expected target";
 		System.out.println("undoing ---------------");
@@ -150,7 +149,7 @@ public class ContentTableTest {
 		/////////////////////////////////////////////////////////////////////////
 		// undo, hence mark is back to true
 		
-		Change thirdcs = secondcs.reverse();
+		Patch thirdcs = Patches.reverse(secondcs);
 		db.apply(thirdcs) ;
 		
 		assert len(t) == 1 : "the table was not filled correctly";
@@ -160,7 +159,7 @@ public class ContentTableTest {
 
 		/////////////////////////////////////////////////////////////////////////
 		// undo hence, delete and delete mark as true
-		Change fourth = firstcs.reverse();
+		Patch fourth = Patches.reverse(firstcs);
 		db.apply(fourth) ;
 		//um.undo();
 		

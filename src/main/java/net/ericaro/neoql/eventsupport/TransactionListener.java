@@ -2,7 +2,7 @@ package net.ericaro.neoql.eventsupport;
 
 import java.util.EventListener;
 
-import net.ericaro.neoql.changeset.Change;
+import net.ericaro.neoql.patches.Patch;
 
 public interface TransactionListener extends EventListener{
 
@@ -11,12 +11,12 @@ public interface TransactionListener extends EventListener{
 	 * 
 	 * @param change
 	 */
-	void committed(Change change);
+	void committed(Patch change);
 	
 	/** the change has not been made, but was rollbacked instead.
 	 * 
 	 * @param change
 	 */
-	void rolledBack(Change change);
+	void rolledBack(Patch change);
 	
 }

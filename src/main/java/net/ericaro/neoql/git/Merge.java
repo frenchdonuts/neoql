@@ -8,6 +8,56 @@ import java.util.Set;
 import net.ericaro.neoql.git.CompactChanges.RowChange;
 import net.ericaro.neoql.git.CompactChanges.RowChange.ChangeType;
 
+/** Merge algorithm. Analyzes two compact changes from a common ancestor.
+ * Compact changes can only have 4 possible values ( o not present, D delete, I insert, Update ).
+ * Deletion has a constraints in the database the the entity used should not be used. Hence for each deletion 
+ * we must check that the instance is not in use in the other part. Hence we need to add another possible status for an instance: S as uSed.
+ * 
+ * therefore here we are 25 (5x5 possibilities)
+ * 		o	 I		S		U		D
+ * o    
+ * I
+ * S
+ * U
+ * D
+ * 
+ * some situation are impossible (8)
+ * 
+ * 		o		I		S		U		D
+ * o    x		
+ * I			x		x		x		x
+ * S			x
+ * U			x
+ * D			x
+ * 
+ * in the remaining some are not conflictuals (11)
+ * 
+ * 		o	 I		S		U		D
+ * o    	 x		x		x		x
+ * I	x			
+ * S	x	 		x		x
+ * U	x			x
+ * D	x
+
+
+this leave us with 25 -8-11 = 6 conflictual situation, called after their coordinate.
+
+ * 		S		U		D
+ * S					SD
+ * U			UU		UD
+ * D	DS		DU		DD
+
+hence the merge algorithm, will update  create a new git checkout from the common ancestor, and will apply
+all the non conflicting changes. It will leave this "checkout" as is, with the list of remaining conflit to be solved.
+Every conflict comes with a "top" level strategy to solve ( like prefer the local version)
+once every conflict have been solved, the database can be tagged, and merged can be created.
+ * 
+ * 
+ * 
+ * @author eric
+ *
+ */
+
 public class Merge {
 	
 	static enum ConflictType {
@@ -66,9 +116,19 @@ public class Merge {
 		
 		A more advanced one could start "editor" part do display the conflict, and build the solution.
 		 
+		 
+		 FK resolution: for each delete (local or remote) I need to check if there are FK issues.
+		 if so: there are only two solutions: 
+		 drop the delete ( reinstanciate the entity) (easier as there are no further consequences
+		 drop the entity in every FK ( nullify, or set a default value, this require some capability though, and then delegation to the calling code).
+		 (dropping the entity in every FK including in the ones in the merge.
+		 
+		 => new type of conflict : DFK
 		
 		*/
 
+		
+		
 		@Override
 		public String toString() {
 			return type+" [local=" + local + ", base=" + base + ", remote=" + remote + "]";

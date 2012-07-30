@@ -9,6 +9,10 @@ import java.util.Set;
 import net.ericaro.neoql.eventsupport.AbstractTableListener;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TableListenerSupport;
+import net.ericaro.neoql.patches.Delete;
+import net.ericaro.neoql.patches.Insert;
+import net.ericaro.neoql.patches.PatchBuilder;
+import net.ericaro.neoql.patches.Update;
 
 /**
  * basic table, the only table that actually contains data.
@@ -30,11 +34,6 @@ public class ContentTable<T> implements Table<T>{
 	private Class<T>				type;												// table type
 	private Database				owner;												// database owner
 
-	DeleteChange<T>				deleteOperation;
-	InsertChange<T>				insertOperation;
-	UpdateChange<T>				updateOperation;
-	
-	
 	private TableListener[]			internalColumnListeners;							// if this table has foreign key (one per column) this are the listeners to the foreign table
 
 
@@ -188,7 +187,6 @@ public class ContentTable<T> implements Table<T>{
 	// ##########################################################################
 
 	T update(T oldValue, ColumnSetter<T, ?>[] setters) {
-		UpdateChange<T> up = getUpdateOperation();
 		T newValue;
 
 		// fix point algorithm, an updated row can trigger internal events that cause it self to change.
@@ -196,7 +194,7 @@ public class ContentTable<T> implements Table<T>{
 
 		// it won't scale up if we have an already huge transition.
 
-		if (up.containsNew(oldValue)) // the the oldvalue is a new value, this means that the value as already been updated
+		if (getCurrentCommit().containsNew( oldValue)) // the the oldvalue is a new value, this means that the value as already been updated
 			newValue = oldValue;
 		else
 			newValue = ContentTable.this.clone(oldValue);
@@ -207,18 +205,20 @@ public class ContentTable<T> implements Table<T>{
 		// TODO handle FK (one of the column might be a FK, and the newValue might not belong to the database
 
 		if (changed) {
-			up.update(oldValue, newValue);
+			getCurrentCommit().update(type, oldValue, newValue);
 			// fire internal events so that other rows might want to keep in touch
 			internals.fireUpdated(oldValue, newValue);
 		}
 		return newValue;
 	}
+
+	private PatchBuilder getCurrentCommit() {
+		return owner.currentCommit;
+	}
 	
 	T update(T oldValue, T newValue) {
 		T clone = clone(newValue);
-
-		UpdateChange<T> up = getUpdateOperation();
-		up.update(oldValue, clone);
+		getCurrentCommit().update(type, oldValue, clone);
 		// fire internal events so that other rows might want to keep in touch
 		internals.fireUpdated(oldValue, clone);
 		
@@ -259,11 +259,7 @@ public class ContentTable<T> implements Table<T>{
 
 	private void delete(T row) {
 		// check if I need to remove the row from inserted AND updated
-		if (getInsertOperation().contains(row))
-			getInsertOperation().remove(row);
-		if (getUpdateOperation().containsOld(row) || getUpdateOperation().containsNew(row))
-			getUpdateOperation().remove(row);
-		getDeleteOperation().delete(row);
+		getCurrentCommit().delete(type, row);
 		internals.fireDeleted(row);
 	}
 
@@ -276,10 +272,7 @@ public class ContentTable<T> implements Table<T>{
 	// ##########################################################################
 
 	T insert(T row) {
-		if (insertOperation == null)
-			insertOperation = getInsertOperation();
-
-		insertOperation.insert(row);
+		getCurrentCommit().insert(type, row);
 		internals.fireInserted(row);
 		return row;
 	}
@@ -334,27 +327,21 @@ public class ContentTable<T> implements Table<T>{
 	 * @return
 	 */
 	Iterable<T> newRowsWhere(Predicate<T> p) {
-
 		Set<T> updated = new HashSet<T>();
 
 		for (T row : rows)
 			// not rows but the virtual new rows
 			if (p.eval(row) // matches the predicate
-					&& !getUpdateOperation().containsOld(row) // but it has not changed
-					&& !getDeleteOperation().contains(row))
+					&& !getCurrentCommit().containsOld(row) // but it has not changed
+				)
 				updated.add(row); // old plain value
 		// now handle updated
-		for (T row : getUpdateOperation().newValues())
+		for (Object row : getCurrentCommit().newValues())
 			// also need to update the 'new' ones
-			if (p.eval(row)) // match, and it has not changed
-				updated.add(row);
+			
+			if (type.isInstance(row) && p.eval((T)row)) // match, and it has not changed
+				updated.add((T)row);
 		// note that updated should not contains deleted (the operation should have been checked before
-
-		// and finally inserted
-		for (T row : getInsertOperation().inserted())
-			if (p.eval(row)) // the new ones matches
-				updated.add(row);
-
 		return Collections.unmodifiableCollection(updated);
 	}
 
@@ -362,26 +349,20 @@ public class ContentTable<T> implements Table<T>{
 	// ACTUAL TRANSACTION OPERATIONS BEGIN
 	// ##########################################################################
 
-	void doCommit(UpdateChange<T> change) {
-		for (Map.Entry<T, T> r : change.updates()) {
-			T left = r.getKey();
-			T right = r.getValue();
-			rows.remove(left); // remove the new
-			rows.add(right); // add the old
-			events.fireUpdated(left, right);
-		}
+	void doCommit(Update<T> p) {
+			rows.remove(p.getOldValue()); // remove the new
+			rows.add(p.getNewValue()); // add the old
+			events.fireUpdated(p.getOldValue(), p.getNewValue());
 	}
 
-	public void doCommit(InsertChange<T> change) {
-		for (T r : change.inserted())
-			if (rows.add(r))// actually add the item back
-				fireInserted(r);
+	public void doCommit(Insert<T> p) {
+			if (rows.add(p.getInserted()))// actually add the item back
+				fireInserted(p.getInserted());
 	}
 
-	void doCommit(DeleteChange<T> change) {
-		for (T r : change.deleted())
-			if (rows.remove(r))// actually add the item back
-				fireDeleted(r);
+	void doCommit(Delete<T> p) {
+			if (rows.remove(p.getDeleted()))// actually add the item back
+				fireDeleted(p.getDeleted());
 	}
 
 	// ##########################################################################
@@ -391,24 +372,6 @@ public class ContentTable<T> implements Table<T>{
 	// ##########################################################################
 	// OPERATIONS BEGIN
 	// ##########################################################################
-
-	InsertChange<T> getInsertOperation() {
-		if (insertOperation == null)
-			insertOperation = new InsertChange<T>(getType());
-		return insertOperation;
-	}
-
-	DeleteChange<T> getDeleteOperation() {
-		if (deleteOperation == null)
-			deleteOperation = new DeleteChange<T>(getType());
-		return deleteOperation;
-	}
-
-	UpdateChange<T> getUpdateOperation() {
-		if (updateOperation == null)
-			updateOperation = new UpdateChange<T>(getType());
-		return updateOperation;
-	}
 
 	void fireDeleted(T row) {
 		events.fireDeleted(row);

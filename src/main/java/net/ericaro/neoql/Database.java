@@ -1,18 +1,22 @@
 package net.ericaro.neoql;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import net.ericaro.neoql.changeset.Change;
-import net.ericaro.neoql.changeset.ChangeSet;
-import net.ericaro.neoql.changeset.ChangeVisitor;
 import net.ericaro.neoql.eventsupport.PropertyListener;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TransactionListener;
 import net.ericaro.neoql.eventsupport.TransactionListenerSupport;
-import net.ericaro.neoql.tables.Pair;
+import net.ericaro.neoql.patches.CreateTable;
+import net.ericaro.neoql.patches.Delete;
+import net.ericaro.neoql.patches.DropTable;
+import net.ericaro.neoql.patches.Insert;
+import net.ericaro.neoql.patches.Patch;
+import net.ericaro.neoql.patches.PatchBuilder;
+import net.ericaro.neoql.patches.PatchSet;
+import net.ericaro.neoql.patches.PatchVisitor;
+import net.ericaro.neoql.patches.Update;
 
 public class Database implements DDL, DQL, DML, DTL {
 
@@ -25,7 +29,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	private Map<Class, ContentTable>	tables			= new HashMap<Class, ContentTable>();
 
 	TransactionListenerSupport			support			= new TransactionListenerSupport();
-	CommitBuilder						currentCommit	= new CommitBuilder(this);
+	PatchBuilder						currentCommit	= new PatchBuilder();
 
 	// I need to track properties, because they hold one bit of information: the actual type they are tracking, this might change => it should be transactional.
 
@@ -56,7 +60,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	@Override
 	public <T> void atomicCreateTable(Class<T> table, Column<T, ?>... columns) {
 		assert columns.length > 0 : "cannot create a table with no columns";
-		LOG.fine("CREATE TABLE " + table); // always log before assert, so that assertion fail can be traced in the logs
+		//LOG.fine("CREATE TABLE " + table); // always log before assert, so that assertion fail can be traced in the logs
 		assert !tables.containsKey(table) : "failed to create a table data that already exists";
 		assert allColumsAreOfType(table, columns) : "cannot create columns that do not have the same type";
 		currentCommit.createTable(table, columns);
@@ -169,12 +173,10 @@ public class Database implements DDL, DQL, DML, DTL {
 	public <T> T insert(ContentTable<T> table, ColumnSetter<T, ?>... values) {
 		if (values.length == 0) {
 			T row = table.insert(table.newInstance());
-			assert table.insertOperation != null : "unexpected empty transaction";
 			precommit();
 			return row;
 		} else {
 			T row = table.insert(table.newInstance(values));
-			assert table.insertOperation != null : "unexpected empty transaction";
 			precommit();
 			return row;
 		}
@@ -183,7 +185,6 @@ public class Database implements DDL, DQL, DML, DTL {
 
 	public <T> T insert(ContentTable<T> table, T t){
 		T row = table.insert(table.clone(t));
-		assert table.insertOperation != null : "unexpected empty transaction";
 		precommit();
 		return row;
 	}
@@ -204,7 +205,6 @@ public class Database implements DDL, DQL, DML, DTL {
 	@Override
 	public <T> void delete(ContentTable<T> table, Predicate<T> predicate) {
 		table.delete(predicate);
-		assert table.deleteOperation != null : "unexpected null delete operation";
 		precommit();
 	}
 
@@ -228,14 +228,12 @@ public class Database implements DDL, DQL, DML, DTL {
 	@Override
 	public <T> void update(ContentTable<T> table, Predicate<T> predicate, ColumnSetter<T, ?>... setters) {
 		table.update(predicate, setters);
-		assert table.updateOperation != null : "unexpected null update operation";
 		precommit();
 	}
 	
 	@Override
 	public <T> void update(ContentTable<T> table, Predicate<T> predicate, T t) {
 		table.update(predicate, t);
-		assert table.updateOperation != null : "unexpected null update operation";
 		precommit();
 	}
 
@@ -300,19 +298,20 @@ public class Database implements DDL, DQL, DML, DTL {
 	}
 
 	@Override
-	public Change commit() {
+	public Patch commit() {
 
-		ChangeSet otx = currentCommit.build(); // flush buffers into the transaction tx
-		currentCommit = new CommitBuilder(this);
-		otx = apply(otx);
+		Patch otx = currentCommit.build(); // flush buffers into the transaction tx
+		//currentCommit = new CommitBuilder(this);// reuse ?
+		if(otx !=null)
+			apply(otx);
 		return otx;
 	}
 
 	@Override
-	public ChangeSet rollback() {
-		ChangeSet tx = currentCommit.build();
-		currentCommit = new CommitBuilder(this);
-		if (!tx.isEmpty())
+	public Patch rollback() {
+		Patch tx = currentCommit.build();
+		//currentCommit = new CommitBuilder(this);
+		if (tx != null )
 			support.fireRolledBack(tx);
 		return tx;
 	}
@@ -336,71 +335,57 @@ public class Database implements DDL, DQL, DML, DTL {
 	// ##########################################################################
 	// HISTORY BEGIN
 	// ##########################################################################
-	/**
-	 * Commit an alien changeset.
-	 * assert that the current transaction is empty.
-	 * 
-	 * @param cs
-	 * @return
-	 */
-	public ChangeSet apply(Change... c) {
-		return apply(Arrays.asList(c));
-	}
-
-	public ChangeSet apply(Iterable<Change> c) {
-		return apply(new ChangeSet(c));
-	}
-
-	public ChangeSet apply(ChangeSet c) {
-		ChangeSet tx = rollback(); // this has no effect if there was no incoming changes
-		assert tx.isEmpty() : "cannot commit a changeset when there are local changes not yet applyed";
-		c.accept(new ChangeVisitor() {
-
+	
+	public void apply(Patch c) {
+		Patch tx = rollback(); // this has no effect if there was no incoming changes
+		assert tx == null  : "cannot commit a patch when there are local changes not yet applyed";
+		c.accept(new PatchVisitor<Void>() {
 			// ##########################################################################
 			// SPECIAL CASES BEGIN
 			// ##########################################################################
+			
 			@Override
-			public void changed(ChangeSet change) { // composite pattern
-				for (Change c : change)
-					c.accept(this);
+			public Void visit(PatchSet patch) {
+				for(Patch p : patch)
+					p.accept(this);
+				return null;
 			}
-
 			// ##########################################################################
 			// SPECIAL CASES END
 			// ##########################################################################
-
+			
 			@Override
-			public <T> void changed(final UpdateChange<T> change) {
-				getTable(change.getType()).doCommit(change);
+			public <T> Void visit(Delete<T> patch) {
+				getTable(patch.getType()).doCommit(patch);
+				return null;
 			}
 
 			@Override
-			public <T> void changed(DeleteChange<T> change) {
-				getTable(change.getType()).doCommit(change);
+			public <T> Void visit(Insert<T> patch) {
+				getTable(patch.getType()).doCommit(patch);
+				return null;
 			}
 
 			@Override
-			public <T> void changed(InsertChange<T> change) {
-				getTable(change.getType()).doCommit(change);
-
+			public <T> Void visit(Update<T> patch) {
+				getTable(patch.getType()).doCommit(patch);
+				return null;
 			}
 
 			@Override
-			public void changed(CreateTableChange change) {
-				for (Pair<Class, Column[]> key : change.created()) 
-						doCreateTable(key.getLeft(), key.getRight());
+			public Void visit(CreateTable patch) {
+				doCreateTable(patch.getType(), patch.getColumns());
+				return null;
 			}
 
 			@Override
-			public void changed(DropTableChange change) {
-				for (Pair<Class, Column[]> c : change.dropped())
-					doDropTable(c.getLeft());
-			}
-		});
+			public Void visit(DropTable patch) {
+				doDropTable(patch.getType());
+				return null;
+			}});
 
 		// now clean the txTables
 		support.fireCommitted(c);
-		return c;
 	}
 
 	// ##########################################################################

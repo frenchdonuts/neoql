@@ -1,7 +1,7 @@
 package net.ericaro.neoql;
 
-import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.eventsupport.TransactionListener;
+import net.ericaro.neoql.patches.Patch;
 
 
 /** Data Transaction Language Interface
@@ -10,8 +10,8 @@ import net.ericaro.neoql.eventsupport.TransactionListener;
  *
  */
 public interface DTL {
-	Change commit();
-	Change rollback();
+	Patch commit();
+	Patch rollback();
 	void addTransactionListener(TransactionListener l);
 	void removeTransactionListener(TransactionListener l);
 	public abstract void setAutocommit(boolean autocommit);

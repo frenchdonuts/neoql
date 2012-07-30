@@ -7,8 +7,9 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 
 import net.ericaro.neoql.Database;
-import net.ericaro.neoql.changeset.Change;
 import net.ericaro.neoql.eventsupport.TransactionListener;
+import net.ericaro.neoql.patches.Patch;
+import net.ericaro.neoql.patches.Patches;
 
 public class UndoableAdapter {
 
@@ -22,12 +23,11 @@ public class UndoableAdapter {
 			
 			
 			@Override
-			public void rolledBack(Change change) {
-			}
+			public void rolledBack(Patch change) {}
 			
 			
 			@Override
-			public void committed(Change change) {
+			public void committed(Patch change) {
 				fireUndoableEditEvent(new UndoableEditEvent(eventSource, new ChangeUndoableEdit(change)));
 			}
 		};
@@ -49,10 +49,10 @@ public class UndoableAdapter {
 	
 	class ChangeUndoableEdit extends AbstractUndoableEdit {
 
-		Change change;
+		Patch change;
 		
 		
-		public ChangeUndoableEdit(Change change) {
+		public ChangeUndoableEdit(Patch change) {
 			super();
 			this.change = change;
 		}
@@ -62,7 +62,7 @@ public class UndoableAdapter {
 			super.undo();
 			try {
 				source.removeTransactionListener(listener);
-				source.apply(change.reverse());
+				source.apply(Patches.reverse(change) );
 			}finally {
 				source.addTransactionListener(listener);
 			}

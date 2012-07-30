@@ -2,7 +2,7 @@ package net.ericaro.neoql.eventsupport;
 
 import javax.swing.event.EventListenerList;
 
-import net.ericaro.neoql.changeset.Change;
+import net.ericaro.neoql.patches.Patch;
 
 
 public class TransactionListenerSupport {
@@ -29,13 +29,13 @@ public class TransactionListenerSupport {
 		return listeners.getListenerCount(TransactionListener.class);
 	}
 
-	public void fireCommitted(Change change) {
+	public void fireCommitted(Patch patch) {
 		for (TransactionListener l : listeners())
-			l.committed(change);
+			l.committed(patch);
 	}
-	public void fireRolledBack(Change change) {
+	public void fireRolledBack(Patch patch) {
 		for (TransactionListener l : listeners())
-			l.rolledBack(change);
+			l.rolledBack(patch);
 	}
 
 	@Override

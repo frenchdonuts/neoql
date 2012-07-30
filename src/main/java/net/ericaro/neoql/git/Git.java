@@ -10,8 +10,7 @@ import net.ericaro.neoql.DML;
 import net.ericaro.neoql.DQL;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.Predicate;
-import net.ericaro.neoql.changeset.Change;
-import net.ericaro.neoql.changeset.Changes;
+import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.tables.Pair;
 import edu.uci.ics.jung.graph.DirectedGraph;
 
@@ -40,8 +39,8 @@ public class Git implements DDL, DML, DQL {
 
 	public Commit commit(String comment) {
 		LOG.fine("git commit -m \"" + comment + "\"");
-		Change commit = db.commit();
-		LOG.fine(Changes.toString(commit));
+		Patch commit = db.commit();
+		LOG.fine(String.valueOf(commit));
 		head = repository.commit(commit, head, branch, comment);
 		LOG.fine("END OF REPOSITORY TRANSACTION");
 
@@ -61,16 +60,16 @@ public class Git implements DDL, DML, DQL {
 	}
 
 	public void checkout(Commit tag) {
-		for (Pair<Change, Commit> c : repository.path(head, tag)) {
+		for (Pair<Patch, Commit> c : repository.path(head, tag)) {
 			db.apply(c.getLeft());
-			LOG.fine(Changes.toString(c.getLeft()));
+			LOG.fine(String.valueOf(c.getLeft() ));
 			head = c.getRight();
 			LOG.info("git new head " + head);
 		}
 		assert head == tag : "checkout failed to reach the asked tag " + head + " instead of " + tag;
 	}
 
-	public DirectedGraph<Commit, Change> getRepositoryGraph() {
+	public DirectedGraph<Commit, Patch> getRepositoryGraph() {
 		return repository.getGraph();
 	}
 

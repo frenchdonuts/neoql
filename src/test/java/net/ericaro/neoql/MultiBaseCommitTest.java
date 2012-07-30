@@ -2,8 +2,6 @@ package net.ericaro.neoql;
 
 import java.util.Iterator;
 
-import net.ericaro.neoql.changeset.Change;
-import net.ericaro.neoql.eventsupport.TransactionListener;
 import net.ericaro.neoql.git.Commit;
 import net.ericaro.neoql.git.Git;
 import net.ericaro.neoql.git.Repository;

@@ -205,7 +205,7 @@ public class ContentTable<T> implements Table<T>{
 		// TODO handle FK (one of the column might be a FK, and the newValue might not belong to the database
 
 		if (changed) {
-			getCurrentCommit().update(type, oldValue, newValue);
+			getCurrentCommit().update(oldValue, newValue);
 			// fire internal events so that other rows might want to keep in touch
 			internals.fireUpdated(oldValue, newValue);
 		}
@@ -218,7 +218,7 @@ public class ContentTable<T> implements Table<T>{
 	
 	T update(T oldValue, T newValue) {
 		T clone = clone(newValue);
-		getCurrentCommit().update(type, oldValue, clone);
+		getCurrentCommit().update(oldValue, clone);
 		// fire internal events so that other rows might want to keep in touch
 		internals.fireUpdated(oldValue, clone);
 		
@@ -259,7 +259,7 @@ public class ContentTable<T> implements Table<T>{
 
 	private void delete(T row) {
 		// check if I need to remove the row from inserted AND updated
-		getCurrentCommit().delete(type, row);
+		getCurrentCommit().delete(row);
 		internals.fireDeleted(row);
 	}
 
@@ -272,7 +272,7 @@ public class ContentTable<T> implements Table<T>{
 	// ##########################################################################
 
 	T insert(T row) {
-		getCurrentCommit().insert(type, row);
+		getCurrentCommit().insert(row);
 		internals.fireInserted(row);
 		return row;
 	}

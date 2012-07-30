@@ -40,10 +40,10 @@ public class Git implements DDL, DML, DQL {
 	public Commit commit(String comment) {
 		LOG.fine("git commit -m \"" + comment + "\"");
 		Patch commit = db.commit();
+		if (commit != null ) {
 		LOG.fine(String.valueOf(commit));
 		head = repository.commit(commit, head, branch, comment);
-		LOG.fine("END OF REPOSITORY TRANSACTION");
-
+		}
 		return head;
 	}
 

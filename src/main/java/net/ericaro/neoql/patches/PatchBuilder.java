@@ -18,13 +18,32 @@ public class PatchBuilder {
 	Set<Object> deleted = new HashSet<Object>();
 	private List<Patch>	patches = new ArrayList<Patch>() ; // only for create and drop table
 	
-	public <T> void insert(Class<T> type, T t) {
+	
+	
+	
+	public Set<Object> getInserted() {
+		return inserted;
+	}
+
+	/** return the updated map. Cave at it's a reversed map: new -> src 
+	 * 
+	 * @return
+	 */
+	public Map<Object, Object> getUpdated() {
+		return updated;
+	}
+
+	public Set<Object> getDeleted() {
+		return deleted;
+	}
+
+	public <T> void insert(T t) {
 		inserted.add(t);
 		deleted.remove(t);
 		assert !updated.containsKey(t) :"an item cannot be updated before beeing inserted";
 	}
 
-	public <T> void update(Class<T> type, T oldValue, T newValue) {
+	public <T> void update( T oldValue, T newValue) {
 		if (inserted.remove(oldValue) ) 			// the value was in the inserted set
 			inserted.add(newValue);
 		else {
@@ -35,7 +54,7 @@ public class PatchBuilder {
 		}
 	}
 
-	public <T> void delete(Class<T> type, T t) {
+	public <T> void delete(T t) {
 		if (inserted.remove(t) )
 			return;// this deletion has no effect
 		Object src = updated.remove(t); // remove from "updated in case
@@ -88,6 +107,54 @@ public class PatchBuilder {
 	public Iterable newValues(){
 		return plus(inserted, updated.keySet());
 		
+	}
+	
+	
+	public void apply(Patch c) {
+		c.accept(new PatchVisitor<Void>() {
+			// ##########################################################################
+			// SPECIAL CASES BEGIN
+			// ##########################################################################
+			
+			@Override
+			public Void visit(PatchSet patch) {
+				for(Patch p : patch)
+					p.accept(this);
+				return null;
+			}
+			// ##########################################################################
+			// SPECIAL CASES END
+			// ##########################################################################
+			
+			@Override
+			public <T> Void visit(Delete<T> patch) {
+				delete(patch.getDeleted());
+				return null;
+			}
+
+			@Override
+			public <T> Void visit(Insert<T> patch) {
+				insert(patch.getInserted());
+				return null;
+			}
+
+			@Override
+			public <T> Void visit(Update<T> patch) {
+				update(patch.getOldValue(), patch.getNewValue());
+				return null;
+			}
+
+			@Override
+			public Void visit(CreateTable patch) {
+				createTable(patch.getType(), patch.getColumns());
+				return null;
+			}
+
+			@Override
+			public Void visit(DropTable patch) {
+				dropTable(patch.getType(), patch.getColumns());
+				return null;
+			}});
 	}
 	
 	

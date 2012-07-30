@@ -43,6 +43,7 @@ public class ContentTableTest {
 	public void testCreate() {
 		Database db = new Database() ;
 		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
+		db.commit();
 		ContentTable<Tester>  t2 = db.getTable(Tester.class);
 		assert t == t2 : "failed to retrieve the content table" ;
 	}
@@ -54,7 +55,8 @@ public class ContentTableTest {
 		// we started with a few "usual" changes, and we added step by step some "decoration" 
 		Database db = new Database() ;
 		ContentTable<Tester> t = db.createTable(Tester.class, NAME, COUNT);
-		Cursor<Tester> c = db.createCursor(t);
+		Cursor<Tester> c = db.createCursor(Tester.class);
+		db.commit();
 		Property<String> name = NeoQL.track(c, NAME);
 		
 		UndoManager m = new UndoManager();
@@ -170,6 +172,7 @@ public 	void testUndoBug() {
 		Cursor<Tester> c = db.createCursor(t);
 		UndoManager m = new UndoManager();
 		new UndoableAdapter(this, db).addUndoableEditListener(m); // record the undomanager
+		db.commit();
 		/////////////////////////////////////////////////////////////////////////:
 		Tester v = db.insert(t);
 		db.moveTo(c, v);
@@ -198,7 +201,7 @@ public 	void testUndoBug() {
 		ContentTable<Marker> m = db.createTable(Marker.class, MARKED, TARGET );
 		Cursor<Marker> c = db.createCursor(m);
 		Cursor<Tester> cv = db.createCursor(t);
-		
+		db.commit();
 		UndoManager um = new UndoManager();
 		new UndoableAdapter(this, db).addUndoableEditListener(um); // record the undomanager
 		

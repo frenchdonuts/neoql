@@ -24,7 +24,7 @@ public class ContentTable<T> implements Table<T>, Content {
 
 	private TableListenerSupport<T>	internals		= new TableListenerSupport<T>();	// fire the internal cascading ( i.e foreign key manager)
 
-	private Column<T, ?>[]			columns;											// column definition
+	Column<T, ?>[]					columns;											// column definition
 	private Set<T>					rows			= new HashSet<T>();				// content definition (note that duplicates are not allowed)
 
 	private Class<T>				type;												// table type
@@ -70,9 +70,8 @@ public class ContentTable<T> implements Table<T>, Content {
 		int i = 0;
 		for (Column<T, ?> col : columns)
 			disconnectForeignKey(i++, col);
-
-		if (internals.getListenerCount() > 0)
-			throw new NeoQLException("Cannot drop table " + type + ". Constraint violation(s)" + internals);
+		// if (internals.getListenerCount() > 0)
+		// throw new NeoQLException("Cannot drop table " + type + ". Constraint violation(s)" + internals);
 		this.rows.clear(); // really ?
 		fireDrop(this);
 	}
@@ -364,13 +363,12 @@ public class ContentTable<T> implements Table<T>, Content {
 			if (rows.add(r))// actually add the item back
 				fireInserted(r);
 	}
-	
+
 	void doCommit(DeleteChange<T> change) {
 		for (T r : change.deleted())
 			if (rows.remove(r))// actually add the item back
 				fireDeleted(r);
 	}
-	
 
 	// ##########################################################################
 	// ACTUAL TRANSACTION OPERATIONS END
@@ -414,6 +412,8 @@ public class ContentTable<T> implements Table<T>, Content {
 	// UNDO END
 	// ##########################################################################
 	@Override
-	public void accept(ContentVisitor visitor) { visitor.visit(this);}
-	
+	public void accept(ContentVisitor visitor) {
+		visitor.visit(this);
+	}
+
 }

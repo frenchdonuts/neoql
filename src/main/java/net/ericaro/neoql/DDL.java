@@ -19,15 +19,17 @@ public interface DDL {
 
 	//TODO : finalize the drop protocol (and test it), this requires the capacity to 'idify cursors. Tables are by "class", what about cursor ?
 	
-	//<T> void dropTable(Class<T> table);
+	<T> void dropTable(Class<T> table);
 	
-	<T> ContentTable<T> createTable(Class<T> table, Column<T, ?>... columns);
+	<T> void atomicCreateTable(Class<T> table, Column<T, ?>... columns);
+	
 	/** creates a new cursor, it delegates the key creation to the database
 	 * 
 	 * @param table
-	 * @return
+	 * @return the cursor's key
 	 */
-	<T> Cursor<T> createCursor(Table<T> table);
+	<T> Object atomicCreateCursor(Class<T> table);
+	
 	
 	/** creates a new cursor, but using a key so that it is possible to retrieve it later
 	 * 
@@ -35,7 +37,8 @@ public interface DDL {
 	 * @param key
 	 * @return
 	 */
-	<T> Cursor<T> createCursor(Table<T> table, Object key);
+	<T> void atomicCreateCursor(Class<T> table, Object key);
+	<T> void dropCursor(Object key);
 	
 	
 	//<T> void dropSingletonProperty(Class<T> type, String name);

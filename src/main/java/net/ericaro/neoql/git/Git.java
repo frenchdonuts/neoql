@@ -97,6 +97,11 @@ public class Git implements DDL, DML, DQL {
 		return db.insert(table, values);
 	}
 
+	@Override
+	public <T> T insert(ContentTable<T> table, T t) {
+		return db.insert(table, t);
+	}
+
 	public <T> void delete(ContentTable<T> table, Predicate<T> predicate) {
 		db.delete(table, predicate);
 	}

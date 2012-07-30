@@ -181,6 +181,12 @@ public class Database implements DDL, DQL, DML, DTL {
 
 	}
 
+	public <T> T insert(ContentTable<T> table, T t){
+		T row = table.insert(table.clone(t));
+		assert table.insertOperation != null : "unexpected empty transaction";
+		precommit();
+		return row;
+	}
 	// ##########################################################################
 	// INSERT END
 	// ##########################################################################
@@ -222,6 +228,13 @@ public class Database implements DDL, DQL, DML, DTL {
 	@Override
 	public <T> void update(ContentTable<T> table, Predicate<T> predicate, ColumnSetter<T, ?>... setters) {
 		table.update(predicate, setters);
+		assert table.updateOperation != null : "unexpected null update operation";
+		precommit();
+	}
+	
+	@Override
+	public <T> void update(ContentTable<T> table, Predicate<T> predicate, T t) {
+		table.update(predicate, t);
 		assert table.updateOperation != null : "unexpected null update operation";
 		precommit();
 	}

@@ -213,6 +213,22 @@ public class ContentTable<T> implements Table<T>{
 		}
 		return newValue;
 	}
+	
+	T update(T oldValue, T newValue) {
+		T clone = clone(newValue);
+
+		UpdateChange<T> up = getUpdateOperation();
+		up.update(oldValue, clone);
+		// fire internal events so that other rows might want to keep in touch
+		internals.fireUpdated(oldValue, clone);
+		
+		return clone;
+	}
+	
+	void update(Predicate<T> p, T t) {
+		for (T row : newRowsWhere(p))
+			update(row, t);
+	}
 
 	void update(Predicate<T> p, ColumnSetter<T, ?>[] setters) {
 		for (T row : newRowsWhere(p))

@@ -334,6 +334,13 @@ public class Database implements DDL, DQL, DML, DTL {
 		assert table.updateOperation != null : "unexpected null update operation";
 		precommit();
 	}
+	
+	@Override
+	public <T> void update(ContentTable<T> table, Predicate<T> predicate, T t) {
+		table.update(predicate, t);
+		assert table.updateOperation != null : "unexpected null update operation";
+		precommit();
+	}
 
 	/**
 	 * Update the cell referenced by this property.

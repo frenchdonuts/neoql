@@ -109,6 +109,10 @@ public class Git implements DDL, DML, DQL {
 	public <T> void update(ContentTable<T> table, Predicate<T> predicate, ColumnSetter<T, ?>... setters) {
 		db.update(table, predicate, setters);
 	}
+	
+	public <T> void update(ContentTable<T> table, Predicate<T> predicate, T t) {
+		db.update(table, predicate, t);
+	}
 
 	public <T> void moveTo(Cursor<T> property, T value) {
 		db.moveTo(property, value);

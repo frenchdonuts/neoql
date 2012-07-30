@@ -14,6 +14,8 @@ public interface DML {
 	
 	<T> void update(ContentTable<T> table, Predicate<T> where, ColumnSetter<T, ?>... setters);
 	
+	<T> void update(ContentTable<T> table, Predicate<T> where, T t);
+	
 	//<T> T update(SingletonProperty<T> property, T value);
 	
 	/** move the row pointer to another row identified by a row value

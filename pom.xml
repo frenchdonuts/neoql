@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.ericaro.neoql</groupId>
 	<artifactId>neoql</artifactId>
-	<version>0.0.1-cursed-SNAPSHOT</version>
+	<version>0.0.1-SNAPSHOT</version>
 	
 	<inceptionYear>2012</inceptionYear> 
 	<description>A database like way to handle objects.</description>

@@ -78,6 +78,6 @@ public class MergeTest {
 			System.out.println(t);
 		
 		
-		//JungUtils.disp(repo.getGraph(), true, false, true);
+		JungUtils.disp(repo.getGraph(), true, false, true);
 	}
 }

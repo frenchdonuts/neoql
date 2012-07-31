@@ -1,5 +1,6 @@
 package net.ericaro.neoql.git;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -63,22 +64,28 @@ public class Merge {
 	// also the capability to solve the conflict "by hand" (ie, user work on the builder directly, and "simply" mark it as resolved".
 	
 	
+	
 	PatchBuilder local;
 	PatchBuilder remote;
 	PatchBuilder merged = new PatchBuilder();
-	Map<Object, Object> localU ;
-	Map<Object, Object> remoteU ;
-	Set<Object> uu = new HashSet<Object>() ; // UU objects
-	Set<Object> du = new HashSet<Object>() ; // UU objects
-	Set<Object> ud = new HashSet<Object>() ; // UU objects
+	Map<Object, Object> localU = new HashMap<Object,Object>() ; // UU objects
+	Map<Object, Object> remoteU = new HashMap<Object,Object>() ; // UU objects
+	Map<Object, Object> uu = new HashMap<Object,Object>() ; // UU objects
+	Map<Object, Object> du = new HashMap<Object,Object>() ; // UU objects
+	Map<Object, Object> ud = new HashMap<Object,Object>() ; // UU objects
 	
 	
 	public Merge(PatchBuilder local, PatchBuilder remote) {
 		super();
 		this.local = local;
 		this.remote = remote;
-		localU = local.getUpdated();
-		remoteU = remote.getUpdated();
+		Map<Object, Object> lU = local.getUpdated();
+		Map<Object, Object> rU = remote.getUpdated();
+		for(Entry<Object, Object> e: lU.entrySet())
+			localU.put(e.getValue(), e.getKey());
+		for(Entry<Object, Object> e: rU.entrySet())
+			remoteU.put(e.getValue(), e.getKey());
+			
 		merge();
 	}
 
@@ -86,6 +93,14 @@ public class Merge {
 	public boolean hasConflicts() {
 		return uu.size()>0 || du.size()>0 || ud.size()>0 ;
 	}
+	
+	public Set<DeleteConflict> deletedConflicts(){
+		Set<DeleteConflict> conflicts = new HashSet<DeleteConflict>();
+		for(Entry<Object,Object> e : du.entrySet()) 
+			conflicts.add(new DeleteConflict(this, e.getKey(), e.getValue(), true));
+		return conflicts;
+	}
+	
 	
 	void merge() {
 		//TODO merge table creation first
@@ -106,35 +121,39 @@ public class Merge {
 	private void mergeUpdates() {
 		//merge locals
 		for (Entry<Object, Object>  e: localU.entrySet() ) {
-			Object src = e.getValue(); // the src, is present in the common ancestor (by definition)
-			Object newValue = e.getKey();
+			Object src = e.getKey(); // the src, is present in the common ancestor (by definition)
+			Object lValue = e.getValue();
+			Object rValue = remoteU.get(src); // possible null
 			
-			if (remoteU.containsValue(src))
-				uu.add(src);
-			else if (remote.getDeleted().contains(src))
-				ud.add(src);
+			if (rValue !=null) // means that there is an uu conflict
+				uu.put(src, rValue);
+			else if (remote.getDeleted().contains(src)) // was remotely deleted
+				ud.put(src, lValue);
 			else // yes ! no conflict
-				merged.update(src, newValue );
+				merged.update(src, lValue );
 		}
+		
 		//merge remotes 
 		for (Entry<Object, Object>  e: remoteU.entrySet() ) {
-			Object src = e.getValue(); // the src, is present in the common ancestor (by definition)
-			Object newValue = e.getKey();
+			Object src = e.getKey(); // the src, is present in the common ancestor (by definition)
+			Object newValue = e.getValue();
 			
-			if (localU.containsValue(src))
-				assert uu.contains(src) : "assymetrical conflict";
+			Object newLocalValue = localU.get(src);
+			
+			if (localU.containsKey(src))
+				assert newLocalValue==null : "assymetrical conflict";
 			else if (local.getDeleted().contains(src))
-				du.add(src);
+				du.put(src,newValue);
 			else // yes ! no conflict
 				merged.update(src, newValue );
 		}
 	}
 	public void mergeDeletes() {
 		for (Object i : local.getDeleted() )
-			if (!du.contains(i))
+			if (!du.containsKey(i))
 				merged.delete(i);
 		for (Object i : remote.getDeleted() )
-			if (!ud.contains(i))
+			if (!ud.containsKey(i))
 			merged.delete(i );
 		
 	}

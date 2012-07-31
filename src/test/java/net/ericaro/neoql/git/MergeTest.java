@@ -1,15 +1,10 @@
 package net.ericaro.neoql.git;
 
-import java.util.Map;
-
 import net.ericaro.neoql.Column;
 import net.ericaro.neoql.ContentTable;
 import net.ericaro.neoql.JungUtils;
 import net.ericaro.neoql.NeoQL;
 import net.ericaro.neoql.Property;
-import net.ericaro.neoql.patches.Patch;
-import net.ericaro.neoql.patches.PatchBuilder;
-import net.ericaro.neoql.patches.PatchSet;
 
 import org.junit.Test;
 
@@ -32,45 +27,69 @@ public class MergeTest {
 		
 		Repository repo = new Repository();
 		
-		Git g1 = Git.clone( repo );
-		Git g2= Git.clone( repo );
+		Git git = Git.clone( repo );
+		Branch master = git.getBranch() ;
+		System.out.println("commit init "+ master.getCommit());
 		
-		g1.atomicCreateTable(Tester.class, NAME, COUNT);
-		Commit init = g1.commit("create empty tables");
+		ContentTable<Tester> t = git.createTable(Tester.class, NAME, COUNT);
 		
-		g2.checkout(init);
+		Tester v1 = git.insert(t, NAME.set("a0"));
+		Property<Tester> c1 = NeoQL.track(t, v1);
+		git.commit("inserted A");
+		System.out.println("commit  last in master "+ master.getCommit());
 		
-		ContentTable<Tester> t1 = g1.getTable(Tester.class);
-		ContentTable<Tester> t2 = g2.getTable(Tester.class);
+		Commit base = git.tag() ;
+		Branch deriv = git.createBranch(); // create the branch but do not check it out
 		
-		Tester v1 = g1.insert(t1, NAME.set("a1"));
-		Property<Tester> c1 = NeoQL.track(t1, v1);
-		Commit localTag = g1.commit("added a1");
+//		git.insert(t, NAME.set("a2"));
+//		git.commit("added a2");
+		git.update(t, NeoQL.is(c1), NAME.set("a1"));
+		git.commit("updated A");
+		Merge m = git.merge(deriv);
+		assert m.isNothingToUpdate() && ! m.isFastForward() && !m.hasConflicts() : "wrong merge";
+		git.apply(m);
+
 		
 		
-		Tester v2 = g2.insert(t2, NAME.set("a2"));
-		Property<Tester> c2 = NeoQL.track(t2, v2);
-		Commit remoteTag = g2.commit("added a2");
+		git.checkout(deriv);
+		master = git.createBranch();
+		
+		git.insert(t, NAME.set("a2"));
+		git.commit("added a2");
+		git.checkout(master);
+		git.update(t, NeoQL.is(c1), NAME.set("a1"));
+		git.commit("updated A");
+		
+		m = git.merge(deriv);
+		assert !m.isNothingToUpdate() && ! m.isFastForward() && !m.hasConflicts() : "wrong merge";
+		git.apply(m);
 		
 		
-		Merge m = g1.merge(g2.getBranch());
-		System.out.println("is Fast forward "+m.isFasForward());
-		System.out.println("has conflicts "+m.hasConflicts());
+		git.checkout(base); // goes back to the nexus
+		// doing a fast forward
+		master = git.createBranch();
+		deriv = git.checkoutNewBranch() ;
+		
+		git.insert(t, NAME.set("a4"));
+		git.commit("added a4");
+		git.checkout(master);
+		m = git.merge(deriv);
+		assert !m.isNothingToUpdate() && m.isFastForward() && !m.hasConflicts() : "wrong merge";
+		git.apply(m);
 		
 		if (m.hasConflicts() ) 
 			for(Conflict c: m.allConflicts())
 				c.resolveRemote();
 		
-		g1.apply(m);
 		
 		
 		
 		
-		ContentTable<Tester> tm = g1.getTable(Tester.class);
-		for(Tester t: tm) 
-			System.out.println(t);
+		ContentTable<Tester> tm = git.getTable(Tester.class);
+		for(Tester tt: tm) 
+			System.out.println(tt);
 		
 		
-//		JungUtils.disp(repo.getGraph(), true, false, true);
+		//JungUtils.disp(repo.getGraph(), true, false, true);
 	}
 }

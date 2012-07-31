@@ -23,7 +23,7 @@ public class Git implements DDL, DML, DQL {
 	private Database		db;
 	private Repository		repository;
 	private Commit			head;
-	private Branch			branch	= new Branch();
+	private Branch			branch;
 
 	public static final Git clone(Repository repo) {
 		return new Git(repo);
@@ -33,6 +33,7 @@ public class Git implements DDL, DML, DQL {
 		this.db = new Database(); // always creates a local repo
 		this.repository = repository;
 		this.head = repository.getRoot();
+		this.branch = new Branch(head);
 	}
 
 	public Commit commit() {
@@ -54,7 +55,7 @@ public class Git implements DDL, DML, DQL {
 	}
 
 	public Branch createBranch() {
-		return branch = new Branch();
+		return new Branch(head);
 	}
 
 	public Commit tag() {
@@ -126,8 +127,8 @@ public class Git implements DDL, DML, DQL {
 		Commit remoteCommit = remote.getCommit();
 		Commit localCommit = head;
 		Commit base = repository.commonAncestor(localCommit, remoteCommit);
-		if (base == localCommit) { // fast forward
-			return new Merge(remoteCommit);
+		if (base == localCommit || base == remoteCommit) { // fast forward or nothing to update
+			return new Merge(localCommit, remoteCommit, base);
 		}
 		
 		PatchBuilder remoteTransaction = new PatchBuilder();
@@ -143,7 +144,9 @@ public class Git implements DDL, DML, DQL {
 	
 	
 	public void apply(Merge merge) {
-		if (merge.isFasForward()) {
+		if (merge.isNothingToUpdate() )
+			System.out.println("nothing to update");
+		else if (merge.isFastForward()) {
 			checkout(merge.forward);
 		}
 		else {
@@ -178,6 +181,16 @@ public class Git implements DDL, DML, DQL {
 		db.atomicCreateTable(table, columns );
 		commit("auto commit for table creation");
 		return db.getTable(table);
+	}
+
+	public void checkout(Branch branch) {
+		this.branch = branch;
+		checkout(branch.getCommit());
+	}
+	
+	public Branch checkoutNewBranch() {
+		Branch b = new Branch(head);
+		return b;
 	}
 
 	// ##########################################################################

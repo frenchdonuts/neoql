@@ -42,4 +42,12 @@ public class UpdateConflict<T>  implements Conflict<T>{
 		merge.patchBuilder.update(src, localUpdated);
 		markAsResolved();
 	}
+
+	@Override
+	public String toString() {
+		return "Update Conflict:\nbase  : " + src + "\nlocal : " + localUpdated + "remote: " + remoteUpdated ;
+	}
+	
+	
+	
 }

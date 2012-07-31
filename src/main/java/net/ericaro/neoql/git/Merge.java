@@ -22,8 +22,10 @@ public class Merge {
 	Commit	remoteHead;
 	
 	// special constructor for a fast forward merge
-	Merge(Commit fastforward) {
+	Merge(Commit localHead, Commit remoteHead, Commit fastforward) {
 		super();
+		this.localHead = localHead;
+		this.remoteHead = remoteHead;
 		this.forward = fastforward;
 	}
 	
@@ -40,8 +42,12 @@ public class Merge {
 		updateConflicts.remove(src);
 	}
 	
-	public boolean isFasForward() {
-		return forward !=null;
+	public boolean isNothingToUpdate() {
+		return forward == localHead;
+	}
+	
+	public boolean isFastForward() {
+		return forward == remoteHead;
 	}
 	
 	public boolean hasConflicts() {
@@ -62,5 +68,18 @@ public class Merge {
 		all.addAll(updateConflicts);
 		return all;
 	}
+	
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("merge ");
+		if (isFastForward()) sb.append("is fastforward");
+		if (isNothingToUpdate()) sb.append("has nothing to Update");
+		if (hasConflicts()) sb.append("has conflicts:");
+		for(Conflict<?> c: allConflicts()) 
+			sb.append(c);
+		return sb.toString() ;
+	}
+	
+	
 
 }

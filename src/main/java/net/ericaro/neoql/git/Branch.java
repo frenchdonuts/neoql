@@ -4,7 +4,8 @@ public class Branch {
 
 	Commit state ;
 	
-	public Branch() {
+	public Branch(Commit state) {
+		this.state = state;;
 	}
 	
 	void setCommit(Commit state) {
@@ -14,5 +15,11 @@ public class Branch {
 	public Commit getCommit() {
 		return state;
 	}
+
+	@Override
+	public String toString() {
+		return state.comment;
+	}
+	
 
 }

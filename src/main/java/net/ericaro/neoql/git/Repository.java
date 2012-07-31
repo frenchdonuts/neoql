@@ -77,13 +77,20 @@ public class Repository {
 	
 	/** computes a common ancestor between two commits
 	 * 
+	 * if the common ancestor is from: then we are in a fastforward situation
+	 * if the common ancestor is target: we are in a nothing to update situation
+	 * 
 	 * @param from
 	 * @param target
-	 * @return
+	 * @return the common ancestor:
 	 */
 	public Commit commonAncestor(Commit from, Commit target) {
+		if ( graph.isPredecessor(from, target)) {
+			// I'm ahead of the remote branch
+			return from; // nothing to update
+		}
 		if ( graph.isPredecessor(target, from))
-			return from; // fastfroward
+			return target; // fastfroward
 		for( Commit c: graph.getPredecessors(from) )
 			if ( graph.isPredecessor(target, c))
 				return c;

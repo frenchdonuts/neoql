@@ -1,7 +1,11 @@
 package net.ericaro.neoql.git;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.patches.Patches;
@@ -34,6 +38,17 @@ public class Repository {
 		return to;
 	}
 	
+	public Commit merge(Patch local, Commit localHead, Branch branch, Patch remote, Commit remoteHead, String comment) {
+		
+		Commit to = new Commit(comment);
+		graph.addEdge(local, localHead, to);
+		graph.addEdge(remote, remoteHead, to);
+		if (branch !=null ) branch.setCommit(to);
+		return to;
+	}
+
+	
+	
 	public List<Pair<Patch, Commit>> path(Commit from, Commit target) {
 		// creates a undirected graph to compute distances
 		SparseMultigraph<Commit, Patch> g = new SparseMultigraph<Commit, Patch>();
@@ -59,6 +74,23 @@ public class Repository {
 		return rawpath;
 	}
 	
+	
+	/** computes a common ancestor between two commits
+	 * 
+	 * @param from
+	 * @param target
+	 * @return
+	 */
+	public Commit commonAncestor(Commit from, Commit target) {
+		if ( graph.isPredecessor(target, from))
+			return from; // fastfroward
+		for( Commit c: graph.getPredecessors(from) )
+			if ( graph.isPredecessor(target, c))
+				return c;
+		assert false: "there is no common ancestor, obviously";
+		return null;
+		}
+	
 	public List<Patch> changePath(Commit from, Commit target){
 		List<Patch> changes = new ArrayList<Patch>();
 		for(Pair<Patch, Commit>  p: path(from,target))
@@ -76,6 +108,9 @@ public class Repository {
 		return root;
 	}
 
+	
+	
+	 
 	
 	// TODO look for create a common ancestor lookup !
 	

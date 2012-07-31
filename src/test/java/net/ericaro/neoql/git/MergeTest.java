@@ -31,11 +31,13 @@ public class MergeTest {
 	public void testBasic() {
 		
 		Repository repo = new Repository();
-		Git g1 = Git.clone(repo );
-		Git g2= Git.clone(repo );
+		
+		Git g1 = Git.clone( repo );
+		Git g2= Git.clone( repo );
 		
 		g1.atomicCreateTable(Tester.class, NAME, COUNT);
 		Commit init = g1.commit("create empty tables");
+		
 		g2.checkout(init);
 		
 		ContentTable<Tester> t1 = g1.getTable(Tester.class);
@@ -45,35 +47,26 @@ public class MergeTest {
 		Property<Tester> c1 = NeoQL.track(t1, v1);
 		Commit localTag = g1.commit("added a1");
 		
+		
 		Tester v2 = g2.insert(t2, NAME.set("a2"));
 		Property<Tester> c2 = NeoQL.track(t2, v2);
 		Commit remoteTag = g2.commit("added a2");
 		
-		// g1 and g2 have diverge, let them merge together
-		PatchBuilder local = new PatchBuilder();
-		System.out.println("LOCAL :");
-		for (Patch p : repo.changePath(init, localTag) ) {
-			System.out.println(p);
-			local.apply(p);
-		}
 		
-		System.out.println("REMOTE :");
-		PatchBuilder remote = new PatchBuilder();
-		for (Patch p : repo.changePath(init, remoteTag) ) { 
-			System.out.println(p);
-			remote.apply(p);
-		}
+		Merge m = g1.merge(g2.getBranch());
+		System.out.println("is Fast forward "+m.isFasForward());
+		System.out.println("has conflicts "+m.hasConflicts());
 		
-		Merge m = new Merge(local, remote);
-		Patch mergePatch = m.merged.build();
-		System.out.println("MERGED :"+mergePatch);
+		if (m.hasConflicts() ) 
+			for(Conflict c: m.allConflicts())
+				c.resolveRemote();
+		
+		g1.apply(m);
 		
 		
-		Commit merged = repo.commit(mergePatch, init, null, "automerge from git");
 		
-		Git gm = Git.clone(repo);
-		gm.checkout(merged);
-		ContentTable<Tester> tm = gm.getTable(Tester.class);
+		
+		ContentTable<Tester> tm = g1.getTable(Tester.class);
 		for(Tester t: tm) 
 			System.out.println(t);
 		

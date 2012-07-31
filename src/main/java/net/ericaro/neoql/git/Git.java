@@ -11,6 +11,8 @@ import net.ericaro.neoql.DQL;
 import net.ericaro.neoql.Database;
 import net.ericaro.neoql.Predicate;
 import net.ericaro.neoql.patches.Patch;
+import net.ericaro.neoql.patches.PatchBuilder;
+import net.ericaro.neoql.patches.Patches;
 import net.ericaro.neoql.tables.Pair;
 import edu.uci.ics.jung.graph.DirectedGraph;
 
@@ -64,6 +66,7 @@ public class Git implements DDL, DML, DQL {
 			db.apply(c.getLeft());
 			LOG.fine(String.valueOf(c.getLeft() ));
 			head = c.getRight();
+			branch.setCommit(head);
 			LOG.info("git new head " + head);
 		}
 		assert head == tag : "checkout failed to reach the asked tag " + head + " instead of " + tag;
@@ -113,6 +116,56 @@ public class Git implements DDL, DML, DQL {
 		return db.getTables();
 	}
 
+	
+	/** computes the merge to be applied.
+	 * 
+	 * @param remote
+	 * @return
+	 */
+	public Merge merge(Branch remote) {
+		Commit remoteCommit = remote.getCommit();
+		Commit localCommit = head;
+		Commit base = repository.commonAncestor(localCommit, remoteCommit);
+		if (base == localCommit) { // fast forward
+			return new Merge(remoteCommit);
+		}
+		
+		PatchBuilder remoteTransaction = new PatchBuilder();
+		for (Patch p : repository.changePath(base, remoteCommit ) )  
+			remoteTransaction.apply(p);
+		
+		PatchBuilder localTransaction = new PatchBuilder();
+		for (Patch p : repository.changePath(base, localCommit ) )  
+			localTransaction.apply(p);
+		
+		return new MergeBuilder(localCommit, localTransaction, remoteCommit, remoteTransaction).build();
+	}
+	
+	
+	public void apply(Merge merge) {
+		if (merge.isFasForward()) {
+			checkout(merge.forward);
+		}
+		else {
+			// built the left part and the right part
+			Patch middle = merge.patchBuilder.build();
+			
+			PatchBuilder localTransaction = new PatchBuilder();
+			localTransaction.apply(Patches.reverse(merge.local));
+			localTransaction.apply(middle);
+			Patch local = localTransaction.build();
+			
+			PatchBuilder remoteTransaction = new PatchBuilder();
+			remoteTransaction.apply(Patches.reverse(merge.remote) );
+			remoteTransaction.apply(middle);
+			Patch remote = remoteTransaction.build();
+			Commit to = repository.merge(local, merge.localHead, branch, remote, merge.remoteHead, "auto merge");
+			checkout(to);
+		}
+		
+		
+		
+	}
 	
 
 	/** creates and retrieve a table. Warning, this methods provoque a commit

@@ -165,9 +165,6 @@ public class Git implements DDL, DML, DQL {
 			Commit to = repository.merge(local, merge.localHead, branch, remote, merge.remoteHead, "auto merge");
 			checkout(to);
 		}
-		
-		
-		
 	}
 	
 
@@ -190,6 +187,7 @@ public class Git implements DDL, DML, DQL {
 	
 	public Branch checkoutNewBranch() {
 		Branch b = new Branch(head);
+		this.branch = b;
 		return b;
 	}
 

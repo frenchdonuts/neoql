@@ -85,6 +85,9 @@ public class Repository {
 	 * @return the common ancestor:
 	 */
 	public Commit commonAncestor(Commit from, Commit target) {
+		if(from == target) {
+			return from;
+		}
 		if ( graph.isPredecessor(from, target)) {
 			// I'm ahead of the remote branch
 			return from; // nothing to update

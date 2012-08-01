@@ -48,6 +48,4 @@ public class UpdateConflict<T>  implements Conflict<T>{
 		return "Update Conflict:\nbase  : " + src + "\nlocal : " + localUpdated + "remote: " + remoteUpdated ;
 	}
 	
-	
-	
 }

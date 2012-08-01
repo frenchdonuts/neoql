@@ -20,20 +20,20 @@ public class Merge {
 	Patch	local; // the local patch, merge is about finding a middle state using local -> middle patch, and remote to middle pathc
 	Commit	localHead;
 	Commit	remoteHead;
+	Commit	base;
 	
 	// special constructor for a fast forward merge
-	Merge(Commit localHead, Commit remoteHead, Commit fastforward) {
+	Merge(Commit base, Commit localHead, Commit remoteHead, Commit fastforward) {
 		super();
+		this.base  = base;
 		this.localHead = localHead;
 		this.remoteHead = remoteHead;
 		this.forward = fastforward;
 	}
 	
-	Merge(PatchBuilder patchBuilder, Commit localHead, Commit remoteHead) {
-		super();
+	Merge(PatchBuilder patchBuilder, Commit base, Commit localHead, Commit remoteHead) {
+		this(base, localHead, remoteHead, null);
 		this.patchBuilder = patchBuilder;
-		this.localHead = localHead;
-		this.remoteHead = remoteHead;
 	}
 	void markResolved(DeleteConflict src) {
 		deleteConflicts.remove(src);
@@ -79,7 +79,4 @@ public class Merge {
 			sb.append(c);
 		return sb.toString() ;
 	}
-	
-	
-
 }

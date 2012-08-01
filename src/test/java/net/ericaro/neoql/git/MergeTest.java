@@ -82,6 +82,9 @@ public class MergeTest {
 				c.resolveRemote();
 		
 		
+		git.checkout(base);
+		master= git.checkoutNewBranch() ;
+		git.merge(master);
 		
 		
 		

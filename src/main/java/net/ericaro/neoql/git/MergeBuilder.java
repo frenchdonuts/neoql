@@ -76,9 +76,11 @@ public class MergeBuilder {
 	private HashSet<DeleteConflict>	deleteConflicts;
 	private HashSet<UpdateConflict>	updateConflicts;
 	Merge merge ;
+	private Commit	base;
 	
-	public MergeBuilder(Commit localHead, PatchBuilder local, Commit remoteHead, PatchBuilder remote) {
+	public MergeBuilder(Commit base, Commit localHead, PatchBuilder local, Commit remoteHead, PatchBuilder remote) {
 		super();
+		this.base = base;
 		this.local = local;
 		this.remote = remote;
 		Map<Object, Object> lU = local.getUpdated();
@@ -88,7 +90,7 @@ public class MergeBuilder {
 		for(Entry<Object, Object> e: rU.entrySet())
 			remoteU.put(e.getValue(), e.getKey());
 			
-		merge = new Merge(merged, localHead, remoteHead);
+		merge = new Merge(merged, base, localHead, remoteHead);
 		merge();
 		buildConflicts();
 		

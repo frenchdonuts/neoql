@@ -110,6 +110,10 @@ public class PatchBuilder {
 	}
 	
 	
+	public void apply(Iterable<Patch> c) {
+		for(Patch p: c) apply(p);
+		
+	}
 	public void apply(Patch c) {
 		c.accept(new PatchVisitor<Void>() {
 			// ##########################################################################

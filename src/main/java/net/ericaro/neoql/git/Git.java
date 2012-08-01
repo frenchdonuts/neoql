@@ -12,19 +12,35 @@ import net.ericaro.neoql.Database;
 import net.ericaro.neoql.Predicate;
 import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.patches.PatchBuilder;
-import net.ericaro.neoql.patches.Patches;
-import net.ericaro.neoql.tables.Pair;
 import edu.uci.ics.jung.graph.DirectedGraph;
 
+/** Git provides an advanced usage mode for local model edition.
+ * 	
+ * To start with you must create a repository ( <code> new Repository()</code> ), then just clone it
+ * <code> Git.clone( repo ) </code>
+ * 
+ * Like git we provide tags, Branches, commits, checkouts, merge.
+ * Like any database we provide update insert delete for data into tables.
+ * We provide very basic ability to query objects in the Git workspace. But we provide an external object, NeoQL that help
+ * you in the task of creating advanced queries.
+ * 
+ * Putting your local model under the control of Git unleashes the real power of git !
+ * 
+ * @author eric
+ *
+ */
 public class Git implements DDL, DML, DQL {
-	// TODO handle branches (pointers moving with head, are branches shared among repositories ? yes)
-
 	private static Logger	LOG		= Logger.getLogger(Git.class.getName());
-	private Database		db;
-	private Repository		repository;
-	private Commit			head;
-	private Branch			branch;
+	private Database		db; // neoql db unique for a single git instance
+	private Repository		repository; // can be shared amongs git instances.
+	private Commit			head; // always the latest commit representing the database. That's why we cannot let user acces the database.
+	private Branch			branch; // a simple commit handler, moved around when commiting.
 
+	/** Creates a new Git Workspace sharing the repo.
+	 * 
+	 * @param repo
+	 * @return
+	 */
 	public static final Git clone(Repository repo) {
 		return new Git(repo);
 	}
@@ -36,16 +52,25 @@ public class Git implements DDL, DML, DQL {
 		this.branch = new Branch(head);
 	}
 
+	/** commit the current changes with no messages.
+	 * 
+	 * @return
+	 */
 	public Commit commit() {
 		return commit("");
 	}
-
+	/** commit current changes in the repository
+	 * 
+	 * @param comment
+	 * @return
+	 */
 	public Commit commit(String comment) {
 		LOG.fine("git commit -m \"" + comment + "\"");
 		Patch commit = db.commit();
 		if (commit != null ) {
-		LOG.fine(String.valueOf(commit));
-		head = repository.commit(commit, head, branch, comment);
+			LOG.fine("commit "+String.valueOf(commit) );
+			head = repository.commit(commit, head, comment);
+			if (branch !=null ) branch.setCommit(head);
 		}
 		return head;
 	}
@@ -63,12 +88,13 @@ public class Git implements DDL, DML, DQL {
 	}
 
 	public void checkout(Commit tag) {
-		for (Pair<Patch, Commit> c : repository.path(head, tag)) {
-			db.apply(c.getLeft());
-			LOG.fine(String.valueOf(c.getLeft() ));
-			head = c.getRight();
+		LOG.fine("git checkout "+tag);
+		for (Patch p : repository.path(head, tag)) {
+			db.apply(p);
+			LOG.fine(String.valueOf( p ));
+			head = repository.getTargetOf(p);
 			branch.setCommit(head);
-			LOG.info("git new head " + head);
+			LOG.info("git moving head to " + head);
 		}
 		assert head == tag : "checkout failed to reach the asked tag " + head + " instead of " + tag;
 	}
@@ -127,19 +153,12 @@ public class Git implements DDL, DML, DQL {
 		Commit remoteCommit = remote.getCommit();
 		Commit localCommit = head;
 		Commit base = repository.commonAncestor(localCommit, remoteCommit);
-		if (base == localCommit || base == remoteCommit) { // fast forward or nothing to update
-			return new Merge(localCommit, remoteCommit, base);
-		}
+		if (base == localCommit || base == remoteCommit) // fast forward or nothing to update
+			return new Merge(base, localCommit, remoteCommit, base);
 		
-		PatchBuilder remoteTransaction = new PatchBuilder();
-		for (Patch p : repository.changePath(base, remoteCommit ) )  
-			remoteTransaction.apply(p);
-		
-		PatchBuilder localTransaction = new PatchBuilder();
-		for (Patch p : repository.changePath(base, localCommit ) )  
-			localTransaction.apply(p);
-		
-		return new MergeBuilder(localCommit, localTransaction, remoteCommit, remoteTransaction).build();
+		PatchBuilder remoteTransaction = repository.asPatchBuilder(base, remoteCommit);
+		PatchBuilder localTransaction = repository.asPatchBuilder(base, localCommit);
+		return new MergeBuilder(base, localCommit, localTransaction, remoteCommit, remoteTransaction).build();
 	}
 	
 	
@@ -152,17 +171,7 @@ public class Git implements DDL, DML, DQL {
 		else {
 			// built the left part and the right part
 			Patch middle = merge.patchBuilder.build();
-			
-			PatchBuilder localTransaction = new PatchBuilder();
-			localTransaction.apply(Patches.reverse(merge.local));
-			localTransaction.apply(middle);
-			Patch local = localTransaction.build();
-			
-			PatchBuilder remoteTransaction = new PatchBuilder();
-			remoteTransaction.apply(Patches.reverse(merge.remote) );
-			remoteTransaction.apply(middle);
-			Patch remote = remoteTransaction.build();
-			Commit to = repository.merge(local, merge.localHead, branch, remote, merge.remoteHead, "auto merge");
+			Commit to = repository.merge(merge.base, merge.localHead, merge.remoteHead, middle, "auto merge");
 			checkout(to);
 		}
 		

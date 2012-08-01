@@ -92,11 +92,9 @@ public class Git implements DDL, DML, DQL {
 		for (Patch p : repository.path(head, tag)) {
 			db.apply(p);
 			LOG.fine(String.valueOf( p ));
-			head = repository.getTargetOf(p);
-			branch.setCommit(head);
-			LOG.info("git moving head to " + head);
 		}
-		assert head == tag : "checkout failed to reach the asked tag " + head + " instead of " + tag;
+		head = tag;
+		branch.setCommit(tag);
 	}
 
 	public DirectedGraph<Commit, Patch> getRepositoryGraph() {

@@ -88,15 +88,12 @@ public class Repository {
 	 */
 	public Iterable<Patch> path(Commit from, Commit target) {
 		// creates a undirected graph to compute distances
-		SparseMultigraph<Commit, Patch> g = new SparseMultigraph<Commit, Patch>();
-		for(Patch c: graph.getEdges())
-			g.addEdge(c, graph.getEndpoints(c));
-		DijkstraShortestPath<Commit, Patch> sp = new DijkstraShortestPath<Commit, Patch>(g) ;
 		List<Patch> path = new ArrayList<Patch>();
 		Commit temphead = from;
 		
-		List<Patch> path2 = ShortestPathUtils.getPath(graph, sp, from, target);
-		for(Patch c: path2 ) {
+		List<Patch> rawPath = rawPath(from, target);
+		
+		for(Patch c: rawPath ) {
 			// changes are correct, but the "order" is not deduced at all
 			Commit next = graph.getOpposite(temphead, c);
 			if(graph.getSource(c).equals(temphead)) // the change is in the right order
@@ -112,7 +109,25 @@ public class Repository {
 		assert temphead == target : "the computed path did not end into the target as expected";
 		return path;
 	}
+
 	
+	private List<Patch> rawPath(Commit from, Commit target) {
+		SparseMultigraph<Commit, Patch> g = new SparseMultigraph<Commit, Patch>();
+		for(Patch c: graph.getEdges())
+			g.addEdge(c, graph.getEndpoints(c));
+		DijkstraShortestPath<Commit, Patch> sp = new DijkstraShortestPath<Commit, Patch>(g) ;
+		
+		List<Patch> rawPath = ShortestPathUtils.getPath(graph, sp, from, target);
+		return rawPath;
+	}
+	
+	List<Commit> commitPath(Commit from, Commit target){
+		List<Commit> path = new ArrayList<Commit>();
+		path.add(from);
+		for(Patch p : rawPath(from, target))
+			path.add( graph.getDest(p));
+		return path;
+	}
 	
 	
 	
@@ -126,20 +141,21 @@ public class Repository {
 	 * @return the common ancestor:
 	 */
 	public Commit commonAncestor(Commit from, Commit target) {
-		if(from == target) {
-			return from;
-		}
-		if ( graph.isPredecessor(from, target)) {
-			// I'm ahead of the remote branch
-			return from; // nothing to update
-		}
-		if ( graph.isPredecessor(target, from))
-			return target; // fastfroward
-		for( Commit c: graph.getPredecessors(from) )
-			if ( graph.isPredecessor(target, c))
-				return c;
-		assert false: "there is no common ancestor, obviously";
-		return null;
+		
+		//take shorcut for dummy changes
+		if(from == target) 	return from;
+		
+		List<Commit> targetPre = commitPath(root, target);
+		// taking the shortcut for fastforward
+		if( targetPre.contains(from)) return target; // fast forward 
+		
+		// taking the shortcut for nothing to update 
+		List<Commit> fromPre = commitPath(root, from);
+		if ( fromPre.contains(target) ) 	return from; // nothing to update
+		
+		fromPre.retainAll(targetPre);
+		assert fromPre.size()> 0: "there is no common ancestor, obviously";
+		return fromPre.get(fromPre.size()-1);
 		}
 	/** use path instead
 	 * 

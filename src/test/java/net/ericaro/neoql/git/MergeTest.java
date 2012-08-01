@@ -23,76 +23,109 @@ public class MergeTest {
 	}
 
 	@Test
-	public void testBasic() {
-		
+	public void testBugMerge() {
 		Repository repo = new Repository();
-		
-		Git git = Git.clone( repo );
-		Branch master = git.getBranch() ;
-		System.out.println("commit init "+ master.getCommit());
-		
+
+		Git git = Git.clone(repo);
+		Branch master = git.getBranch();
 		ContentTable<Tester> t = git.createTable(Tester.class, NAME, COUNT);
 		
+		Commit common = git.tag();
+		Branch remote = git.checkoutNewBranch();
+		git.insert(t, NAME.set("a0"));
+		git.commit();
+		git.insert(t, NAME.set("a1"));
+		git.commit();
+		git.insert(t, NAME.set("a2"));
+		git.commit();
+		git.insert(t, NAME.set("a3"));
+		git.commit();
+		git.insert(t, NAME.set("a4"));
+		git.commit();
+		
+		git.checkout(master); // goes bach to the common ancestor
+		git.insert(t, NAME.set("b0"));
+		git.commit();
+		git.insert(t, NAME.set("b1"));
+		git.commit();
+		git.insert(t, NAME.set("b2"));
+		git.commit();
+		git.insert(t, NAME.set("b3"));
+		git.commit();
+		git.insert(t, NAME.set("b4"));
+		git.commit();
+		
+		
+		assert repo.commonAncestor(remote.getCommit(), master.getCommit()) == common : "failed to compute the common ancestor";
+		git.merge(remote);
+		assert true: "bug is there";
+		
+		
+	}
+
+	@Test
+	public void testBasic() {
+
+		Repository repo = new Repository();
+
+		Git git = Git.clone(repo);
+		Branch master = git.getBranch();
+		System.out.println("commit init " + master.getCommit());
+
+		ContentTable<Tester> t = git.createTable(Tester.class, NAME, COUNT);
 		Tester v1 = git.insert(t, NAME.set("a0"));
 		Property<Tester> c1 = NeoQL.track(t, v1);
 		git.commit("inserted A");
-		System.out.println("commit  last in master "+ master.getCommit());
-		
-		Commit base = git.tag() ;
+		System.out.println("commit  last in master " + master.getCommit());
+
+		Commit base = git.tag();
 		Branch deriv = git.createBranch(); // create the branch but do not check it out
-		
-//		git.insert(t, NAME.set("a2"));
-//		git.commit("added a2");
+
+		// git.insert(t, NAME.set("a2"));
+		// git.commit("added a2");
 		git.update(t, NeoQL.is(c1), NAME.set("a1"));
 		git.commit("updated A");
 		Merge m = git.merge(deriv);
-		assert m.isNothingToUpdate() && ! m.isFastForward() && !m.hasConflicts() : "wrong merge";
+		assert m.isNothingToUpdate() && !m.isFastForward() && !m.hasConflicts() : "wrong merge";
 		git.apply(m);
 
-		
-		
 		git.checkout(deriv);
 		master = git.createBranch();
-		
+
 		git.insert(t, NAME.set("a2"));
 		git.commit("added a2");
 		git.checkout(master);
 		git.update(t, NeoQL.is(c1), NAME.set("a1"));
 		git.commit("updated A");
-		
+
 		m = git.merge(deriv);
-		assert !m.isNothingToUpdate() && ! m.isFastForward() && !m.hasConflicts() : "wrong merge";
+		assert !m.isNothingToUpdate() && !m.isFastForward() && !m.hasConflicts() : "wrong merge";
 		git.apply(m);
-		
-		
+
 		git.checkout(base); // goes back to the nexus
 		// doing a fast forward
 		master = git.createBranch();
-		deriv = git.checkoutNewBranch() ;
-		
+		deriv = git.checkoutNewBranch();
+
 		git.insert(t, NAME.set("a4"));
 		git.commit("added a4");
 		git.checkout(master);
 		m = git.merge(deriv);
 		assert !m.isNothingToUpdate() && m.isFastForward() && !m.hasConflicts() : "wrong merge";
 		git.apply(m);
-		
-		if (m.hasConflicts() ) 
-			for(Conflict c: m.allConflicts())
+
+		if (m.hasConflicts())
+			for (Conflict c : m.allConflicts())
 				c.resolveRemote();
-		
-		
+
 		git.checkout(base);
-		master= git.checkoutNewBranch() ;
+		master = git.checkoutNewBranch();
 		git.merge(master);
-		
-		
-		
+
 		ContentTable<Tester> tm = git.getTable(Tester.class);
-		for(Tester tt: tm) 
+		for (Tester tt : tm)
 			System.out.println(tt);
-		
-		
-		//JungUtils.disp(repo.getGraph(), true, false, true);
+
+		// JungUtils.disp(repo.getGraph(), true, false, true);
 	}
 }

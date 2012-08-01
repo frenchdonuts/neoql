@@ -143,7 +143,7 @@ public class MergeBuilder {
 		for (Entry<Object, Object>  e: localU.entrySet() ) {
 			Object src = e.getKey(); // the src, is present in the common ancestor (by definition)
 			Object lValue = e.getValue();
-			Object rValue = remoteU.get(src); // possible null
+			Object rValue = remoteU.get(src); // possibly null , means that the same src has been updated in both parts
 			
 			if (rValue !=null) // means that there is an uu conflict
 				uu.add(src);
@@ -160,9 +160,10 @@ public class MergeBuilder {
 			
 			Object newLocalValue = localU.get(src);
 			
-			if (localU.containsKey(src))
-				assert newLocalValue==null : "assymetrical conflict";
-			else if (local.getDeleted().contains(src))
+//			if (localU.containsKey(src))
+//				assert newLocalValue==null : "not symetrical conflict";
+//			else 
+			if (local.getDeleted().contains(src))
 				du.put(src,newValue);
 			else // yes ! no conflict
 				merged.update(src, newValue );

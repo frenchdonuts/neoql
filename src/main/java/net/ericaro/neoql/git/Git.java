@@ -121,15 +121,15 @@ public class Git implements DDL, DML, DQL {
 		return db.insert(table, t);
 	}
 
-	public <T> void delete(ContentTable<T> table, Predicate<T> predicate) {
+	public <T> void delete(ContentTable<T> table, Predicate<? super T> predicate) {
 		db.delete(table, predicate);
 	}
 
-	public <T> void update(ContentTable<T> table, Predicate<T> predicate, ColumnSetter<T, ?>... setters) {
+	public <T> void update(ContentTable<T> table, Predicate<? super T> predicate, ColumnSetter<T, ?>... setters) {
 		db.update(table, predicate, setters);
 	}
 	
-	public <T> void update(ContentTable<T> table, Predicate<T> predicate, T t) {
+	public <T> void update(ContentTable<T> table, Predicate<? super T> predicate, T t) {
 		db.update(table, predicate, t);
 	}
 

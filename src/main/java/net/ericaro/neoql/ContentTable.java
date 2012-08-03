@@ -225,12 +225,12 @@ public class ContentTable<T> implements Table<T>{
 		return clone;
 	}
 	
-	void update(Predicate<T> p, T t) {
+	void update(Predicate<? super T> p, T t) {
 		for (T row : newRowsWhere(p))
 			update(row, t);
 	}
 
-	void update(Predicate<T> p, ColumnSetter<T, ?>[] setters) {
+	void update(Predicate<? super T> p, ColumnSetter<T, ?>[] setters) {
 		for (T row : newRowsWhere(p))
 			update(row, setters);
 
@@ -326,7 +326,7 @@ public class ContentTable<T> implements Table<T>{
 	 * 
 	 * @return
 	 */
-	Iterable<T> newRowsWhere(Predicate<T> p) {
+	Iterable<T> newRowsWhere(Predicate<? super T> p) {
 		Set<T> updated = new HashSet<T>();
 
 		for (T row : rows)

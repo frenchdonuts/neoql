@@ -30,20 +30,26 @@ public class NeoQL {
 	// TODO add javadoc in there, once the api is stable
 	
 
-	/** Simple 'true' predicate (always returns true)
-	 * 
-	 */
-	public static Predicate<?>	True	= new Predicate<Object>() {
-												public boolean eval(Object t) {	return true; }
-											};
+    /**
+     * Simple 'true' predicate (always returns true)
+     */
+    public static Predicate<Object> True = new Predicate<Object>() {
+        @Override
+        public boolean eval(Object t) {
+            return true;
+        }
+    };
 											
-	/** Simple 'false' predicate (always returns false)
-	 * 
-	 */
-	public static Predicate<?>	False	= new Predicate<Object>() {
-												public boolean eval(Object t) { return false; }
-											};
-    
+    /**
+     * Simple 'false' predicate (always returns false)
+     */
+    public static Predicate<Object> False = new Predicate<Object>() {
+        @Override
+        public boolean eval(Object t) {
+            return false;
+        }
+    };
+											
 	/**
 	 * return the identity predicate for this type.
 	 * 

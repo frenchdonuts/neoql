@@ -12,11 +12,11 @@ public interface DML {
 
 	<T> T insert(ContentTable<T> table, T t);
 	
-	<T> void update(ContentTable<T> table, Predicate<T> where, ColumnSetter<T, ?>... setters);
+	<T> void update(ContentTable<T> table, Predicate<? super T> where, ColumnSetter<T, ?>... setters);
 
-	<T> void update(ContentTable<T> table, Predicate<T> where, T t);
+	<T> void update(ContentTable<T> table, Predicate<? super T> where, T t);
 		
-	<T> void delete(ContentTable<T> table, Predicate<T> where);
+	<T> void delete(ContentTable<T> table, Predicate<? super T> where);
 
 	public abstract boolean isClean();
 

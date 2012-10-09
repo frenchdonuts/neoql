@@ -203,7 +203,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	 * @param predicate
 	 */
 	@Override
-	public <T> void delete(ContentTable<T> table, Predicate<T> predicate) {
+	public <T> void delete(ContentTable<T> table, Predicate<? super T> predicate) {
 		table.delete(predicate);
 		precommit();
 	}
@@ -226,13 +226,13 @@ public class Database implements DDL, DQL, DML, DTL {
 	 *            the action to take
 	 */
 	@Override
-	public <T> void update(ContentTable<T> table, Predicate<T> predicate, ColumnSetter<T, ?>... setters) {
+	public <T> void update(ContentTable<T> table, Predicate<? super T> predicate, ColumnSetter<T, ?>... setters) {
 		table.update(predicate, setters);
 		precommit();
 	}
 	
 	@Override
-	public <T> void update(ContentTable<T> table, Predicate<T> predicate, T t) {
+	public <T> void update(ContentTable<T> table, Predicate<? super T> predicate, T t) {
 		table.update(predicate, t);
 		precommit();
 	}

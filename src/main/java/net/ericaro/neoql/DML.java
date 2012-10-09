@@ -18,4 +18,6 @@ public interface DML {
 		
 	<T> void delete(ContentTable<T> table, Predicate<T> where);
 
+	public abstract boolean isClean();
+
 }

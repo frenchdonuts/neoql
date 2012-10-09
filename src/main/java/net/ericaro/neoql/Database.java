@@ -388,6 +388,10 @@ public class Database implements DDL, DQL, DML, DTL {
 		support.fireCommitted(c);
 	}
 
+	public boolean isClean() {
+		return currentCommit.isEmpty();
+	}
+
 	// ##########################################################################
 	// HISTORY END
 	// ##########################################################################

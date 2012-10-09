@@ -197,5 +197,13 @@ public class PatchBuilder {
 			}
 		};
 	}
+
+	/** nothing to commit
+	 * 
+	 * @return
+	 */
+	public boolean isEmpty() {
+		return patches.isEmpty() && inserted.isEmpty() && deleted.isEmpty() && updated.isEmpty();
+	}
 	
 }

@@ -198,6 +198,16 @@ public class Git implements DDL, DML, DQL {
 		return b;
 	}
 
+	@Override
+	public boolean isClean() {
+		return db.isClean();
+	}
+
+	public Patch reset() {
+		return db.rollback();
+		
+	}
+
 	// ##########################################################################
 	// NeoQL Wrapping END
 	// ##########################################################################

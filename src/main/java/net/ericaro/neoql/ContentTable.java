@@ -86,6 +86,7 @@ public class ContentTable<T> implements Table<T>{
 	private <V> void connectForeignKey(int i, Column<T, V> col) {
 		if (col.hasForeignKey()) {
 			ContentTable<V> ftable = owner.getTable(col.getType());
+			if (ftable == null ) throw new NeoQLException("missing foreign key for col "+col);
 			internalColumnListeners[i] = new ForeignKeyColumnListener<V>(col);
 			owner.addInternalTableListener(ftable, internalColumnListeners[i]);
 		}

@@ -171,6 +171,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	 */
 	@Override
 	public <T> T insert(ContentTable<T> table, ColumnSetter<T, ?>... values) {
+		assert tables.containsValue(table): "unknown table "+table+". not in the database";
 		if (values.length == 0) {
 			T row = table.insert(table.newInstance());
 			precommit();
@@ -338,7 +339,7 @@ public class Database implements DDL, DQL, DML, DTL {
 	
 	public void apply(Patch c) {
 		Patch tx = rollback(); // this has no effect if there was no incoming changes
-		assert tx == null  : "cannot commit a patch when there are local changes not yet applyed";
+		assert tx == null  : "cannot commit a patch when there are local changes not yet applied";
 		c.accept(new PatchVisitor<Void>() {
 			// ##########################################################################
 			// SPECIAL CASES BEGIN

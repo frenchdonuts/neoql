@@ -9,6 +9,7 @@ import net.ericaro.neoql.Property;
 import org.junit.Test;
 
 public class MergeTest {
+	
 	public static Column<Tester, String>	NAME	= NeoQL.column(Tester.class, "name", String.class, false);
 	public static Column<Tester, Integer>	COUNT	= NeoQL.column(Tester.class, "count", Integer.class, false);
 
@@ -31,6 +32,7 @@ public class MergeTest {
 		ContentTable<Tester> t = git.createTable(Tester.class, NAME, COUNT);
 		
 		Commit common = git.tag();
+		
 		Branch remote = git.checkoutNewBranch();
 		git.insert(t, NAME.set("a0"));
 		git.commit();
@@ -43,7 +45,7 @@ public class MergeTest {
 		git.insert(t, NAME.set("a4"));
 		git.commit();
 		
-		git.checkout(master); // goes bach to the common ancestor
+		git.checkout(master); // goes back to the common ancestor
 		git.insert(t, NAME.set("b0"));
 		git.commit();
 		git.insert(t, NAME.set("b1"));

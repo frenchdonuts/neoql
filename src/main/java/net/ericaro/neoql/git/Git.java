@@ -20,8 +20,10 @@ import edu.uci.ics.jung.graph.DirectedGraph;
  * <code> Git.clone( repo ) </code>
  * 
  * Like git we provide tags, Branches, commits, checkouts, merge.
- * Like any database we provide update insert delete for data into tables.
- * We provide very basic ability to query objects in the Git workspace. But we provide an external object, NeoQL that help
+ * 
+ * Like any neoql database we provide update insert delete for data into tables, this would be more like editing 
+ * the working directory files.
+ * We provide very basic abilities to query objects in the Git workspace. But we provide an external object, NeoQL that help
  * you in the task of creating advanced queries.
  * 
  * Putting your local model under the control of Git unleashes the real power of git !
@@ -32,8 +34,8 @@ import edu.uci.ics.jung.graph.DirectedGraph;
 public class Git implements DDL, DML, DQL {
 	private static Logger	LOG		= Logger.getLogger(Git.class.getName());
 	private Database		db; // neoql db unique for a single git instance
-	private Repository		repository; // can be shared amongs git instances.
-	private Commit			head; // always the latest commit representing the database. That's why we cannot let user acces the database.
+	private Repository		repository; // common history to be shared amongs git instances.
+	private Commit			head; // always the latest commit representing the database. That's why we cannot let user access the database.
 	private Branch			branch; // a simple commit handler, moved around when commiting.
 
 	/** Creates a new Git Workspace sharing the repo.
@@ -154,6 +156,8 @@ public class Git implements DDL, DML, DQL {
 		if (base == localCommit || base == remoteCommit) // fast forward or nothing to update
 			return new Merge(base, localCommit, remoteCommit, base);
 		
+		// compact path between the common ancestor and the current position (in both branches)
+		// so that every changes are compacted ( undo are skipped )
 		PatchBuilder remoteTransaction = repository.asPatchBuilder(base, remoteCommit);
 		PatchBuilder localTransaction = repository.asPatchBuilder(base, localCommit);
 		return new MergeBuilder(base, localCommit, localTransaction, remoteCommit, remoteTransaction).build();
@@ -169,13 +173,15 @@ public class Git implements DDL, DML, DQL {
 		else {
 			// built the left part and the right part
 			Patch middle = merge.patchBuilder.build();
+			// apply the merge, create the new node, and the new edges
 			Commit to = repository.merge(merge.base, merge.localHead, merge.remoteHead, middle, "auto merge");
+			// move the current head to this new checkout
 			checkout(to);
 		}
 	}
 	
 
-	/** creates and retrieve a table. Warning, this methods provoque a commit
+	/** creates and retrieve a table. Warning, this methods cause a commit
 	 * 
 	 * @param table
 	 * @param columns

@@ -10,7 +10,7 @@ import net.ericaro.neoql.patches.PatchBuilder;
 
 
 /** MergeBuilder algorithm. Analyzes two compact changes from a common ancestor.
- * Compact changes can only have 4 possible values ( o not present, D delete, I insert, Update ).
+ * Compact changes can only have 4 possible values ( o not present, D delete, I insert, U Update ).
  * Deletion has a constraints in the database the the entity used should not be used. Hence for each deletion 
  * we must check that the instance is not in use in the other part. Hence we need to add another possible status for an instance: S as uSed.
  * 
@@ -25,7 +25,7 @@ import net.ericaro.neoql.patches.PatchBuilder;
  * some situation are impossible (8)
  * 
  * 		o		I		S		U		D
- * o    x		
+ * o	x		
  * I			x		x		x		x
  * S			x
  * U			x
@@ -50,10 +50,8 @@ this leave us with 25 -8-11 = 6 conflictual situation, called after their coordi
 
 hence the mergeBuilder algorithm, will update  create a new git checkout from the common ancestor, and will apply
 all the non conflicting changes. It will leave this "checkout" as is, with the list of remaining conflit to be solved.
-Every conflict comes with a "top" level strategy to solve ( like prefer the local version)
-once every conflict have been solved, the database can be tagged, and merged can be created.
- * 
- * 
+Every conflict comes with "top" level strategies to solve ( like prefer the local version )
+once every conflict have been solved, the database can be tagged, and a merge can be created.
  * 
  * @author eric
  *

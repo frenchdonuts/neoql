@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.patches.PatchBuilder;
@@ -46,13 +47,15 @@ public class Repository {
 	 */
 	public Commit commit(Patch change, Commit from, String comment) {
 		Commit to = new Commit(comment);
-		graph.addEdge(change, from, to);
+		synchronized (graph) {
+			graph.addEdge(change, from, to);
+		}
 		return to;
 	}
 	/** creates a merge commit from two points.
 	 * 
 	 * @param local the local change
-	 * @param localHead 
+	 * @param localHead head one 
 	 * @param remote
 	 * @param remoteHead
 	 * @param comment
@@ -60,20 +63,24 @@ public class Repository {
 	 */
 	public Commit merge(Commit common, Commit localHead, Commit remoteHead, Patch middle, String comment) {
 		
-		
+		// simulates an "undo" up to the common ancestor, then from there apply the "middle" path
 		PatchBuilder localTransaction = asPatchBuilder(localHead, common);
 		localTransaction.apply(middle);// apply middle (i.e merge)
 		Patch local = localTransaction.build();
 		
+		// idem from the remote point of view.
 		PatchBuilder remoteTransaction = asPatchBuilder(remoteHead, common);
 		remoteTransaction.apply(middle);
 		Patch remote = remoteTransaction.build();
+		
 		// accept a single patch as input and computes the left part and the right part to guarantee that those
 		// two patches are consistent, i.e. the commit is the same no matter the path
 		
 		Commit to = new Commit(comment);
-		graph.addEdge(local, localHead, to);
-		graph.addEdge(remote, remoteHead, to);
+		synchronized (graph) {
+			graph.addEdge(local, localHead, to);
+			graph.addEdge(remote, remoteHead, to);
+		}
 		return to;
 	}
 
@@ -95,12 +102,17 @@ public class Repository {
 		
 		for(Patch c: rawPath ) {
 			// changes are correct, but the "order" is not deduced at all
-			Commit next = graph.getOpposite(temphead, c);
-			if(graph.getSource(c).equals(temphead)) // the change is in the right order
+			Commit next;
+			Commit source;
+			synchronized (graph) {
+				next = graph.getOpposite(temphead, c);
+				source = graph.getSource(c);
+			}
+			
+			if(source.equals(temphead)) // the change is in the right order
             	path.add(c);
             else {
             	// change is backward
-            	System.out.println("using path backward");
             	path.add(Patches.reverse(c) );
             }
 			temphead = next;
@@ -113,19 +125,30 @@ public class Repository {
 	
 	private List<Patch> rawPath(Commit from, Commit target) {
 		SparseMultigraph<Commit, Patch> g = new SparseMultigraph<Commit, Patch>();
-		for(Patch c: graph.getEdges())
-			g.addEdge(c, graph.getEndpoints(c));
-		DijkstraShortestPath<Commit, Patch> sp = new DijkstraShortestPath<Commit, Patch>(g) ;
 		
-		List<Patch> rawPath = ShortestPathUtils.getPath(graph, sp, from, target);
+		List<Patch> rawPath;
+		synchronized (graph) {
+			
+			for (Patch c : graph.getEdges())
+				g.addEdge(c, graph.getEndpoints(c));
+			
+			DijkstraShortestPath<Commit, Patch> sp = new DijkstraShortestPath<Commit, Patch>(g) ;
+			rawPath = ShortestPathUtils.getPath(graph, sp, from, target);
+		
+		}
 		return rawPath;
 	}
 	
-	List<Commit> commitPath(Commit from, Commit target){
+	private List<Commit> commitPath(Commit from, Commit target){
 		List<Commit> path = new ArrayList<Commit>();
 		path.add(from);
-		for(Patch p : rawPath(from, target))
-			path.add( graph.getDest(p));
+		
+		synchronized (graph) {
+			
+			for (Patch p : rawPath(from, target))
+				path.add(graph.getDest(p));
+			
+		}
 		return path;
 	}
 	
@@ -201,16 +224,6 @@ public class Repository {
 	public Commit getRoot() {
 		return root;
 	}
-
-	public Commit getTargetOf(Patch p) {
-		return graph.getDest(p);
-	}
-
-	
-	
-	 
-	
-	// TODO look for create a common ancestor lookup !
 	
 	
 }

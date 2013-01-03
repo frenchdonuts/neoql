@@ -1,33 +1,26 @@
 package net.ericaro.neoql.git;
 
-import java.util.logging.Logger;
-
-import net.ericaro.neoql.Column;
-import net.ericaro.neoql.ColumnSetter;
-import net.ericaro.neoql.ContentTable;
-import net.ericaro.neoql.DDL;
-import net.ericaro.neoql.DML;
-import net.ericaro.neoql.DQL;
-import net.ericaro.neoql.Database;
-import net.ericaro.neoql.Predicate;
+import edu.uci.ics.jung.graph.DirectedGraph;
+import net.ericaro.neoql.*;
 import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.patches.PatchBuilder;
-import edu.uci.ics.jung.graph.DirectedGraph;
+
+import java.util.logging.Logger;
 
 /** Git provides an advanced usage mode for local model edition.
- * 	
+ *
  * To start with you must create a repository ( <code> new Repository()</code> ), then just clone it
  * <code> Git.clone( repo ) </code>
- * 
+ *
  * Like git we provide tags, Branches, commits, checkouts, merge.
- * 
- * Like any neoql database we provide update insert delete for data into tables, this would be more like editing 
+ *
+ * Like any neoql database we provide update insert delete for data into tables, this would be more like editing
  * the working directory files.
  * We provide very basic abilities to query objects in the Git workspace. But we provide an external object, NeoQL that help
  * you in the task of creating advanced queries.
- * 
+ *
  * Putting your local model under the control of Git unleashes the real power of git !
- * 
+ *
  * @author eric
  *
  */
@@ -39,7 +32,7 @@ public class Git implements DDL, DML, DQL {
 	private Branch			branch; // a simple commit handler, moved around when commiting.
 
 	/** Creates a new Git Workspace sharing the repo.
-	 * 
+	 *
 	 * @param repo
 	 * @return
 	 */
@@ -55,14 +48,14 @@ public class Git implements DDL, DML, DQL {
 	}
 
 	/** commit the current changes with no messages.
-	 * 
+	 *
 	 * @return
 	 */
 	public Commit commit() {
 		return commit("");
 	}
 	/** commit current changes in the repository
-	 * 
+	 *
 	 * @param comment
 	 * @return
 	 */
@@ -130,7 +123,7 @@ public class Git implements DDL, DML, DQL {
 	public <T> void update(ContentTable<T> table, Predicate<? super T> predicate, ColumnSetter<T, ?>... setters) {
 		db.update(table, predicate, setters);
 	}
-	
+
 	public <T> void update(ContentTable<T> table, Predicate<? super T> predicate, T t) {
 		db.update(table, predicate, t);
 	}
@@ -143,27 +136,35 @@ public class Git implements DDL, DML, DQL {
 		return db.getTables();
 	}
 
-	
+
 	/** computes the merge to be applied.
-	 * 
+	 *
 	 * @param remote
 	 * @return
 	 */
 	public Merge merge(Branch remote) {
-		Commit remoteCommit = remote.getCommit();
+        return merge(remote.getCommit());
+	}
+
+	/** computes the merge to be applied.
+	 *
+	 * @param remoteCommit
+	 * @return
+	 */
+	public Merge merge(Commit remoteCommit) {
 		Commit localCommit = head;
 		Commit base = repository.commonAncestor(localCommit, remoteCommit);
 		if (base == localCommit || base == remoteCommit) // fast forward or nothing to update
 			return new Merge(base, localCommit, remoteCommit, base);
-		
+
 		// compact path between the common ancestor and the current position (in both branches)
 		// so that every changes are compacted ( undo are skipped )
 		PatchBuilder remoteTransaction = repository.asPatchBuilder(base, remoteCommit);
 		PatchBuilder localTransaction = repository.asPatchBuilder(base, localCommit);
 		return new MergeBuilder(base, localCommit, localTransaction, remoteCommit, remoteTransaction).build();
 	}
-	
-	
+
+
 	public void apply(Merge merge) {
 		if (merge.isNothingToUpdate() )
 			System.out.println("nothing to update");
@@ -179,10 +180,10 @@ public class Git implements DDL, DML, DQL {
 			checkout(to);
 		}
 	}
-	
+
 
 	/** creates and retrieve a table. Warning, this methods cause a commit
-	 * 
+	 *
 	 * @param table
 	 * @param columns
 	 * @return
@@ -197,7 +198,7 @@ public class Git implements DDL, DML, DQL {
 		this.branch = branch;
 		checkout(branch.getCommit());
 	}
-	
+
 	public Branch checkoutNewBranch() {
 		Branch b = new Branch(head);
 		this.branch = b;
@@ -211,7 +212,7 @@ public class Git implements DDL, DML, DQL {
 
 	public Patch reset() {
 		return db.rollback();
-		
+
 	}
 
 	// ##########################################################################

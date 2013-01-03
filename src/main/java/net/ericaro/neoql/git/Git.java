@@ -83,7 +83,7 @@ public class Git implements DDL, DML, DQL {
 		return new Branch(head);
 	}
 
-	public Commit tag() {
+	public Commit head() {
 		return head;
 	}
 

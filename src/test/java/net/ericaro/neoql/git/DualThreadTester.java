@@ -31,7 +31,7 @@ public class DualThreadTester {
 
 		final Git local = Git.clone(repo);
 		final ContentTable<Tester> t = local.createTable(Tester.class, NAME, COUNT);
-		final Commit common = local.tag();
+		final Commit common = local.head();
 		final Git remote = Git.clone(repo);
 		remote.checkout(common); // both local and remote are at the same point now
 		final ContentTable<Tester> remoteT = remote.getTable(Tester.class);
@@ -47,7 +47,7 @@ public class DualThreadTester {
 					while (running.get()) {
 						i++;
 						local.insert(t, NAME.set("loc" + i));
-						
+
 						local.commit("setting local name " + i);
 						Thread.sleep(3);
 					}
@@ -83,7 +83,7 @@ public class DualThreadTester {
 				while (running.get()) {
 					if (!local.isClean())
 						local.commit("commit before merge");
-					
+
 					Merge m = local.merge(remote.getBranch());
 					System.out.println(m.isNothingToUpdate());
 					local.apply(m);

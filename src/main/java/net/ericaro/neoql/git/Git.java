@@ -2,6 +2,8 @@ package net.ericaro.neoql.git;
 
 import edu.uci.ics.jung.graph.DirectedGraph;
 import net.ericaro.neoql.*;
+import net.ericaro.neoql.eventsupport.GitListener;
+import net.ericaro.neoql.eventsupport.GitListenerSupport;
 import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.patches.PatchBuilder;
 
@@ -25,11 +27,12 @@ import java.util.logging.Logger;
  *
  */
 public class Git implements DDL, DML, DQL {
-	private static Logger	LOG		= Logger.getLogger(Git.class.getName());
-	private Database		db; // neoql db unique for a single git instance
-	private Repository		repository; // common history to be shared amongs git instances.
-	private Commit			head; // always the latest commit representing the database. That's why we cannot let user access the database.
-	private Branch			branch; // a simple commit handler, moved around when commiting.
+	private static Logger	   LOG		   = Logger.getLogger(Git.class.getName());
+	private Database           db;         // neoql db unique for a single git instance
+	private Repository         repository; // common history to be shared amongs git instances.
+	private Commit             head;       // always the latest commit representing the database. That's why we cannot let user access the database.
+	private Branch             branch;     // a simple commit handler, moved around when commiting.
+	private GitListenerSupport listeners;
 
 	/** Creates a new Git Workspace sharing the repo.
 	 *
@@ -45,6 +48,7 @@ public class Git implements DDL, DML, DQL {
 		this.repository = repository;
 		this.head = repository.getRoot();
 		this.branch = new Branch(head);
+		this.listeners = new GitListenerSupport();
 	}
 
 	/** commit the current changes with no messages.
@@ -61,11 +65,12 @@ public class Git implements DDL, DML, DQL {
 	 */
 	public Commit commit(String comment) {
 		LOG.fine("git commit -m \"" + comment + "\"");
-		Patch commit = db.commit();
-		if (commit != null ) {
-			LOG.fine("commit "+String.valueOf(commit) );
-			head = repository.commit(commit, head, comment);
-			if (branch !=null ) branch.setCommit(head);
+		Patch patch = db.commit();
+		if (patch != null ) {
+			LOG.fine("commit "+String.valueOf(patch) );
+			Commit c = repository.commit(patch, head, comment);
+			fireHeadChanged(head, head = c);
+			if (branch !=null ) branch.setCommit(c);
 		}
 		return head;
 	}
@@ -82,14 +87,14 @@ public class Git implements DDL, DML, DQL {
 		return head;
 	}
 
-	public void checkout(Commit tag) {
-		LOG.fine("git checkout "+tag);
-		for (Patch p : repository.path(head, tag)) {
+	public void checkout(Commit c) {
+		LOG.fine("git checkout " + c);
+		for (Patch p : repository.path(head, c)) {
 			db.apply(p);
 			LOG.fine(String.valueOf( p ));
 		}
-		head = tag;
-		branch.setCommit(tag);
+		fireHeadChanged(head, head = c);
+		branch.setCommit(c);
 	}
 
 	public DirectedGraph<Commit, Patch> getRepositoryGraph() {
@@ -143,7 +148,7 @@ public class Git implements DDL, DML, DQL {
 	 * @return
 	 */
 	public Merge merge(Branch remote) {
-        return merge(remote.getCommit());
+		return merge(remote.getCommit());
 	}
 
 	/** computes the merge to be applied.
@@ -217,6 +222,26 @@ public class Git implements DDL, DML, DQL {
 
 	// ##########################################################################
 	// NeoQL Wrapping END
+	// ##########################################################################
+
+	// ##########################################################################
+	// EVENTS BEGIN
+	// ##########################################################################
+
+	public void addGitListener(GitListener l) {
+		listeners.addGitListener(l);
+	}
+
+	public void removeGitListener(GitListener l) {
+		listeners.removeGitListener(l);
+	}
+
+	protected void fireHeadChanged(Commit from, Commit to) {
+		listeners.fireHeadChanged(from, to);
+	}
+
+	// ##########################################################################
+	// EVENTS END
 	// ##########################################################################
 
 }

@@ -6,6 +6,7 @@ import net.ericaro.neoql.eventsupport.GitListener;
 import net.ericaro.neoql.eventsupport.GitListenerSupport;
 import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.patches.PatchBuilder;
+import net.ericaro.neoql.patches.PatchSet;
 
 import java.util.logging.Logger;
 
@@ -171,7 +172,7 @@ public class Git implements DDL, DML, DQL {
 
 
 	public void apply(Merge merge) {
-		if (merge.isNothingToUpdate() )
+		if (merge.isNothingToUpdate())
 			System.out.println("nothing to update");
 		else if (merge.isFastForward()) {
 			checkout(merge.forward);
@@ -179,6 +180,8 @@ public class Git implements DDL, DML, DQL {
 		else {
 			// built the left part and the right part
 			Patch middle = merge.patchBuilder.build();
+			if (middle == null)
+				middle = new PatchSet();
 			// apply the merge, create the new node, and the new edges
 			Commit to = repository.merge(merge.base, merge.localHead, merge.remoteHead, middle, "auto merge");
 			// move the current head to this new checkout

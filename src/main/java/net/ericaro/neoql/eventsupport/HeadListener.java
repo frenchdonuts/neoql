@@ -4,10 +4,10 @@ import net.ericaro.neoql.git.Commit;
 
 import java.util.EventListener;
 
-public interface GitListener extends EventListener {
+public interface HeadListener extends EventListener {
 
 	/**
-	 * Called whenever the HEAD changed (because of a commit,
+	 * Called when the HEAD changed (because of a commit,
 	 * checkout, merge, etc)
 	 */
 	void headChanged(Commit from, Commit to);

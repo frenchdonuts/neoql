@@ -2,7 +2,8 @@ package net.ericaro.neoql.git;
 
 import edu.uci.ics.jung.graph.DirectedGraph;
 import net.ericaro.neoql.*;
-import net.ericaro.neoql.eventsupport.GitListener;
+import net.ericaro.neoql.eventsupport.CommitListener;
+import net.ericaro.neoql.eventsupport.HeadListener;
 import net.ericaro.neoql.eventsupport.GitListenerSupport;
 import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.patches.PatchBuilder;
@@ -67,11 +68,14 @@ public class Git implements DDL, DML, DQL {
 	public Commit commit(String comment) {
 		LOG.fine("git commit -m \"" + comment + "\"");
 		Patch patch = db.commit();
+		Commit oldHead = head;
 		if (patch != null ) {
 			LOG.fine("commit "+String.valueOf(patch) );
 			Commit c = repository.commit(patch, head, comment);
-			fireHeadChanged(head, head = c);
+			head = c;
 			if (branch !=null ) branch.setCommit(c);
+			fireCommitCreated(oldHead, patch, c);
+			fireHeadChanged(oldHead, c);
 		}
 		return head;
 	}
@@ -94,8 +98,8 @@ public class Git implements DDL, DML, DQL {
 			db.apply(p);
 			LOG.fine(String.valueOf( p ));
 		}
-		fireHeadChanged(head, head = c);
 		branch.setCommit(c);
+		fireHeadChanged(head, head = c);
 	}
 
 	public DirectedGraph<Commit, Patch> getRepositoryGraph() {
@@ -231,16 +235,29 @@ public class Git implements DDL, DML, DQL {
 	// EVENTS BEGIN
 	// ##########################################################################
 
-	public void addGitListener(GitListener l) {
-		listeners.addGitListener(l);
+	public void addHeadListener(HeadListener l) {
+		listeners.addHeadListener(l);
 	}
 
-	public void removeGitListener(GitListener l) {
-		listeners.removeGitListener(l);
+	public void removeHeadListener(HeadListener l) {
+		listeners.removeHeadListener(l);
 	}
 
 	protected void fireHeadChanged(Commit from, Commit to) {
-		listeners.fireHeadChanged(from, to);
+		if (to != from)
+			listeners.fireHeadChanged(from, to);
+	}
+
+	public void addCommitListener(CommitListener l) {
+		listeners.addCommitListener(l);
+	}
+
+	public void removeCommitListener(CommitListener l) {
+		listeners.removeCommitListener(l);
+	}
+
+	protected void fireCommitCreated(Commit onto, Patch p, Commit c) {
+		listeners.fireCommitCreated(onto, p, c);
 	}
 
 	// ##########################################################################

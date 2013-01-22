@@ -1,7 +1,7 @@
 package net.ericaro.neoql.git;
 
 /** Holds information about a delete conflict, either update/delete or delete/update.
- * 
+ *
  * @author eric
  *
  */
@@ -17,30 +17,30 @@ public class DeleteConflict<T> implements Conflict<T> {
 		this.updated = updated;
 		this.deletedOnSource = deletedOnSource;
 	}
-	
-	/** calling this method totally ignore both changes, mark them as resolved outside. It is 
+
+	/** calling this method totally ignore both changes, mark them as resolved outside. It is
 	 * your responsibility to mergeBuilder the conflict
-	 * 
+	 *
 	 */
 	public void markAsResolved() {
 			merge.markResolved(this);
 	}
-	
+
 	/**resolve the conflict using the deletion anyway
-	 * 
+	 *
 	 */
 	public void resolveDeleting() {
 		merge.patchBuilder.delete(src);
 		markAsResolved();
 	}
 	/** resolve the conflict ignoring the deletion, and reinstanciating the update
-	 * 
+	 *
 	 */
 	public void resolveUpdating() {
 		merge.patchBuilder.update(src, updated);
 		markAsResolved();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see net.ericaro.neoql.git.Conflict#resolveRemote()
 	 */
@@ -61,4 +61,11 @@ public class DeleteConflict<T> implements Conflict<T> {
 		else
 			resolveUpdating();
 	}
+
+    @Override
+    public String toString() {
+        return "Delete Conflict:\nbase  : " + src
+                + "\nlocal : " + (deletedOnSource ? "deleted" : updated)
+                + "\nremote: " + (deletedOnSource ? updated   : "deleted");
+    }
 }

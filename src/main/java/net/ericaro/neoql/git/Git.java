@@ -9,6 +9,7 @@ import net.ericaro.neoql.patches.Patch;
 import net.ericaro.neoql.patches.PatchBuilder;
 import net.ericaro.neoql.patches.PatchSet;
 
+import java.util.Collections;
 import java.util.logging.Logger;
 
 /** Git provides an advanced usage mode for local model edition.
@@ -74,8 +75,8 @@ public class Git implements DDL, DML, DQL {
 			Commit c = repository.commit(patch, head, comment);
 			head = c;
 			if (branch !=null ) branch.setCommit(c);
-			fireCommitCreated(oldHead, patch, c);
-			fireHeadChanged(oldHead, c);
+			fireCommitCreated(oldHead, c, patch);
+			fireHeadChanged(oldHead, c, Collections.singleton(patch));
 		}
 		return head;
 	}
@@ -94,12 +95,13 @@ public class Git implements DDL, DML, DQL {
 
 	public void checkout(Commit c) {
 		LOG.fine("git checkout " + c);
-		for (Patch p : repository.path(head, c)) {
+        Iterable<Patch> path = repository.path(head, c);
+		for (Patch p : path) {
 			db.apply(p);
 			LOG.fine(String.valueOf( p ));
 		}
 		branch.setCommit(c);
-		fireHeadChanged(head, head = c);
+		fireHeadChanged(head, head = c, path);
 	}
 
 	public DirectedGraph<Commit, Patch> getRepositoryGraph() {
@@ -243,9 +245,9 @@ public class Git implements DDL, DML, DQL {
 		listeners.removeHeadListener(l);
 	}
 
-	protected void fireHeadChanged(Commit from, Commit to) {
+	protected void fireHeadChanged(Commit from, Commit to, Iterable<Patch> patches) {
 		if (to != from)
-			listeners.fireHeadChanged(from, to);
+			listeners.fireHeadChanged(from, to, patches);
 	}
 
 	public void addCommitListener(CommitListener l) {
@@ -256,8 +258,8 @@ public class Git implements DDL, DML, DQL {
 		listeners.removeCommitListener(l);
 	}
 
-	protected void fireCommitCreated(Commit onto, Patch p, Commit c) {
-		listeners.fireCommitCreated(onto, p, c);
+	protected void fireCommitCreated(Commit onto, Commit c, Patch p) {
+		listeners.fireCommitCreated(onto, c, p);
 	}
 
 	// ##########################################################################

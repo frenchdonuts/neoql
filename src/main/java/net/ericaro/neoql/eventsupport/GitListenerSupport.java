@@ -33,9 +33,9 @@ public class GitListenerSupport {
 		return listeners.getListenerCount(HeadListener.class);
 	}
 
-	public void fireHeadChanged(Commit from, Commit to) {
+	public void fireHeadChanged(Commit from, Commit to, Iterable<Patch> patches) {
 		for (HeadListener l : listeners.getListeners(HeadListener.class))
-			l.headChanged(from, to);
+			l.headChanged(from, to, patches);
 	}
 
 
@@ -57,9 +57,9 @@ public class GitListenerSupport {
 		return listeners.getListenerCount(CommitListener.class);
 	}
 
-	public void fireCommitCreated(Commit onto, Patch p, Commit c) {
+	public void fireCommitCreated(Commit onto, Commit c, Patch p) {
 		for (CommitListener l : listeners.getListeners(CommitListener.class))
-			l.commitCreated(onto, p, c);
+			l.commitCreated(onto, c, p);
 	}
 
 

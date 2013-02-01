@@ -10,6 +10,6 @@ public interface CommitListener extends EventListener {
 	/**
 	 * Called when a new commit is created
 	 */
-	void commitCreated(Commit onto, Patch patch, Commit newHead);
+	void commitCreated(Commit onto, Commit newHead, Patch patch);
 
 }

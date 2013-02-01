@@ -2,11 +2,13 @@ package net.ericaro.neoql;
 
 import net.ericaro.neoql.properties.FinalProperty;
 
+import java.util.Collection;
+
 /**
  * The column implementation. Separated from the interface to avoid references to it in the client's model.
- * 
+ *
  * @author eric
- * 
+ *
  * @param <T>
  *            table type
  * @param <C>
@@ -25,7 +27,7 @@ public class Column<T, C> {
 		this.hasForeignKey = hasForeignKey;
 	}
 
-	/** 
+	/**
 	 * @param property
 	 * @return
 	 */
@@ -42,7 +44,7 @@ public class Column<T, C> {
 	}
 
 	/** return the table's type.
-	 * 
+	 *
 	 */
 	public Class<T> getTable() {
 		return table;
@@ -52,7 +54,7 @@ public class Column<T, C> {
 	 * Copies every columns values from src into target.
 	 * new ColumnValue<T, V>((ColumnDef<T, V>) col, value);
 	 * make use of the abstract get and set method to achieve it's goal.
-	 * 
+	 *
 	 * @param src
 	 * @param target
 	 */
@@ -61,7 +63,7 @@ public class Column<T, C> {
 	}
 
 	/** returns the value of for this column, and src row.
-	 * 
+	 *
 	 * @param src
 	 * @return
 	 */
@@ -81,7 +83,7 @@ public class Column<T, C> {
 	}
 
 	/** returns the class that defines the type associated with this column.
-	 * 
+	 *
 	 * @return
 	 */
 	public Class<C> getType() {
@@ -93,7 +95,7 @@ public class Column<T, C> {
 	}
 
 	/** return a predicate that test the identity of the given property
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 */
@@ -111,15 +113,33 @@ public class Column<T, C> {
 		};
 	}
 
+	/** return a predicate that test the inclusion in the given collection
+	 *
+	 * @param collection
+	 * @return
+	 */
+	public Predicate<T> in(final Collection<? super C> collection) {
+		return new Predicate<T>() {
+			public boolean eval(T t) {
+				C that = Column.this.get(t);
+				return collection.contains(that);
+			}
+
+			public String toString() {
+				return Column.this.attr + " in " + collection;
+			}
+		};
+	}
+
 	/** returns a predicate that test the == for this column's value and the value
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 */
 	public Predicate<T> is(final C value) {
 		return is(new FinalProperty<C>(getType(), value));
 	}
-	
+
 	public Predicate<T> isNull(Class<C> type) {
 		return is(new FinalProperty<C>(type, null));
 	}

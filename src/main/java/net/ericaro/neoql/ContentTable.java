@@ -1,11 +1,5 @@
 package net.ericaro.neoql;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
 import net.ericaro.neoql.eventsupport.AbstractTableListener;
 import net.ericaro.neoql.eventsupport.TableListener;
 import net.ericaro.neoql.eventsupport.TableListenerSupport;
@@ -14,11 +8,16 @@ import net.ericaro.neoql.patches.Insert;
 import net.ericaro.neoql.patches.PatchBuilder;
 import net.ericaro.neoql.patches.Update;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 /**
  * basic table, the only table that actually contains data.
- * 
+ *
  * @author eric
- * 
+ *
  */
 public class ContentTable<T> implements Table<T>{
 
@@ -51,7 +50,7 @@ public class ContentTable<T> implements Table<T>{
 
 	/**
 	 * internal assertion methods
-	 * 
+	 *
 	 * @param cols
 	 * @return
 	 */
@@ -75,7 +74,7 @@ public class ContentTable<T> implements Table<T>{
 
 	/**
 	 * called by the database (at creation) to connect foreign keys.
-	 * 
+	 *
 	 */
 	void install() {
 		int i = 0;
@@ -167,7 +166,7 @@ public class ContentTable<T> implements Table<T>{
 
 	/**
 	 * Table type, the type of row.
-	 * 
+	 *
 	 * @return
 	 */
 	public Class<T> getType() {
@@ -216,16 +215,16 @@ public class ContentTable<T> implements Table<T>{
 	private PatchBuilder getCurrentCommit() {
 		return owner.currentCommit;
 	}
-	
+
 	T update(T oldValue, T newValue) {
 		T clone = clone(newValue);
 		getCurrentCommit().update(oldValue, clone);
 		// fire internal events so that other rows might want to keep in touch
 		internals.fireUpdated(oldValue, clone);
-		
+
 		return clone;
 	}
-	
+
 	void update(Predicate<? super T> p, T t) {
 		for (T row : newRowsWhere(p))
 			update(row, t);
@@ -247,7 +246,7 @@ public class ContentTable<T> implements Table<T>{
 
 	/**
 	 * delete operation, fill the delete Operation accordingly
-	 * 
+	 *
 	 * @param where
 	 */
 	void delete(Predicate<? super T> where) {
@@ -284,7 +283,7 @@ public class ContentTable<T> implements Table<T>{
 
 	/**
 	 * creates an instance suitable for this table data, with the given columns set
-	 * 
+	 *
 	 * @param data
 	 * @param values
 	 * @return
@@ -324,7 +323,7 @@ public class ContentTable<T> implements Table<T>{
 
 	/**
 	 * special query that include the transaction content.
-	 * 
+	 *
 	 * @return
 	 */
 	Iterable<T> newRowsWhere(Predicate<? super T> p) {
@@ -339,7 +338,7 @@ public class ContentTable<T> implements Table<T>{
 		// now handle updated
 		for (Object row : getCurrentCommit().newValues())
 			// also need to update the 'new' ones
-			
+
 			if (type.isInstance(row) && p.eval((T)row)) // match, and it has not changed
 				updated.add((T)row);
 		// note that updated should not contains deleted (the operation should have been checked before
@@ -356,7 +355,7 @@ public class ContentTable<T> implements Table<T>{
 			events.fireUpdated(p.getOldValue(), p.getNewValue());
 	}
 
-	public void doCommit(Insert<T> p) {
+	void doCommit(Insert<T> p) {
 			if (rows.add(p.getInserted()))// actually add the item back
 				fireInserted(p.getInserted());
 	}

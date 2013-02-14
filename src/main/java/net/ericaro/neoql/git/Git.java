@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * @author eric
  *
  */
-public class Git implements DDL, DML, DQL {
+public class Git implements DDL, DML, DQL, DHL {
 	private static Logger	   LOG		   = Logger.getLogger(Git.class.getName());
 	private Database           db;         // neoql db unique for a single git instance
 	private Repository         repository; // common history to be shared amongs git instances.
@@ -89,6 +89,7 @@ public class Git implements DDL, DML, DQL {
 		return new Branch(head);
 	}
 
+	@Override
 	public Commit head() {
 		return head;
 	}
@@ -237,10 +238,12 @@ public class Git implements DDL, DML, DQL {
 	// EVENTS BEGIN
 	// ##########################################################################
 
+	@Override
 	public void addHeadListener(HeadListener l) {
 		listeners.addHeadListener(l);
 	}
 
+	@Override
 	public void removeHeadListener(HeadListener l) {
 		listeners.removeHeadListener(l);
 	}
@@ -250,10 +253,12 @@ public class Git implements DDL, DML, DQL {
 			listeners.fireHeadChanged(from, to, patches);
 	}
 
+	@Override
 	public void addCommitListener(CommitListener l) {
 		listeners.addCommitListener(l);
 	}
 
+	@Override
 	public void removeCommitListener(CommitListener l) {
 		listeners.removeCommitListener(l);
 	}

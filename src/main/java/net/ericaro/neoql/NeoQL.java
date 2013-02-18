@@ -1,20 +1,12 @@
 package net.ericaro.neoql;
 
+import net.ericaro.neoql.properties.Tracker;
+import net.ericaro.neoql.tables.*;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
-import net.ericaro.neoql.properties.ColumnProperty;
-import net.ericaro.neoql.properties.ObservableCursor;
-import net.ericaro.neoql.properties.Tracker;
-import net.ericaro.neoql.tables.GroupByTable;
-import net.ericaro.neoql.tables.InnerJoinTable;
-import net.ericaro.neoql.tables.MappedTable;
-import net.ericaro.neoql.tables.Mapper;
-import net.ericaro.neoql.tables.OrderByTable;
-import net.ericaro.neoql.tables.Pair;
-import net.ericaro.neoql.tables.SelectTable;
 
 
 
@@ -22,13 +14,13 @@ import net.ericaro.neoql.tables.SelectTable;
 
 /**
  * EDSL for the Data Query Language
- * 
+ *
  * @author eric
- * 
+ *
  */
 public class NeoQL {
 	// TODO add javadoc in there, once the api is stable
-	
+
 
     /**
      * Simple 'true' predicate (always returns true)
@@ -39,7 +31,7 @@ public class NeoQL {
             return true;
         }
     };
-											
+
     /**
      * Simple 'false' predicate (always returns false)
      */
@@ -49,10 +41,10 @@ public class NeoQL {
             return false;
         }
     };
-											
+
 	/**
 	 * return the identity predicate for this type.
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 */
@@ -66,10 +58,10 @@ public class NeoQL {
 			}
 		};
 	}
-	
+
 	/**
 	 * return the identity predicate for this property .
-	 * 
+	 *
 	 * @param value
 	 * @return
 	 */
@@ -83,7 +75,7 @@ public class NeoQL {
 	}
 
 	/** return true if the column value is in the set of values
-	 * 
+	 *
 	 * @param col
 	 * @param value
 	 * @return
@@ -99,7 +91,7 @@ public class NeoQL {
 	}
 
 	/** returns a predicate that is <code>left AND right</code>
-	 * 
+	 *
 	 * @param left
 	 * @param right
 	 * @return
@@ -114,7 +106,7 @@ public class NeoQL {
 	}
 
 	/** returns a predicate that is true iif all predicate are true (generalization of and)
-	 * 
+	 *
 	 * @param left
 	 * @param right
 	 * @return
@@ -134,7 +126,7 @@ public class NeoQL {
 	}
 
 	/** return a predicate that returns true iif one at least of the predicate is true.
-	 * 
+	 *
 	 * @param left
 	 * @param right
 	 * @return
@@ -154,7 +146,7 @@ public class NeoQL {
 	}
 
 	/** returns a predicate that returns true if one of left or right returns true.
-	 * 
+	 *
 	 * @param left
 	 * @param right
 	 * @return
@@ -168,11 +160,11 @@ public class NeoQL {
 		};
 	}
 
-	
+
 
 	/**
 	 * creates a columns by using introspection to access the field, and defines a foreign key
-	 * 
+	 *
 	 * @param name
 	 * @param columnType
 	 * @return
@@ -183,7 +175,7 @@ public class NeoQL {
 	}
 
 	/** creates a column by using introspection and does not define any foreign key
-	 * 
+	 *
 	 * @param type
 	 * @param name
 	 * @param columnType
@@ -193,11 +185,11 @@ public class NeoQL {
 		IntrospectionAttribute<T, V> attr = new IntrospectionAttribute<T, V>(type, name);
 		return column(type, attr, columnType, false);
 	}
-	
-		
+
+
 	/**
 	 * Add a column by using the attribute accessor
-	 * 
+	 *
 	 * @param attr
 	 * @param columnType
 	 * @return
@@ -205,9 +197,9 @@ public class NeoQL {
 	public static <T,V> Column<T, V> column(Class<T> type, Attribute<T, V> attr, Class<V> columnType, boolean hasForeignKey) {
 		return new Column<T, V>(type, attr, columnType,hasForeignKey);
 	}
-	
+
 	/** creates a Select Table from another table and a predicate.
-	 * 
+	 *
 	 * @param table
 	 * @param where
 	 * @return
@@ -216,8 +208,8 @@ public class NeoQL {
 		return new SelectTable<T>(table, where);
 	}
 	/** creates a table using a transformation from the source table.
-	 * Turns a table of S into a table of T provided that you give a Mapper<S,T> implementation. 
-	 * 
+	 * Turns a table of S into a table of T provided that you give a Mapper<S,T> implementation.
+	 *
 	 * @param table
 	 * @param mapper
 	 * @return
@@ -225,9 +217,9 @@ public class NeoQL {
 	public static <S, T> MappedTable<S,T> map(Table<S> table, Class<T> target, Mapper<S, T> mapper) {
 		return new MappedTable<S, T>(target, mapper, table);
 	}
-	
+
 	/** returns  table with a single colum of type T, so that T is a column of table<S> and t values are unique.
-	 * 
+	 *
 	 * @param table
 	 * @param groupBy
 	 * @return
@@ -235,9 +227,9 @@ public class NeoQL {
 	public static <S, T> Table<T> groupBy(Table<S> table, Column<S, T> groupBy) {
 		return new GroupByTable<S, T>(groupBy, table);
 	}
-	
+
 	/** return a table ordered by a column
-	 * 
+	 *
 	 * @param table
 	 * @param orderBy
 	 * @param ascendent
@@ -247,7 +239,7 @@ public class NeoQL {
 		return new OrderByTable<T, V>(table,orderBy, ascendent);
 	}
 	/** creates an inner join table.
-	 * 
+	 *
 	 * @param leftTable
 	 * @param rightTable
 	 * @param on
@@ -256,20 +248,20 @@ public class NeoQL {
 	public static <L, R> Table<Pair<L, R>> innerJoin(Table<L> leftTable, Table<R> rightTable, Class<Pair<L,R>> target, Predicate<? super Pair<L, R>> on) {
 		return new InnerJoinTable<L, R>(target, leftTable, rightTable,  on );
 	}
-	
+
 	/** split and inner join table into it's left counter part (usefull if you really need inner join to operation filter, or order)
-	 * 
+	 *
 	 * @param table
 	 * @return
 	 */
 	public static <L,R> Table<L> left(Class<L> left, Table<Pair<L,R>> table) {
 		Mapper<Pair<L,R>, L> map= Pair.left() ;
-		
+
 		return map(table,left,  map);
 	}
-	
+
 	/** same as left but for the right counterpart of the inner join.
-	 * 
+	 *
 	 * @param table
 	 * @return
 	 */
@@ -277,14 +269,14 @@ public class NeoQL {
 		Mapper<Pair<L,R>, R> map= Pair.right() ;
 		return map(table, right, map);
 	}
-	
+
 	/**
 	 * if this columns has a foreign key, returns a predicate that is true if the pair left joins.
 	 * for instance
 	 * for a Pair<Student,Teacher> p, and this column is "Student.teacher" then
 	 * p.getLeft().teacher = p.getRight()
-	 * 
-	 * 
+	 *
+	 *
 	 * @return
 	 */
 	public static <L,R> Predicate<Pair<L, R>> joins(final Column<L,R> column) {
@@ -299,9 +291,9 @@ public class NeoQL {
 
 		};
 	}
-	
-	/** returns a simple iterator over a table. 
-	 * 
+
+	/** returns a simple iterator over a table.
+	 *
 	 * @param table
 	 * @return
 	 */
@@ -313,9 +305,9 @@ public class NeoQL {
 			}
 		};
 	}
-	
+
 	/** returns a simple iterator over a table, filtered by predicate == True
-	 * 
+	 *
 	 * @param table
 	 * @param where
 	 * @return
@@ -329,21 +321,21 @@ public class NeoQL {
 		};
 	}
 
-	/** return 
+	/** return
 	 * if a is null, return true if b is null.
 	 * otherwise return a.equals(b).
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 * @return
 	 */
 	public static <T> boolean eq(T a, T b) {
 			if (a == null)
-				return b == null; 
+				return b == null;
 			else
 				return a.equals(b);
 	}
-	
+
 	public static <T> Property<T> track(Table<T> table, T value) {
 		return Tracker.track(table, value);
 	}
@@ -354,6 +346,28 @@ public class NeoQL {
 	public static <T, C> Property<C> track(Property<T> source, Class<C> target, Mapper<T, C> mapper) {
 		return Tracker.track(source, target, mapper);
 	}
-		
-	
+
+
+	public static <T> T build(Class<T> type, ColumnSetter<T, ?>... values) {
+		try {
+			T t = type.newInstance();
+			assert allSameType(type, values) : "Column Setter mismatch: cannot use alien column setter";
+			for (ColumnSetter<T, ?> s : values)
+				s.set(t);
+
+			return t;
+		} catch (Exception e) {
+			throw new NeoQLException("Exception while building " + type, e);
+		}
+	}
+
+	// helper method to assert that all columnvalue have the same class definition
+	static <T> boolean allSameType(Class<T> type, ColumnSetter<T, ?>... values) {
+		for (ColumnSetter cv : values)
+			if (!type.isAssignableFrom(cv.column.getTable()))
+				return false;
+		return true;
+	}
+
+
 }

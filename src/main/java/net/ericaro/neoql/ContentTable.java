@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import static net.ericaro.neoql.NeoQL.build;
+
 /**
  * basic table, the only table that actually contains data.
  *
@@ -291,16 +293,11 @@ public class ContentTable<T> implements Table<T>{
 	T newInstance(ColumnSetter<T, ?>... values) {
 
 		try {
-			T row = type.newInstance();
-			assert allSameType(values) : "Column Setter mismatch: cannot use alien column setter";
-			for (ColumnSetter s : values)
-				s.set(row);
+			return build(type, values);
 			// TODO : handle FK verification here, one of the column might be a FK, hence I need to check that the value belongs to the database
 			// TODO handle default values (like ids etc, so I need to 'update' the object a little bit and return it
-
-			return row;
-		} catch (Exception e) {
-			throw new NeoQLException("Exception while instanciating row for table " + type, e);
+		} catch (NeoQLException e) {
+			throw new NeoQLException("Exception while instanciating row for table " + type, e.getCause());
 		}
 	}
 
@@ -309,16 +306,6 @@ public class ContentTable<T> implements Table<T>{
 		for (Column<T, ?> c : columns)
 			c.copy(row, clone);
 		return clone;
-	}
-
-	// helper method to assert that all columnvalue have the same class definition
-	private boolean allSameType(ColumnSetter<T, ?>... values) {
-		if (values.length == 0)
-			return true;
-		for (ColumnSetter cv : values)
-			if (!type.isAssignableFrom(cv.column.getTable()))
-				return false;
-		return true;
 	}
 
 	/**

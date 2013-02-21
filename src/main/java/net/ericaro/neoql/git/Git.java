@@ -167,8 +167,10 @@ public class Git implements DDL, DML, DQL, DHL {
 	public Merge merge(Commit remoteCommit) {
 		Commit localCommit = head;
 		Commit base = repository.commonAncestor(localCommit, remoteCommit);
-		if (base == localCommit || base == remoteCommit) // fast forward or nothing to update
-			return new Merge(base, localCommit, remoteCommit, base);
+		if (base == localCommit) // fast forward
+			return new Merge(base, localCommit, remoteCommit, remoteCommit);
+		if (base == remoteCommit) // nothing to update
+			return new Merge(base, localCommit, remoteCommit, localCommit);
 
 		// compact path between the common ancestor and the current position (in both branches)
 		// so that every changes are compacted ( undo are skipped )

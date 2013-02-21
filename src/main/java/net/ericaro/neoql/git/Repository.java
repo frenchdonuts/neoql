@@ -170,11 +170,11 @@ public class Repository {
 		
 		List<Commit> targetPre = commitPath(root, target);
 		// taking the shortcut for fastforward
-		if( targetPre.contains(from)) return target; // fast forward 
+		if( targetPre.contains(from)) return from; // fast forward
 		
 		// taking the shortcut for nothing to update 
 		List<Commit> fromPre = commitPath(root, from);
-		if ( fromPre.contains(target) ) 	return from; // nothing to update
+		if ( fromPre.contains(target) ) 	return target; // nothing to update
 		
 		fromPre.retainAll(targetPre);
 		assert fromPre.size()> 0: "there is no common ancestor, obviously";

@@ -47,7 +47,7 @@ public class PatchBuilder {
 		if (inserted.remove(oldValue) ) 			// the value was in the inserted set
 			inserted.add(newValue);
 		else {
-			Object src = updated.remove(newValue) ;
+			Object src = updated.remove(oldValue) ;
 			if (src == null)
 				src = oldValue;			// oldValue will become the new src
 			updated.put(newValue, src);

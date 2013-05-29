@@ -1,12 +1,20 @@
 package net.ericaro.neoql;
 
-import net.ericaro.neoql.properties.Tracker;
-import net.ericaro.neoql.tables.*;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import net.ericaro.neoql.properties.HeadProperty;
+import net.ericaro.neoql.properties.PredicateProperty;
+import net.ericaro.neoql.properties.Tracker;
+import net.ericaro.neoql.tables.GroupByTable;
+import net.ericaro.neoql.tables.InnerJoinTable;
+import net.ericaro.neoql.tables.MappedTable;
+import net.ericaro.neoql.tables.Mapper;
+import net.ericaro.neoql.tables.OrderByTable;
+import net.ericaro.neoql.tables.Pair;
+import net.ericaro.neoql.tables.SelectTable;
 
 
 
@@ -360,6 +368,26 @@ public class NeoQL {
 			throw new NeoQLException("Exception while building " + type, e);
 		}
 	}
+	
+    public static <T> Property<T> track(Table<T> source, Predicate<T> predicate) {
+        return new PredicateProperty<T>(source, predicate);
+    }
+
+    public static <T> Property<T> trackHead(DHL db, Table<T> table, T row) {
+        return new HeadProperty<T>(db, Tracker.track(table, row));
+    }
+
+    public static <DB extends DQL & DHL, T> Property<T> trackHead(DB db, Class<T> type, T row) {
+        return trackHead(db, db.getTable(type), row);
+    }
+
+    public static <T> Property<T> trackHead(DHL db, Table<T> table, Predicate<T> predicate) {
+        return new HeadProperty<T>(db, track(table, predicate));
+    }
+
+    public static <DB extends DQL & DHL, T> Property<T> trackHead(DB db, Class<T> type, Predicate<T> predicate) {
+        return trackHead(db, db.getTable(type), predicate);
+    }
 
 	// helper method to assert that all columnvalue have the same class definition
 	static <T> boolean allSameType(Class<T> type, ColumnSetter<T, ?>... values) {

@@ -212,7 +212,7 @@ public class NeoQL {
 	 * @param where
 	 * @return
 	 */
-	public static <T> SelectTable<T> where(Table<T> table, Predicate<T> where){
+	public static <T> SelectTable<T> where(Table<T> table, Predicate<? super T> where){
 		return new SelectTable<T>(table, where);
 	}
 	/** creates a table using a transformation from the source table.
